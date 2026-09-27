@@ -178,3 +178,7 @@ Append-only. One dated entry per product decision, with the reason. Carried over
   Lighthouse reports weren't uploaded (`.lighthouseci/` is hidden;
   `include-hidden-files: true`). The gitleaks Docker image is still pinned
   by tag, not digest.
+- 2026-09-27: SessionStart hook (`.claude/hooks/session-start.sh`, cloud
+  sessions only, synchronous): `pnpm install`, start Docker, point Playwright
+  at the preinstalled Chromium. Local Supabase stays on demand (`pnpm
+  db:start`) to keep startup around 5 s; CI remains the gate for pgTAP.

@@ -59,7 +59,7 @@ pnpm db:test        # supabase test db: pgTAP (supabase/tests)
 pnpm db:types       # regenerate types/database.ts (CI fails if stale)
 ```
 
-Supabase CLI: Ahmed doesn't run it locally. CI runs the local stack for pgTAP, the stale-types check and `supabase db advisors --fail-on warn` on every PR, and on merge to `main` links the hosted project (`SUPABASE_ACCESS_TOKEN`, `SUPABASE_PROJECT_REF`, `SUPABASE_DB_PASSWORD` repo secrets) and runs `supabase db push`. The `db:*` scripts are for sessions or machines that have Docker.
+Supabase CLI: Ahmed doesn't run it locally. CI runs the local stack for pgTAP, the stale-types check and `supabase db advisors --fail-on warn` on every PR, and on merge to `main` links the hosted project (`SUPABASE_ACCESS_TOKEN`, `SUPABASE_PROJECT_REF`, `SUPABASE_DB_PASSWORD` repo secrets) and runs `supabase db push`. The `db:*` scripts are for sessions or machines that have Docker. In cloud sessions, `.claude/hooks/session-start.sh` runs `pnpm install`, starts Docker and sets `PW_CHROMIUM_PATH`; run `pnpm db:start` yourself when a task touches the database (about a minute, longer on a fresh container). The hook does nothing on local machines.
 
 Local setup: `cp .env.example .env.local`, then `pnpm db:start` and fill `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` from `pnpm exec supabase status`. If Playwright's own browser isn't installed, set `PW_CHROMIUM_PATH` to a local Chromium.
 
