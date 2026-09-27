@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from "next";
+import { headers } from "next/headers";
 import { ThemeProvider } from "@/components/providers/theme-provider";
+import { NONCE_HEADER } from "@/lib/security/headers";
 import { fontVariables } from "./fonts";
 import "./globals.css";
 
@@ -25,11 +27,13 @@ export const viewport: Viewport = {
   ],
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  // Per-request CSP nonce from proxy.ts; reading it renders every page dynamically, as nonces require.
+  const nonce = (await headers()).get(NONCE_HEADER) ?? undefined;
   return (
     <html lang="en" className={fontVariables} suppressHydrationWarning>
       <body className="min-h-dvh bg-bg-page font-sans text-body text-text-primary">
-        <ThemeProvider>{children}</ThemeProvider>
+        <ThemeProvider nonce={nonce}>{children}</ThemeProvider>
       </body>
     </html>
   );

@@ -228,3 +228,40 @@ Append-only. One dated entry per product decision, with the reason. Carried over
 - 2026-09-27 (phase 1): Staff roles count only on a two-factor (`aal2`) session;
   `super_admin` implies every role. Staff can now read `job_runs`. The first super
   admin has to be granted by a human in the SQL editor until the ops UI (phase 11).
+- 2026-09-27 (phase 1): Supabase auth cookies stay readable by the browser (the
+  `@supabase/ssr` default), not HttpOnly as PRD 10 lists: the browser client needs the
+  session for `onAuthStateChange` (PRD 5.2's check-inbox screen and CurrentUserProvider)
+  and for Realtime later. The app's own cookies (device id, pending verification,
+  agreement intent) are HttpOnly, Secure and SameSite=Lax. **Needs Ahmed's OK.**
+- 2026-09-27 (phase 1): Email links (confirm, reset, email change) use `token_hash` and
+  land on `/auth/confirm`, so they work on any device, not only in the browser that
+  started the flow (PKCE). `/auth/callback` handles Google only, honours a validated
+  `next`, and re-checks the university domain on every sign-in. The confirmation email
+  carries both the 6-digit code and the link.
+- 2026-09-27 (phase 1): Turnstile is verified by the app (`lib/security/turnstile.ts`),
+  not Supabase's built-in CAPTCHA, because Vercel has real keys on Production and test
+  keys on Preview while Supabase takes one secret per project. Direct calls to the Auth
+  API skip Turnstile and the app's breached-password check; the domain hook still
+  applies, and Supabase's own leaked-password protection and per-IP limits (dashboard)
+  cover that path.
+- 2026-09-27 (phase 1): New-device alerts and security events are recorded on the app's
+  sign-in paths (password, code, link, Google, reset). A device is a random HttpOnly
+  cookie, stored hashed. The alert's "This wasn't me" link opens a confirm page (mail
+  scanners prefetch links); the button deletes every session of the account and sends a
+  reset email. Alert and lock emails go through Resend's API and need `EMAIL_FROM`.
+- 2026-09-27 (phase 1): New env vars: `EMAIL_FROM` (verified sender for the app's
+  security emails) and `IP_HASH_SECRET` (HMAC key for IP hashes and rate-limit keys).
+  Without them locally the app skips the emails and falls back to plain hashes.
+- 2026-09-27 (phase 1): Two-factor (TOTP) plumbing: enrol/remove in Settings → Security,
+  a `/signin/mfa` step whenever an enrolled account's session is aal1, and aal2 required
+  by `proxy.ts` for `/ops`, `/uni`, `/recruit`, `/org`. **Open question for Ahmed:**
+  Supabase Auth has no recovery codes (PRD 10 wants them shown once at setup). Options:
+  let people enrol a second authenticator as a backup (built in), or build our own codes
+  with a staff-assisted reset in ops. Needed before recruiters and admins (phase 8/9).
+- 2026-09-27 (phase 1): The full nonce-based CSP now ships from `proxy.ts` (every page
+  renders dynamically, as nonces require). `CurrentUserProvider` is seeded in the
+  signed-in `(app)` layout rather than the root layout, so public pages don't pay an
+  Auth round trip. `/feed` is a teaching empty state until phase 3. The signup form
+  offers the student role only (faculty with phase 7), and for a domain only one
+  university uses, "Not your university?" explains that instead of opening a
+  one-item picker.

@@ -82,3 +82,28 @@ export function SheetContent({ title, description, className, children, ...props
     </DialogPrimitive.Portal>
   );
 }
+
+/** Side sheet: full height on the right from tablet up, full screen on phones (e.g. the agreement). */
+export function SideSheetContent({ title, description, className, children, ...props }: ContentProps) {
+  return (
+    <DialogPrimitive.Portal>
+      <Overlay />
+      <DialogPrimitive.Content
+        className={cn(
+          "fixed inset-y-0 right-0 z-50 flex w-full flex-col border-l border-border-default bg-bg-elevated shadow-4 sm:max-w-xl",
+          className,
+        )}
+        {...props}
+      >
+        <div className="border-b border-border-muted px-6 pt-6 pb-4">
+          <DialogPrimitive.Title className="pr-10 font-display text-h2 text-text-primary">{title}</DialogPrimitive.Title>
+          {description ? (
+            <DialogPrimitive.Description className="mt-1 text-body-sm text-text-secondary">{description}</DialogPrimitive.Description>
+          ) : null}
+        </div>
+        <div className="min-h-0 flex-1 overflow-y-auto px-6 py-5">{children}</div>
+        <CloseButton />
+      </DialogPrimitive.Content>
+    </DialogPrimitive.Portal>
+  );
+}
