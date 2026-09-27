@@ -19,6 +19,8 @@ const EVENT_LABELS: Record<string, string> = {
   mfa_enrolled: "Two-factor turned on",
   mfa_unenrolled: "Two-factor turned off",
   signed_out_everywhere: "Signed out of all devices",
+  github_connected: "GitHub connected",
+  github_disconnected: "GitHub disconnected",
 };
 
 const when = new Intl.DateTimeFormat("en-GB", { dateStyle: "medium", timeStyle: "short", timeZone: "Asia/Karachi" });

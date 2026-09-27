@@ -55,6 +55,102 @@ isOneToOne: false
                   Relationships: [
                     
                   ]
+                },"github_accounts": {
+                  Row: {
+                    "connected_at": string,"github_id": number,"login": string,"revoked_at": string | null,"updated_at": string,"user_id": string
+                  }
+                  Insert: {
+                    "connected_at"?: string,"github_id": number,"login": string,"revoked_at"?: string | null,"updated_at"?: string,"user_id": string
+                  }
+                  Update: {
+                    "connected_at"?: string,"github_id"?: number,"login"?: string,"revoked_at"?: string | null,"updated_at"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"github_installations": {
+                  Row: {
+                    "account_id": number,"account_login": string,"account_type": string,"created_at": string,"deleted_at": string | null,"installation_id": number,"repository_selection": string,"suspended_at": string | null,"updated_at": string
+                  }
+                  Insert: {
+                    "account_id": number,"account_login": string,"account_type": string,"created_at"?: string,"deleted_at"?: string | null,"installation_id": number,"repository_selection"?: string,"suspended_at"?: string | null,"updated_at"?: string
+                  }
+                  Update: {
+                    "account_id"?: number,"account_login"?: string,"account_type"?: string,"created_at"?: string,"deleted_at"?: string | null,"installation_id"?: number,"repository_selection"?: string,"suspended_at"?: string | null,"updated_at"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"github_link_clashes": {
+                  Row: {
+                    "created_at": string,"github_id": number,"github_login": string,"id": number,"linked_user_id": string | null,"resolved_at": string | null,"resolved_by": string | null,"user_id": string
+                  }
+                  Insert: {
+                    "created_at"?: string,"github_id": number,"github_login": string,"id"?: never,"linked_user_id"?: string | null,"resolved_at"?: string | null,"resolved_by"?: string | null,"user_id": string
+                  }
+                  Update: {
+                    "created_at"?: string,"github_id"?: number,"github_login"?: string,"id"?: never,"linked_user_id"?: string | null,"resolved_at"?: string | null,"resolved_by"?: string | null,"user_id"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"github_repos": {
+                  Row: {
+                    "created_at": string,"default_branch": string | null,"fork": boolean,"full_name": string,"owner_id": number,"parent_full_name": string | null,"private": boolean,"pushed_at": string | null,"repo_id": number,"template_full_name": string | null,"updated_at": string
+                  }
+                  Insert: {
+                    "created_at"?: string,"default_branch"?: string | null,"fork"?: boolean,"full_name": string,"owner_id": number,"parent_full_name"?: string | null,"private": boolean,"pushed_at"?: string | null,"repo_id": number,"template_full_name"?: string | null,"updated_at"?: string
+                  }
+                  Update: {
+                    "created_at"?: string,"default_branch"?: string | null,"fork"?: boolean,"full_name"?: string,"owner_id"?: number,"parent_full_name"?: string | null,"private"?: boolean,"pushed_at"?: string | null,"repo_id"?: number,"template_full_name"?: string | null,"updated_at"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"github_user_installations": {
+                  Row: {
+                    "created_at": string,"installation_id": number,"user_id": string
+                  }
+                  Insert: {
+                    "created_at"?: string,"installation_id": number,"user_id": string
+                  }
+                  Update: {
+                    "created_at"?: string,"installation_id"?: number,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "github_user_installations_installation_id_fkey"
+      columns: ["installation_id"]
+isOneToOne: false
+      referencedRelation: "github_installations"
+      referencedColumns: ["installation_id"]
+    }
+                  ]
+                },"github_user_repos": {
+                  Row: {
+                    "classified_at": string | null,"discovered_at": string,"excluded": boolean,"installation_id": number,"kind": Database["public"]['Enums']["github_repo_kind"] | null,"last_synced_at": string | null,"repo_id": number,"user_id": string
+                  }
+                  Insert: {
+                    "classified_at"?: string | null,"discovered_at"?: string,"excluded"?: boolean,"installation_id": number,"kind"?: Database["public"]['Enums']["github_repo_kind"] | null,"last_synced_at"?: string | null,"repo_id": number,"user_id": string
+                  }
+                  Update: {
+                    "classified_at"?: string | null,"discovered_at"?: string,"excluded"?: boolean,"installation_id"?: number,"kind"?: Database["public"]['Enums']["github_repo_kind"] | null,"last_synced_at"?: string | null,"repo_id"?: number,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "github_user_repos_installation_id_fkey"
+      columns: ["installation_id"]
+isOneToOne: false
+      referencedRelation: "github_installations"
+      referencedColumns: ["installation_id"]
+    },{
+      foreignKeyName: "github_user_repos_repo_id_fkey"
+      columns: ["repo_id"]
+isOneToOne: false
+      referencedRelation: "github_repos"
+      referencedColumns: ["repo_id"]
+    }
+                  ]
                 },"job_runs": {
                   Row: {
                     "created_at": string,"error": string | null,"finished_at": string | null,"id": string,"job": string,"meta": NonNullable<Json>,"rows": number | null,"started_at": string,"status": Database["public"]['Enums']["job_run_status"]
@@ -158,6 +254,19 @@ isOneToOne: true
                   Relationships: [
                     
                   ]
+                },"sync_jobs": {
+                  Row: {
+                    "commits_analysed": number,"created_at": string,"error": string | null,"finished_at": string | null,"id": number,"repos_done": number,"repos_total": number,"skills_found": number,"stage": string | null,"status": Database["public"]['Enums']["sync_status"],"trigger": string,"updated_at": string,"user_id": string
+                  }
+                  Insert: {
+                    "commits_analysed"?: number,"created_at"?: string,"error"?: string | null,"finished_at"?: string | null,"id"?: never,"repos_done"?: number,"repos_total"?: number,"skills_found"?: number,"stage"?: string | null,"status"?: Database["public"]['Enums']["sync_status"],"trigger": string,"updated_at"?: string,"user_id": string
+                  }
+                  Update: {
+                    "commits_analysed"?: number,"created_at"?: string,"error"?: string | null,"finished_at"?: string | null,"id"?: never,"repos_done"?: number,"repos_total"?: number,"skills_found"?: number,"stage"?: string | null,"status"?: Database["public"]['Enums']["sync_status"],"trigger"?: string,"updated_at"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
                 },"universities": {
                   Row: {
                     "city": string | null,"created_at": string,"id": string,"name": string,"province": string | null,"slug": string,"updated_at": string
@@ -212,6 +321,9 @@ isOneToOne: false
             "complete_onboarding":
 { Args: Record<PropertyKey, never>; Returns: boolean
                            },
+"disconnect_github":
+{ Args: Record<PropertyKey, never>; Returns: boolean
+                           },
 "get_profile_card":
 { Args: { "p_username": string }; Returns: {
               "department": string,"full_name": string,"graduation_year": number,"username": string
@@ -241,8 +353,14 @@ isOneToOne: false
 "rate_limit":
 { Args: { "p_key": string,"p_limit": number,"p_window_seconds": number }; Returns: boolean
                            },
+"record_github_webhook":
+{ Args: { "p_action"?: string,"p_delivery_id": string,"p_event": string,"p_installation_id"?: number,"p_payload": Json }; Returns: boolean
+                           },
 "record_sign_in":
 { Args: { "p_device_hash": string,"p_ip_hash": string,"p_method": string,"p_user_agent": string }; Returns: Json
+                           },
+"request_github_resync":
+{ Args: Record<PropertyKey, never>; Returns: boolean
                            },
 "security_not_me":
 { Args: { "p_token": string }; Returns: Json
@@ -256,12 +374,15 @@ isOneToOne: false
 "signin_status":
 { Args: { "p_email": string,"p_ip_hash": string }; Returns: Json
                            },
+"start_github_link":
+{ Args: { "p_code": string,"p_installation_id"?: number }; Returns: string
+                           },
 "username_available":
 { Args: { "p_username": string }; Returns: boolean
                            }
           }
           Enums: {
-            "account_role": "student"|"faculty"|"recruiter"|"university_admin","domain_kind": "student"|"faculty"|"both","job_run_status": "running"|"succeeded"|"failed","looking_for_option": "internships"|"jobs"|"teammates"|"competitions"|"learning","profile_visibility": "friends"|"university"|"global","staff_role": "moderator"|"trust_reviewer"|"accounts"|"super_admin"
+            "account_role": "student"|"faculty"|"recruiter"|"university_admin","domain_kind": "student"|"faculty"|"both","github_repo_kind": "owned"|"collaborator"|"fork"|"template","job_run_status": "running"|"succeeded"|"failed","looking_for_option": "internships"|"jobs"|"teammates"|"competitions"|"learning","profile_visibility": "friends"|"university"|"global","staff_role": "moderator"|"trust_reviewer"|"accounts"|"super_admin","sync_status": "queued"|"running"|"done"|"failed"|"cancelled"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -381,7 +502,7 @@ export const Constants = {
           }
         },"public": {
           Enums: {
-            "account_role": ["student", "faculty", "recruiter", "university_admin"],"domain_kind": ["student", "faculty", "both"],"job_run_status": ["running", "succeeded", "failed"],"looking_for_option": ["internships", "jobs", "teammates", "competitions", "learning"],"profile_visibility": ["friends", "university", "global"],"staff_role": ["moderator", "trust_reviewer", "accounts", "super_admin"]
+            "account_role": ["student", "faculty", "recruiter", "university_admin"],"domain_kind": ["student", "faculty", "both"],"github_repo_kind": ["owned", "collaborator", "fork", "template"],"job_run_status": ["running", "succeeded", "failed"],"looking_for_option": ["internships", "jobs", "teammates", "competitions", "learning"],"profile_visibility": ["friends", "university", "global"],"staff_role": ["moderator", "trust_reviewer", "accounts", "super_admin"],"sync_status": ["queued", "running", "done", "failed", "cancelled"]
           }
         }
 } as const

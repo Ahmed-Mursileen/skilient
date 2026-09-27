@@ -1,4 +1,4 @@
-import { CaretRight, ShieldCheck, UserCircle } from "@phosphor-icons/react/dist/ssr";
+import { CaretRight, GithubLogo, ShieldCheck, UserCircle } from "@phosphor-icons/react/dist/ssr";
 import type { Metadata, Route } from "next";
 import Link from "next/link";
 
@@ -6,6 +6,7 @@ export const metadata: Metadata = { title: "Settings" };
 
 const sections = [
   { href: "/settings/profile", title: "Profile", description: "Name, photo, bio, department and who can see your profile.", icon: UserCircle },
+  { href: "/settings/github", title: "GitHub", description: "Connect GitHub, choose repositories, resync or disconnect.", icon: GithubLogo },
   { href: "/settings/security", title: "Security", description: "Two-factor, signed-in devices and recent account activity.", icon: ShieldCheck },
 ] as const;
 

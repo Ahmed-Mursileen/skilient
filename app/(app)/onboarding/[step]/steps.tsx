@@ -3,6 +3,8 @@
 import { Buildings, GithubLogo, ShieldCheck, Sparkle, UsersThree } from "@phosphor-icons/react/dist/ssr";
 import { useState, useTransition } from "react";
 import { FormAlert } from "@/components/auth/form-alert";
+import { ConnectGithubButton } from "@/components/github/connect-button";
+import { SyncStatus } from "@/components/github/sync-status";
 import { StepForm } from "@/components/onboarding/step-form";
 import { BatchSelect } from "@/components/profile/batch-select";
 import { DepartmentSelect } from "@/components/profile/department-select";
@@ -34,6 +36,7 @@ import {
 } from "@/lib/actions/onboarding";
 import type { ActionError } from "@/lib/actions/result";
 import type { UniversityRef } from "@/lib/auth/email-domain";
+import type { GithubSync } from "@/lib/data/github";
 import type { LookingFor } from "@/lib/profile/options";
 
 // Step 1 ------------------------------------------------------------------------------
@@ -123,32 +126,62 @@ export function ProfileStep(props: { fullName: string; username: string | null; 
 
 // Step 3 ------------------------------------------------------------------------------
 
-export function GithubStep() {
+export function GithubStep({
+  configured,
+  account,
+  sync,
+  outcome,
+}: {
+  configured: boolean;
+  account: { login: string; revoked: boolean } | null;
+  sync: GithubSync | null;
+  outcome: { tone: "success" | "error"; message: string } | null;
+}) {
+  const connected = account !== null && !account.revoked;
   return (
-    <StepForm action={saveGithubStep} submitLabel="Skip for now">
-      {() => (
+    <div className="flex flex-col gap-6">
+      {outcome ? <FormAlert tone={outcome.tone}>{outcome.message}</FormAlert> : null}
+      {connected ? (
+        <div className="flex flex-col gap-3 rounded-md border border-border-default bg-bg-subtle px-4 py-3">
+          <p className="flex items-center gap-2 text-body font-semibold">
+            <GithubLogo aria-hidden weight="bold" className="size-5 text-text-muted" />
+            Connected as <span className="font-mono">@{account.login}</span>
+          </p>
+          <SyncStatus sync={sync} />
+        </div>
+      ) : (
         <div className="flex flex-col gap-5 text-body">
           <div className="flex items-start gap-3">
             <GithubLogo aria-hidden weight="bold" className="mt-1 size-5 shrink-0 text-text-muted" />
             <p>
-              Skilient reads the repositories you choose through the Skilient GitHub App: the languages, frameworks and
-              tools your own commits use, and your merged pull requests. That&apos;s how your skills get verified levels.
+              You choose which repositories the Skilient GitHub App can read, private ones included. We read the
+              languages, frameworks and tools your own commits use, and your merged pull requests. That&apos;s how your
+              skills get verified levels.
             </p>
           </div>
           <div className="flex items-start gap-3">
             <ShieldCheck aria-hidden weight="bold" className="mt-1 size-5 shrink-0 text-text-muted" />
             <p>
-              We never write to your repositories, never read ones you didn&apos;t choose, and never show your code to
-              anyone. You can disconnect at any time.
+              We never write to your repositories, never store your code, and never show a private repository&apos;s
+              name to anyone but you. You can disconnect at any time.
             </p>
           </div>
+          {configured ? <ConnectGithubButton returnTo="onboarding" /> : null}
           <p className="rounded-md border border-border-default bg-bg-subtle px-3 py-2.5 text-body-sm text-text-secondary">
-            Connecting takes a minute. If you skip it now, &ldquo;Connect GitHub&rdquo; stays on your getting-started
-            checklist.
+            {configured
+              ? "Connecting takes a minute. If you skip it now, \u201cConnect GitHub\u201d stays on your getting-started checklist."
+              : "Connecting GitHub isn't switched on yet. Skip for now: \u201cConnect GitHub\u201d stays on your getting-started checklist."}
           </p>
         </div>
       )}
-    </StepForm>
+      <StepForm
+        action={saveGithubStep}
+        submitLabel={connected ? "Continue" : "Skip for now"}
+        submitVariant={connected ? "primary" : "secondary"}
+      >
+        {() => <input type="hidden" name="choice" value={connected ? "connected" : "skipped"} />}
+      </StepForm>
+    </div>
   );
 }
 
