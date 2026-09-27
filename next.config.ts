@@ -6,6 +6,10 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   reactStrictMode: true,
   typedRoutes: true,
+  experimental: {
+    // Profile images (PRD 5.4: covers up to 8 MB) are uploaded through a server action.
+    serverActions: { bodySizeLimit: "9mb" },
+  },
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },
