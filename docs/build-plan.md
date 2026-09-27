@@ -13,15 +13,15 @@ Legend: 📖 = PRD files to read (in `docs/prd/`), ✅ = done-when checks.
 - [x] Next.js 16 app, TS strict, pnpm, ESLint rules (no service-role imports outside allowed folders, no `getSession()` in server code)
 - [x] Tailwind v4 tokens from PRD 9.2–9.4 (`app/styles/tokens.css` + `@theme inline`), fonts via `next/font`, ThemeProvider (default `system`)
 - [x] `brand/` SVGs copied to `public/brand/`; favicon and app icon wired
-- [ ] Supabase project (Mumbai) linked; `supabase/migrations/`, `seed.sql`, pgTAP harness; Vercel project pinned to `bom1` — *repo side done (migrations, seed, pgTAP, `vercel.json` → `bom1`); CI links the hosted project and runs `supabase db push` on merge to `main` once the three repo secrets exist; the Vercel project needs Ahmed (setup checklist)*
-- [ ] CI: typecheck, lint, Vitest, pgTAP on fresh `db reset`, gitleaks (blocking), `npm audit` (critical), Lighthouse CI + size-limit (report only) — *`.github/workflows/ci.yml` written and every step passes locally; tick once it's green on the first PR*
+- [x] Supabase project (Mumbai) linked; `supabase/migrations/`, `seed.sql`, pgTAP harness; Vercel project pinned to `bom1` — *linked and migrated by CI on merge to `main` (2026-09-27); Vercel function region confirmed `bom1` by Ahmed*
+- [x] CI: typecheck, lint, Vitest, pgTAP on fresh `db reset`, gitleaks (blocking), `npm audit` (critical), Lighthouse CI + size-limit (report only) — *green on PR and on `main` (run 36344493529), plus Supabase advisors*
 - [x] Sentry (client/server/edge), JSON logger with `request_id`, `/api/health`, `job_runs` table
 - [x] `components/ui/` primitives + dev-only UI gallery in both themes
 - [x] `.env.example` with names only
 
 ✅ A fresh clone + `supabase db reset` rebuilds everything · preview deploy green · every primitive renders in light and dark · axe-core clean on the gallery
 
-*Status 2026-09-27: db reset + pgTAP (16 tests) pass locally; every primitive renders in both themes and axe-core is clean on desktop and phone (20 E2E tests); preview deploy waits on the Vercel project.*
+*Status 2026-09-27: every box ticked. db reset + pgTAP pass in CI; every primitive renders in both themes and axe-core is clean (desktop + phone); preview deploy green (`/api/health` 200 on 723db53). Vercel function region confirmed `bom1`. Phase 0 closes when the Realtime health-check fix is on `main` and production `/api/health` returns 200.*
 
 ## Phase 1 — Identity
 
