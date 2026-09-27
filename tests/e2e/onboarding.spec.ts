@@ -216,6 +216,33 @@ test.describe("onboarding and profiles", () => {
     await expect(bPage.getByTestId("restricted-card")).toHaveCount(0);
   });
 
+  test("replacing or removing a photo leaves no orphan files; /profile/edit redirects", async ({ page }) => {
+    const student = await createStudent({ domain: "nutech.edu.pk", fullName: "Photo Swapper" });
+    const bucket = adminClient().storage.from("avatars");
+    const stored = async () => ((await bucket.list(student.id)).data ?? []).map((f) => f.name).filter((n) => n.endsWith(".webp"));
+    const upload = async () => {
+      await page.getByTestId("avatar-file").setInputFiles(await photoWithGps());
+      await page.getByRole("dialog").getByRole("button", { name: "Save" }).click();
+      await expect(page.getByRole("dialog")).toBeHidden({ timeout: 15_000 });
+    };
+
+    await signInWithPassword(page, student.email, student.password);
+    await page.goto("/profile/edit");
+    await expect(page).toHaveURL(/\/settings\/profile$/);
+
+    await upload();
+    const first = await stored();
+    expect(first).toHaveLength(1);
+    await upload();
+    const second = await stored();
+    expect(second).toHaveLength(1);
+    expect(second[0]).not.toBe(first[0]);
+
+    await page.getByRole("button", { name: "Remove" }).click();
+    await expect(page.getByRole("button", { name: "Add a photo" })).toBeVisible();
+    expect(await stored()).toEqual([]);
+  });
+
   test("profile edit refuses a taken username with a named fix", async ({ page }) => {
     const a = await createStudent({ domain: "nutech.edu.pk", fullName: "Name Taker" });
     const b = await createStudent({ domain: "nutech.edu.pk", fullName: "Name Wanter" });

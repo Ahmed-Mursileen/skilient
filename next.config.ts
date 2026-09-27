@@ -13,6 +13,10 @@ const nextConfig: NextConfig = {
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },
+  async redirects() {
+    // Screen spec route note: old routes keep working. `edit` is a reserved username.
+    return [{ source: "/profile/edit", destination: "/settings/profile", permanent: true }];
+  },
 };
 
 export default withSentryConfig(nextConfig, {

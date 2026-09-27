@@ -291,3 +291,21 @@ Append-only. One dated entry per product decision, with the reason. Carried over
   same, only slower); the owner is emailed once per lock. Closing it needs a caller the
   database can trust without the service-role key (e.g. a Vault-held HMAC shared with
   the app) or Supabase's password verification hook (Team plan). Revisit before launch.
+- 2026-09-27 (phase 1 audit): Supabase Auth's per-IP limits can't see students' IPs.
+  Sign-up, sign-in, code checks, resets and the proxy's token refresh run on the
+  server, so Supabase counts Vercel's IPs, shared by every user. Passing the real IP
+  (`Sb-Forwarded-For`) needs the secret key, which CLAUDE.md bars from actions acting
+  for a user. PRD 5.2's "sign-in 30/h, sign-up 10/h per IP" can't simply move into the
+  app either: a campus shares one or a few public IPs, so 10 sign-ups an hour would
+  stall a signup drive in a single lab. Today these paths are held by Turnstile on
+  every sign-up, per-email limits on codes, resends and resets, Turnstile after 5
+  failures per account or IP, and 15-minute account locks after 10. Proposal: no hard
+  per-IP cap; raise Supabase's sign-up/sign-in, token-verification and token-refresh
+  limits (Auth → Rate Limits) well above the defaults, since they now meter our
+  servers, and raise the email limit once Resend is the SMTP sender. **Needs Ahmed's
+  OK.**
+- 2026-09-27 (phase 1 audit): `/profile/edit` redirects to `/settings/profile` (screen
+  spec route note). The `/projects` and `/startups` redirects to `/ventures` come with
+  ventures in phase 2. Image actions now log `orphan_left` when deleting the old file
+  fails, and an E2E test proves replace and remove leave no stray objects (5.4
+  done-when).
