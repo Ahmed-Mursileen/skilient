@@ -169,8 +169,8 @@ export async function setProfileImage(formData: FormData): Promise<ActionResult<
   }
 
   const previous = kind.data === "avatar" ? current.avatar_path : current.cover_path;
-  if (previous && previous !== path) await bucket.remove([previous]);
-  ctx.done("ok", { user_id: user.id, kind: kind.data });
+  const cleanup = previous && previous !== path ? await bucket.remove([previous]) : null;
+  ctx.done("ok", { user_id: user.id, kind: kind.data, orphan_left: Boolean(cleanup?.error) });
   return ok({ url: publicImageUrl(spec.bucket, path) });
 }
 
@@ -199,7 +199,7 @@ export async function removeProfileImage(formData: FormData): Promise<ActionResu
     ctx.done("error", { error_code: error?.code ?? "no_row_written", user_id: user.id });
     return fail("unavailable", "Couldn't remove your photo. Try again.", { requestId: ctx.requestId });
   }
-  if (previous) await supabase.storage.from(IMAGE_SPECS[kind.data].bucket).remove([previous]);
-  ctx.done("ok", { user_id: user.id, kind: kind.data });
+  const cleanup = previous ? await supabase.storage.from(IMAGE_SPECS[kind.data].bucket).remove([previous]) : null;
+  ctx.done("ok", { user_id: user.id, kind: kind.data, orphan_left: Boolean(cleanup?.error) });
   return ok(null);
 }

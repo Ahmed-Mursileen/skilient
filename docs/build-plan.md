@@ -37,7 +37,7 @@ Legend: 📖 = PRD files to read (in `docs/prd/`), ✅ = done-when checks.
 
 ✅ Two students at different universities sign up and onboard · neither can read the other's university data (pgTAP + E2E) · personal and non-university Google emails refused · sign out → sign in as another user shows zero residue
 
-*Status 2026-09-27: every box ticked, in three stacked PRs (slice 1 database, slice 2 auth, slice 3 onboarding and profiles). Done-when: two students (NUTECH and FAST) sign up through the UI and onboard (E2E); cross-university reads are refused in pgTAP (`05_profiles_rls`) and in E2E through the UI and the API; personal and non-university Google emails are refused by the hook (pgTAP `04_signup_gate`, E2E for the callback); zero residue after switching accounts, across tabs (E2E). Hosted-project settings still to do by hand are listed in the PRs. Only NUTECH's email domain is verified; the rest need checking before public launch.*
+*Status 2026-09-27: every box ticked, in three stacked PRs (slice 1 database, slice 2 auth, slice 3 onboarding and profiles). Done-when: two students (NUTECH and FAST) sign up through the UI and onboard (E2E); cross-university reads are refused in pgTAP (`05_profiles_rls`) and in E2E through the UI and the API; personal and non-university Google emails are refused by the hook (pgTAP `04_signup_gate`, E2E for the callback); zero residue after switching accounts, across tabs (E2E). Hosted-project settings still to do by hand are listed in the PRs. Only NUTECH's email domain is verified; the rest need checking before public launch. Friend and blocked viewers get their visibility tests in phase 3, when friendships and blocks exist (the helpers are stubs until then).*
 
 ## Phase 2 — Proof core
 
