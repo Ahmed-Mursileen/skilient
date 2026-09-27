@@ -9,10 +9,12 @@ const db = dbFrom(postgres(Deno.env.get("SUPABASE_DB_URL")!, { prepare: false, m
 
 Deno.serve(async (req) => {
   if (req.method !== "POST") return new Response(null, { status: 405 });
+  const auth = req.headers.get("authorization") ?? "";
+  if (!auth.startsWith("Bearer ")) return new Response(null, { status: 401 });
   const [row] = await db.query<{ secret: string }>(
     "select decrypted_secret as secret from vault.decrypted_secrets where name = 'github_worker_secret'",
   );
-  if (!row || !safeEqual(req.headers.get("authorization") ?? "", `Bearer ${row.secret}`)) {
+  if (!row || !safeEqual(auth, `Bearer ${row.secret}`)) {
     return new Response(null, { status: 401 });
   }
   let cfg;
