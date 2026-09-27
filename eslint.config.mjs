@@ -12,6 +12,7 @@ export const SERVICE_ROLE_ALLOWED = [
   "lib/jobs/**",
   "lib/billing/**",
   "app/api/webhooks/**",
+  "app/api/github/webhook/**",
   "app/api/jobs/**",
 ];
 

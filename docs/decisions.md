@@ -309,3 +309,43 @@ Append-only. One dated entry per product decision, with the reason. Carried over
   ventures in phase 2. Image actions now log `orphan_left` when deleting the old file
   fails, and an E2E test proves replace and remove leave no stray objects (5.4
   done-when).
+- 2026-09-27 (phase 2): GitHub identity binding (PRD 5.5 P0) runs through a ticket. The
+  callback checks `state` against the signed-in student, stores GitHub's one-time code
+  in a ticket under the student's own `auth.uid()` (`start_github_link`), and calls the
+  `github-link` Edge Function with only the ticket id. The function claims the ticket
+  once, exchanges the code with GitHub, reads `GET /user`, and records the numeric
+  GitHub id GitHub returned. The browser never names a GitHub account, and the Next app
+  never holds the App's client secret or private key: those are Supabase Edge Function
+  secrets. A GitHub account already linked to someone else goes to
+  `github_link_clashes` (trust reviewers on two-factor); switching to a different
+  GitHub account needs a disconnect first.
+- 2026-09-27 (phase 2): The GitHub Edge Functions connect to Postgres directly
+  (`SUPABASE_DB_URL`, postgres.js) instead of the Data API, so pgmq, Vault and the
+  `private` schema stay unexposed. Neither uses the gateway's JWT check: `github-link`
+  trusts only the ticket, and `github-worker` only a bearer secret that the migration
+  generates into Vault (never in the repo). pg_cron wakes the worker each minute while
+  the queue has work, which needs a Vault secret `project_url` set once by hand. Their
+  shared code lives in `supabase/functions/_shared/github/` (not `lib/github/` as the
+  PRD's build note says) because Edge Functions bundle only what's under
+  `supabase/functions`. Vitest runs it from Node against the local database with a
+  fake GitHub (`pnpm test:worker`, in CI after pgTAP).
+- 2026-09-27 (phase 2): GitHub data model: installations are many-to-many with
+  students, since a club's organisation installation can serve several of them.
+  Repository metadata is shared, with a per-student row for kind and exclusion.
+  Repository names, private ones included, are owner-only. The GitHub login is readable
+  by anyone who can read the student's full profile, for the profile's GitHub link (shown
+  from slice 4). User tokens (8 hours, refresh tokens 6 months) live in Vault; a refused
+  refresh marks the link revoked (evidence stays, syncing stops until reconnect).
+  Disconnect deletes the link, installations and repository rows; the worker revokes the
+  grant at GitHub, then deletes the Vault secrets. Evidence rules for disconnect come
+  with the evidence tables (slice 3).
+- 2026-09-27 (phase 2): The webhook route stays at `/api/github/webhook` (setup checklist)
+  and is added to the service-role allowlist, since a webhook acts for no user. It checks
+  the signature on the raw body, trims each delivery to ids and flags (no commit
+  messages, emails, file names or other people's logins), stores it once per delivery id
+  (a replay is a no-op) and queues it. Deliveries are purged after 30 days (PRD 10: logs 30
+  days). `pg_net` is installed in the `extensions` schema (advisor lint 0014).
+- 2026-09-27 (phase 2): CI now also runs the Edge Functions (a boot check) and deploys
+  them on merge to `main` (`supabase functions deploy --use-api`). The
+  `SUPABASE_ACCESS_TOKEN` secret must be allowed to deploy Edge Functions. The Vercel app
+  needs a new `GITHUB_APP_SLUG` for install links.

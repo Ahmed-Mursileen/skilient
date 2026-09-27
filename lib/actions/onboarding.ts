@@ -140,11 +140,12 @@ export async function saveProfileStep(formData: FormData): Promise<ActionResult>
   return advance(ctx, supabase, userId, 2, {});
 }
 
-// Step 3: GitHub (skippable; the App arrives in phase 2)
+// Step 3: GitHub (skippable; the choice is only a note, the link itself lives in github_accounts)
 export async function saveGithubStep(formData: FormData): Promise<ActionResult> {
   const { ctx, supabase, userId } = await begin("onboarding.github");
   if (!userId) return noSession();
-  const choice = formText(formData, "choice") === "later" ? "later" : "skipped";
+  const raw = formText(formData, "choice");
+  const choice = raw === "connected" || raw === "later" ? raw : "skipped";
   return advance(ctx, supabase, userId, 3, { github: choice });
 }
 

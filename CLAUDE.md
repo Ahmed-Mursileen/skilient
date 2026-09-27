@@ -82,3 +82,8 @@ Next.js 16 differs from older versions (`proxy.ts`, not `middleware.ts`; async `
 - Identity on the client: `useCurrentUser()` from `components/providers/current-user-provider.tsx`; sign-out goes through `components/auth/sign-out-button.tsx` (clears state in every tab).
 - Security helpers: `lib/security/{turnstile,hibp,hash,rate-limit,request-meta,headers}.ts`; images: `lib/images/reencode.ts`.
 - E2E fixtures: `tests/e2e/support.ts` (Auth admin API on the local stack, Mailpit reader, TOTP).
+
+## Code map (phase 2)
+
+- GitHub: `supabase/migrations/*_github_connect.sql` (accounts, installations, repos, sync jobs, webhook deliveries, pgmq queue `github_jobs`, cron wake). Edge Functions `supabase/functions/github-link` (ticket → identity binding) and `github-worker` (queue stages); their logic is in `supabase/functions/_shared/github/` (web APIs only, `.ts` imports) and is tested from Node by `pnpm test:worker` against the local DB with a fake GitHub.
+- App side: `/api/github/callback` (state check → ticket → `github-link`), `/api/github/webhook` (signature, trim, record once), `lib/actions/github.ts`, `lib/data/github.ts`, `components/github/*`, Settings → GitHub.

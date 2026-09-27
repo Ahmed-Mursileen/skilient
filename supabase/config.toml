@@ -399,6 +399,15 @@ deno_version = 2
 # [edge_runtime.secrets]
 # secret_key = "env(SECRET_VALUE)"
 
+# GitHub Edge Functions (PRD 5.5). Neither uses the gateway's JWT check: github-link trusts
+# only the ticket a signed-in student wrote, github-worker only its Vault-held bearer
+# secret. Their GitHub App secrets are set with `supabase secrets set` (see decisions.md).
+[functions.github-link]
+verify_jwt = false
+
+[functions.github-worker]
+verify_jwt = false
+
 [analytics]
 enabled = true
 port = 54327

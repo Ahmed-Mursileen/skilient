@@ -43,7 +43,7 @@ Legend: 📖 = PRD files to read (in `docs/prd/`), ✅ = done-when checks.
 
 📖 `05-05-github-skill-extraction-and-verification.md`, `05-07-ventures-and-join-flows.md`, `05-14-contribution-log.md`, `05-15-venture-lifecycle.md`, `05-28-…` (Ventures section)
 
-- [ ] GitHub App: install/callback with server-side identity binding; tokens in Vault; webhook route
+- [x] GitHub App: install/callback with server-side identity binding; tokens in Vault; webhook route — *ticket-based binding in the `github-link` Edge Function; webhooks stored once per delivery; discover and classify stages run (decisions.md)*
 - [ ] pgmq pipeline (discover → classify → harvest → extract → prs → level); taxonomy v1 YAML + detectors with unit tests
 - [ ] L1–L2 levels, anti-gaming holds, skill drawer, Settings → GitHub
 - [ ] Ventures: create, roles, visibility, invites, apply with questions, max 6 members, lifecycle state machine, deliverables (members only), updates, follows

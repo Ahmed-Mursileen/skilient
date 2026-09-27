@@ -50,11 +50,32 @@ jobs:
 
       # Mailpit stays on: the auth E2E tests read signup codes and reset links from it.
       - name: Start local Supabase
-        run: pnpm exec supabase start -x studio,imgproxy,logflare,vector,supavisor,edge-runtime
+        run: pnpm exec supabase start -x studio,imgproxy,logflare,vector,supavisor
       - name: Rebuild the database from migrations + seed
         run: pnpm exec supabase db reset
       - name: pgTAP
         run: pnpm exec supabase test db
+      - name: GitHub worker against the database (fake GitHub)
+        run: pnpm test:worker
+      # The GitHub Edge Functions boot (imports resolve) and refuse strangers. They have no
+      # GitHub App secrets here, so the link function reports it isn't configured. Their
+      # database code is covered by test:worker above (the local edge runtime can't resolve
+      # the database container's hostname).
+      - name: Edge Functions boot
+        run: |
+          # The first request boots the worker (and fetches its npm imports), so allow a minute.
+          for i in $(seq 1 30); do
+            worker=$(curl -s -o /tmp/worker.txt -w '%{http_code}' --max-time 30 -X POST http://127.0.0.1:54321/functions/v1/github-worker || true)
+            [ "$worker" = 401 ] && break
+            sleep 2
+          done
+          link=$(curl -s --max-time 30 -X POST http://127.0.0.1:54321/functions/v1/github-link -H 'content-type: application/json' -d '{}' || true)
+          echo "github-worker: $worker $(cat /tmp/worker.txt)"
+          echo "github-link: $link"
+          if [ "$worker" != 401 ] || ! echo "$link" | grep -q '"not_configured"'; then
+            docker logs supabase_edge_runtime_skilient 2>&1 | tail -60
+            exit 1
+          fi
       - name: Supabase advisors (security + performance, fail on warn)
         run: pnpm exec supabase db advisors --local --type all --fail-on warn
       - name: Generated types are up to date
@@ -71,6 +92,12 @@ jobs:
           echo "E2E_SUPABASE_URL=$API_URL" >> "$GITHUB_ENV"
           echo "E2E_SUPABASE_SECRET_KEY=$SECRET_KEY" >> "$GITHUB_ENV"
           echo "E2E_MAILPIT_URL=http://127.0.0.1:54324" >> "$GITHUB_ENV"
+          # The webhook route acts for no user; locally it uses the stack's dev secret key.
+          echo "SUPABASE_SERVICE_ROLE_KEY=$SECRET_KEY" >> "$GITHUB_ENV"
+          # Test-only GitHub App identity: links point at github.com, which the E2E test stubs.
+          echo "GITHUB_APP_SLUG=skilient-e2e" >> "$GITHUB_ENV"
+          echo "GITHUB_APP_CLIENT_ID=Iv1.e2e" >> "$GITHUB_ENV"
+          echo "GITHUB_WEBHOOK_SECRET=e2e-webhook-signing-value" >> "$GITHUB_ENV"
       - name: Build (gallery enabled)
         run: pnpm build
         env:
@@ -143,7 +170,7 @@ jobs:
           retention-days: 14
 
   migrate-production:
-    name: Apply migrations to Supabase (main only)
+    name: Apply migrations and functions to Supabase (main only)
     # Runs only after every gate above is green on the merged commit.
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: [checks, database-and-e2e, gitleaks, audit]
@@ -176,6 +203,9 @@ jobs:
         run: pnpm exec supabase db push --linked --dry-run
       - name: Apply migrations
         run: pnpm exec supabase db push --linked
+      # GitHub App secrets are set on the project once by hand (decisions.md); this only ships code.
+      - name: Deploy Edge Functions
+        run: pnpm exec supabase functions deploy --project-ref "$SUPABASE_PROJECT_REF" --use-api
       - name: Supabase advisors on the live project (report)
         run: pnpm exec supabase db advisors --linked --type all --level warn
         continue-on-error: true

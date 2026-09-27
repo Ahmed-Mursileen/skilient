@@ -15,6 +15,7 @@ export const NONCE_HEADER = "x-nonce";
 
 export const TURNSTILE_ORIGIN = "https://challenges.cloudflare.com";
 const GOOGLE_ACCOUNTS_ORIGIN = "https://accounts.google.com";
+const GITHUB_ORIGIN = "https://github.com";
 
 export interface CspOptions {
   nonce: string;
@@ -54,8 +55,9 @@ export function buildCsp({ nonce, supabaseUrl, sentryDsn, dev = false }: CspOpti
     "worker-src": ["'self'", "blob:"],
     "object-src": ["'none'"],
     "base-uri": ["'self'"],
-    // Google sign-in without JavaScript posts the form, then redirects through Supabase to Google.
-    "form-action": ["'self'", supabase, GOOGLE_ACCOUNTS_ORIGIN],
+    // Google sign-in without JavaScript posts the form, then redirects through Supabase to Google;
+    // "Connect GitHub" redirects to the GitHub App's install or authorise page.
+    "form-action": ["'self'", supabase, GOOGLE_ACCOUNTS_ORIGIN, GITHUB_ORIGIN],
     "frame-ancestors": ["'none'"],
   };
 

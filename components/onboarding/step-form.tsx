@@ -2,7 +2,7 @@
 
 import { useState, useTransition, type FormEvent, type ReactNode } from "react";
 import { FormAlert } from "@/components/auth/form-alert";
-import { Button } from "@/components/ui";
+import { Button, type ButtonVariant } from "@/components/ui";
 import type { ActionError, ActionResult } from "@/lib/actions/result";
 
 /**
@@ -12,11 +12,13 @@ import type { ActionError, ActionResult } from "@/lib/actions/result";
 export function StepForm({
   action,
   submitLabel = "Continue",
+  submitVariant = "primary",
   secondary,
   children,
 }: {
   action: (formData: FormData) => Promise<ActionResult>;
   submitLabel?: string;
+  submitVariant?: ButtonVariant;
   secondary?: ReactNode;
   children: (errors: Record<string, string>) => ReactNode;
 }) {
@@ -39,7 +41,7 @@ export function StepForm({
       {children(error?.fields ?? {})}
       <div className="flex flex-col-reverse gap-3 pt-2 sm:flex-row sm:justify-end">
         {secondary}
-        <Button type="submit" size="lg" loading={pending}>
+        <Button type="submit" size="lg" variant={submitVariant} loading={pending}>
           {submitLabel}
         </Button>
       </div>

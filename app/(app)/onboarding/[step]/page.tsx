@@ -5,7 +5,9 @@ import { onboardingStepNumber } from "@/lib/auth/gate";
 import type { UniversityRef } from "@/lib/auth/email-domain";
 import { emailDomain } from "@/lib/auth/email-domain";
 import { getCurrentUser } from "@/lib/auth/current-user";
+import { getGithubOverview, GITHUB_OUTCOMES } from "@/lib/data/github";
 import { getClassmates } from "@/lib/data/profiles";
+import { githubApp } from "@/lib/github/config";
 import type { LookingFor } from "@/lib/profile/options";
 import { createClient } from "@/lib/supabase/server";
 import { GithubStep, LookingForStep, PeopleStep, ProfileStep, SkillsStep, UniversityStep } from "./steps";
@@ -22,8 +24,9 @@ const STEPS = {
   6: { title: "Find your people", why: "So your feed isn't empty." },
 } as const;
 
-export default async function OnboardingStepPage({ params }: PageProps<"/onboarding/[step]">) {
+export default async function OnboardingStepPage({ params, searchParams }: PageProps<"/onboarding/[step]">) {
   const { step: slug } = await params;
+  const query = await searchParams;
   const step = onboardingStepNumber(slug) as keyof typeof STEPS | null;
   if (!step) notFound();
 
@@ -61,7 +64,9 @@ export default async function OnboardingStepPage({ params }: PageProps<"/onboard
   } else if (step === 2) {
     body = <ProfileStep fullName={user.fullName} username={profile?.username ?? null} bio={profile?.bio ?? null} avatarUrl={user.avatarUrl} />;
   } else if (step === 3) {
-    body = <GithubStep />;
+    const { account, sync } = await getGithubOverview(user.id, false);
+    const outcome = typeof query.github === "string" ? (GITHUB_OUTCOMES[query.github] ?? null) : null;
+    body = <GithubStep configured={githubApp() !== null} account={account} sync={sync} outcome={outcome} />;
   } else if (step === 4) {
     body = <SkillsStep />;
   } else if (step === 5) {
