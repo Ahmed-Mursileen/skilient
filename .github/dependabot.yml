@@ -16,3 +16,7 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    # One PR for all action bumps: they share lines in ci.yml and conflict when split.
+    groups:
+      github-actions:
+        patterns: ["*"]
