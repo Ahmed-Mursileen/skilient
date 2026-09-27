@@ -109,8 +109,11 @@ test.describe("GitHub connection", () => {
     await expect(page.getByText(`${login}/secret-robot`)).toBeVisible();
     await axe(page, "settings/github (connected)");
 
-    await page.getByRole("switch", { name: "club/website" }).click();
+    const exclude = page.getByRole("switch", { name: "club/website" });
+    await exclude.click();
     await expect(page.getByText("Excluded")).toBeVisible();
+    // The switch flips at once and stays disabled until the save finishes; reload after that.
+    await expect(exclude).toBeEnabled();
     await page.reload();
     await expect(page.getByRole("switch", { name: "club/website" })).not.toBeChecked();
 
