@@ -134,11 +134,17 @@ export function totp(secret: string, now = Date.now()): string {
 
 // --- UI helpers ------------------------------------------------------------------------
 
+/**
+ * Signs in through the form and waits until the server action has redirected away from
+ * /signin (to the feed, onboarding, the agreement or the two-factor step), so a following
+ * page.goto() can't cancel the sign-in mid-flight.
+ */
 export async function signInWithPassword(page: Page, email: string, password: string) {
   await page.goto("/signin");
   await page.getByLabel("University email").fill(email);
   await page.getByLabel("Password", { exact: true }).fill(password);
   await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  await page.waitForURL((url) => url.pathname !== "/signin");
 }
 
 /** Collects CSP violations and page errors so a test can assert there were none. */

@@ -284,3 +284,10 @@ Append-only. One dated entry per product decision, with the reason. Carried over
   Skills and Activity are nested segments with teaching empty states until their phases.
   Add friend, Message and Report arrive with phase 3. Opening someone else's profile
   counts toward PRD 10's 300 profiles a day.
+- 2026-09-27 (phase 1): Known limitation: `signin_failed()` is callable over the API by
+  signed-out visitors (the sign-in action runs as them), so a script that knows a
+  student's email can keep that account locked in 15-minute windows without passing
+  Turnstile. This is inherent to any lockout (ten wrong passwords in the form do the
+  same, only slower); the owner is emailed once per lock. Closing it needs a caller the
+  database can trust without the service-role key (e.g. a Vault-held HMAC shared with
+  the app) or Supabase's password verification hook (Team plan). Revisit before launch.
