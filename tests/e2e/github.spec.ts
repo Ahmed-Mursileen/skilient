@@ -33,7 +33,7 @@ test.describe("GitHub connection", () => {
     const student = await createStudent({ domain: "nutech.edu.pk", fullName: "Gul GitHub" });
     await signInWithPassword(page, student.email, student.password);
     await page.goto("/settings");
-    await page.getByRole("link", { name: /GitHub/ }).click();
+    await page.getByRole("main").getByRole("link", { name: /^GitHub/ }).click();
     await expect(page.getByRole("heading", { level: 1, name: "GitHub" })).toBeVisible();
     await axe(page, "settings/github (not connected)");
 
