@@ -10,16 +10,18 @@ Legend: 📖 = PRD files to read (in `docs/prd/`), ✅ = done-when checks.
 
 📖 `07-architecture-and-tech-stack.md`, `09-design-system-and-ux.md`, `10-non-functional-requirements.md` (Performance, Observability, Security), `06-data-model.md` (Build: database workflow), `docs/setup-checklist.md`
 
-- [ ] Next.js 16 app, TS strict, pnpm, ESLint rules (no service-role imports outside allowed folders, no `getSession()` in server code)
-- [ ] Tailwind v4 tokens from PRD 9.2–9.4 (`app/styles/tokens.css` + `@theme inline`), fonts via `next/font`, ThemeProvider (default `system`)
-- [ ] `brand/` SVGs copied to `public/brand/`; favicon and app icon wired
-- [ ] Supabase project (Mumbai) linked; `supabase/migrations/`, `seed.sql`, pgTAP harness; Vercel project pinned to `bom1`
-- [ ] CI: typecheck, lint, Vitest, pgTAP on fresh `db reset`, gitleaks (blocking), `npm audit` (critical), Lighthouse CI + size-limit (report only)
-- [ ] Sentry (client/server/edge), JSON logger with `request_id`, `/api/health`, `job_runs` table
-- [ ] `components/ui/` primitives + dev-only UI gallery in both themes
-- [ ] `.env.example` with names only
+- [x] Next.js 16 app, TS strict, pnpm, ESLint rules (no service-role imports outside allowed folders, no `getSession()` in server code)
+- [x] Tailwind v4 tokens from PRD 9.2–9.4 (`app/styles/tokens.css` + `@theme inline`), fonts via `next/font`, ThemeProvider (default `system`)
+- [x] `brand/` SVGs copied to `public/brand/`; favicon and app icon wired
+- [ ] Supabase project (Mumbai) linked; `supabase/migrations/`, `seed.sql`, pgTAP harness; Vercel project pinned to `bom1` — *repo side done (migrations, seed, pgTAP, `vercel.json` → `bom1`); linking the hosted Supabase project and the Vercel project needs Ahmed (setup checklist)*
+- [ ] CI: typecheck, lint, Vitest, pgTAP on fresh `db reset`, gitleaks (blocking), `npm audit` (critical), Lighthouse CI + size-limit (report only) — *`.github/workflows/ci.yml` written and every step passes locally; tick once it's green on the first PR*
+- [x] Sentry (client/server/edge), JSON logger with `request_id`, `/api/health`, `job_runs` table
+- [x] `components/ui/` primitives + dev-only UI gallery in both themes
+- [x] `.env.example` with names only
 
 ✅ A fresh clone + `supabase db reset` rebuilds everything · preview deploy green · every primitive renders in light and dark · axe-core clean on the gallery
+
+*Status 2026-09-27: db reset + pgTAP (16 tests) pass locally; every primitive renders in both themes and axe-core is clean on desktop and phone (20 E2E tests); preview deploy waits on the Vercel project.*
 
 ## Phase 1 — Identity
 
