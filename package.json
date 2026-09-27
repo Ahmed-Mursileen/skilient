@@ -15,7 +15,8 @@
     "db:reset": "supabase db reset",
     "db:test": "supabase test db",
     "db:types": "supabase gen types typescript --local > types/database.ts",
-    "size": "size-limit"
+    "size": "size-limit",
+    "universities:sync": "node scripts/universities.mjs --write"
   },
   "dependencies": {
     "@phosphor-icons/react": "2.1.10",

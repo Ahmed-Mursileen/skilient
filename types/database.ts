@@ -23,7 +23,39 @@ export type Database = {
           }
         },"public": {
           Tables: {
-            "job_runs": {
+            "agreement_acceptances": {
+                  Row: {
+                    "accepted_at": string,"ip_hash": string | null,"user_id": string,"version": number
+                  }
+                  Insert: {
+                    "accepted_at"?: string,"ip_hash"?: string | null,"user_id": string,"version": number
+                  }
+                  Update: {
+                    "accepted_at"?: string,"ip_hash"?: string | null,"user_id"?: string,"version"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "agreement_acceptances_version_fkey"
+      columns: ["version"]
+isOneToOne: false
+      referencedRelation: "agreement_versions"
+      referencedColumns: ["version"]
+    }
+                  ]
+                },"agreement_versions": {
+                  Row: {
+                    "body_md": string,"created_at": string,"published_at": string | null,"summary_md": string,"title": string,"version": number
+                  }
+                  Insert: {
+                    "body_md": string,"created_at"?: string,"published_at"?: string | null,"summary_md"?: string,"title": string,"version": number
+                  }
+                  Update: {
+                    "body_md"?: string,"created_at"?: string,"published_at"?: string | null,"summary_md"?: string,"title"?: string,"version"?: number
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"job_runs": {
                   Row: {
                     "created_at": string,"error": string | null,"finished_at": string | null,"id": string,"job": string,"meta": NonNullable<Json>,"rows": number | null,"started_at": string,"status": Database["public"]['Enums']["job_run_status"]
                   }
@@ -36,24 +68,200 @@ export type Database = {
                   Relationships: [
                     
                   ]
+                },"onboarding_state": {
+                  Row: {
+                    "completed_at": string | null,"created_at": string,"data": NonNullable<Json>,"role": Database["public"]['Enums']["account_role"],"step": number,"updated_at": string,"user_id": string
+                  }
+                  Insert: {
+                    "completed_at"?: string | null,"created_at"?: string,"data"?: NonNullable<Json>,"role"?: Database["public"]['Enums']["account_role"],"step"?: number,"updated_at"?: string,"user_id": string
+                  }
+                  Update: {
+                    "completed_at"?: string | null,"created_at"?: string,"data"?: NonNullable<Json>,"role"?: Database["public"]['Enums']["account_role"],"step"?: number,"updated_at"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"personal_email_domains": {
+                  Row: {
+                    "created_at": string,"domain": string
+                  }
+                  Insert: {
+                    "created_at"?: string,"domain": string
+                  }
+                  Update: {
+                    "created_at"?: string,"domain"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"profiles": {
+                  Row: {
+                    "avatar_path": string | null,"bio": string | null,"campus": string | null,"cover_path": string | null,"created_at": string,"department": string | null,"full_name": string,"graduation_year": number | null,"looking_for": (Database["public"]['Enums']["looking_for_option"])[],"onboarding_complete": boolean,"programme": string | null,"recruiter_visible": boolean,"role": Database["public"]['Enums']["account_role"],"university_id": string | null,"updated_at": string,"user_id": string,"username": string | null,"visibility": Database["public"]['Enums']["profile_visibility"]
+                  }
+                  Insert: {
+                    "avatar_path"?: string | null,"bio"?: string | null,"campus"?: string | null,"cover_path"?: string | null,"created_at"?: string,"department"?: string | null,"full_name": string,"graduation_year"?: number | null,"looking_for"?: (Database["public"]['Enums']["looking_for_option"])[],"onboarding_complete"?: boolean,"programme"?: string | null,"recruiter_visible"?: boolean,"role"?: Database["public"]['Enums']["account_role"],"university_id"?: string | null,"updated_at"?: string,"user_id": string,"username"?: string | null,"visibility"?: Database["public"]['Enums']["profile_visibility"]
+                  }
+                  Update: {
+                    "avatar_path"?: string | null,"bio"?: string | null,"campus"?: string | null,"cover_path"?: string | null,"created_at"?: string,"department"?: string | null,"full_name"?: string,"graduation_year"?: number | null,"looking_for"?: (Database["public"]['Enums']["looking_for_option"])[],"onboarding_complete"?: boolean,"programme"?: string | null,"recruiter_visible"?: boolean,"role"?: Database["public"]['Enums']["account_role"],"university_id"?: string | null,"updated_at"?: string,"user_id"?: string,"username"?: string | null,"visibility"?: Database["public"]['Enums']["profile_visibility"]
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "profiles_university_id_fkey"
+      columns: ["university_id"]
+isOneToOne: false
+      referencedRelation: "universities"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"profiles_public_card": {
+                  Row: {
+                    "department": string | null,"full_name": string,"graduation_year": number | null,"user_id": string,"username": string | null
+                  }
+                  Insert: {
+                    "department"?: string | null,"full_name": string,"graduation_year"?: number | null,"user_id": string,"username"?: string | null
+                  }
+                  Update: {
+                    "department"?: string | null,"full_name"?: string,"graduation_year"?: number | null,"user_id"?: string,"username"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "profiles_public_card_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: true
+      referencedRelation: "profiles"
+      referencedColumns: ["user_id"]
+    }
+                  ]
+                },"security_events": {
+                  Row: {
+                    "created_at": string,"id": string,"ip_hash": string | null,"kind": string,"meta": NonNullable<Json>,"user_agent": string | null,"user_id": string
+                  }
+                  Insert: {
+                    "created_at"?: string,"id"?: string,"ip_hash"?: string | null,"kind": string,"meta"?: NonNullable<Json>,"user_agent"?: string | null,"user_id": string
+                  }
+                  Update: {
+                    "created_at"?: string,"id"?: string,"ip_hash"?: string | null,"kind"?: string,"meta"?: NonNullable<Json>,"user_agent"?: string | null,"user_id"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"staff_roles": {
+                  Row: {
+                    "granted_at": string,"granted_by": string | null,"role": Database["public"]['Enums']["staff_role"],"user_id": string
+                  }
+                  Insert: {
+                    "granted_at"?: string,"granted_by"?: string | null,"role": Database["public"]['Enums']["staff_role"],"user_id": string
+                  }
+                  Update: {
+                    "granted_at"?: string,"granted_by"?: string | null,"role"?: Database["public"]['Enums']["staff_role"],"user_id"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"universities": {
+                  Row: {
+                    "city": string | null,"created_at": string,"id": string,"name": string,"province": string | null,"slug": string,"updated_at": string
+                  }
+                  Insert: {
+                    "city"?: string | null,"created_at"?: string,"id"?: string,"name": string,"province"?: string | null,"slug": string,"updated_at"?: string
+                  }
+                  Update: {
+                    "city"?: string | null,"created_at"?: string,"id"?: string,"name"?: string,"province"?: string | null,"slug"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"university_domains": {
+                  Row: {
+                    "created_at": string,"domain": string,"kind": Database["public"]['Enums']["domain_kind"],"source": string,"university_id": string
+                  }
+                  Insert: {
+                    "created_at"?: string,"domain": string,"kind"?: Database["public"]['Enums']["domain_kind"],"source"?: string,"university_id": string
+                  }
+                  Update: {
+                    "created_at"?: string,"domain"?: string,"kind"?: Database["public"]['Enums']["domain_kind"],"source"?: string,"university_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "university_domains_university_id_fkey"
+      columns: ["university_id"]
+isOneToOne: false
+      referencedRelation: "universities"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"user_devices": {
+                  Row: {
+                    "device_hash": string,"first_seen_at": string,"last_seen_at": string,"user_agent": string | null,"user_id": string
+                  }
+                  Insert: {
+                    "device_hash": string,"first_seen_at"?: string,"last_seen_at"?: string,"user_agent"?: string | null,"user_id": string
+                  }
+                  Update: {
+                    "device_hash"?: string,"first_seen_at"?: string,"last_seen_at"?: string,"user_agent"?: string | null,"user_id"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
                 }
           }
           Views: {
             [_ in never]: never
           }
           Functions: {
-            "health_check":
+            "complete_onboarding":
 { Args: Record<PropertyKey, never>; Returns: boolean
+                           },
+"get_profile_card":
+{ Args: { "p_username": string }; Returns: {
+              "department": string,"full_name": string,"graduation_year": number,"username": string
+            }[]
+                           },
+"health_check":
+{ Args: Record<PropertyKey, never>; Returns: boolean
+                           },
+"hook_before_user_created":
+{ Args: { "event": Json }; Returns: Json
+                           },
+"is_staff":
+{ Args: { "p_role"?: Database["public"]['Enums']["staff_role"] }; Returns: boolean
                            },
 "job_run_finish":
 { Args: { "p_error"?: string,"p_id": string,"p_rows"?: number,"p_status": Database["public"]['Enums']["job_run_status"] }; Returns: undefined
                            },
 "job_run_start":
 { Args: { "p_job": string,"p_meta"?: Json }; Returns: string
+                           },
+"log_security_event":
+{ Args: { "p_ip_hash": string,"p_kind": string,"p_user_agent": string }; Returns: undefined
+                           },
+"my_gate_state":
+{ Args: Record<PropertyKey, never>; Returns: Json
+                           },
+"rate_limit":
+{ Args: { "p_key": string,"p_limit": number,"p_window_seconds": number }; Returns: boolean
+                           },
+"record_sign_in":
+{ Args: { "p_device_hash": string,"p_ip_hash": string,"p_method": string,"p_user_agent": string }; Returns: Json
+                           },
+"security_not_me":
+{ Args: { "p_token": string }; Returns: Json
+                           },
+"set_my_university":
+{ Args: { "p_university_id": string }; Returns: boolean
+                           },
+"signin_failed":
+{ Args: { "p_email": string,"p_ip_hash": string }; Returns: Json
+                           },
+"signin_status":
+{ Args: { "p_email": string,"p_ip_hash": string }; Returns: Json
+                           },
+"username_available":
+{ Args: { "p_username": string }; Returns: boolean
                            }
           }
           Enums: {
-            "job_run_status": "running"|"succeeded"|"failed"
+            "account_role": "student"|"faculty"|"recruiter"|"university_admin","domain_kind": "student"|"faculty"|"both","job_run_status": "running"|"succeeded"|"failed","looking_for_option": "internships"|"jobs"|"teammates"|"competitions"|"learning","profile_visibility": "friends"|"university"|"global","staff_role": "moderator"|"trust_reviewer"|"accounts"|"super_admin"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -173,7 +381,7 @@ export const Constants = {
           }
         },"public": {
           Enums: {
-            "job_run_status": ["running", "succeeded", "failed"]
+            "account_role": ["student", "faculty", "recruiter", "university_admin"],"domain_kind": ["student", "faculty", "both"],"job_run_status": ["running", "succeeded", "failed"],"looking_for_option": ["internships", "jobs", "teammates", "competitions", "learning"],"profile_visibility": ["friends", "university", "global"],"staff_role": ["moderator", "trust_reviewer", "accounts", "super_admin"]
           }
         }
 } as const
