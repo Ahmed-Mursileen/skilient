@@ -61,9 +61,19 @@ jobs:
       # GitHub App secrets here, so the link function reports it isn't configured.
       - name: Edge Functions boot
         run: |
-          test "$(curl -s -o /dev/null -w '%{http_code}' -X POST http://127.0.0.1:54321/functions/v1/github-worker)" = 401
-          curl -s -X POST http://127.0.0.1:54321/functions/v1/github-link -H 'content-type: application/json' -d '{}' \
-            | grep -q '"not_configured"'
+          # The first request boots the worker (and fetches its npm imports), so allow a minute.
+          for i in $(seq 1 30); do
+            worker=$(curl -s -o /tmp/worker.txt -w '%{http_code}' --max-time 30 -X POST http://127.0.0.1:54321/functions/v1/github-worker || true)
+            [ "$worker" = 401 ] && break
+            sleep 2
+          done
+          link=$(curl -s --max-time 30 -X POST http://127.0.0.1:54321/functions/v1/github-link -H 'content-type: application/json' -d '{}' || true)
+          echo "github-worker: $worker $(cat /tmp/worker.txt)"
+          echo "github-link: $link"
+          if [ "$worker" != 401 ] || ! echo "$link" | grep -q '"not_configured"'; then
+            docker logs supabase_edge_runtime_skilient 2>&1 | tail -60
+            exit 1
+          fi
       - name: Supabase advisors (security + performance, fail on warn)
         run: pnpm exec supabase db advisors --local --type all --fail-on warn
       - name: Generated types are up to date
