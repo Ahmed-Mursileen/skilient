@@ -160,3 +160,11 @@ Append-only. One dated entry per product decision, with the reason. Carried over
   executable by anon or authenticated. Kept despite the skill: uuid v4
   primary keys (`gen_random_uuid()`, PRD 6 convention; Postgres 17 has no
   built-in uuidv7) and Postgres enums (PRD 6).
+- 2026-09-27: Design-gate skills vendored in `.claude/skills/` via `npx
+  skills add` (pinned in `skills-lock.json`): `impeccable` (Gate A critique,
+  Gate B audit/polish) and `design-taste-frontend` from taste-skill (Gate A
+  pre-flight). Installed skill-only: impeccable's edit hooks are off (enable
+  with `impeccable hooks on` if wanted); its launcher downloads a
+  checksum-verified engine binary from GitHub releases on first use.
+  taste-skill targets landing pages and marketing surfaces, so for app screens
+  only its pre-flight checklist applies, as the screen spec requires.

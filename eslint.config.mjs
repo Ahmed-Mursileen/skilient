@@ -62,6 +62,8 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     "types/database.ts",
     "supabase/functions/**",
+    // Vendored agent skills (third-party); not app code.
+    ".claude/**",
   ]),
   {
     files: ["**/*.{ts,tsx,js,mjs}"],
