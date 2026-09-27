@@ -50,10 +50,12 @@ create index job_runs_running_idx on public.job_runs (started_at) where status =
 alter table public.job_runs enable row level security;
 revoke all on table public.job_runs from anon, authenticated;
 
+-- security invoker: the only caller is service_role, which already bypasses RLS, so
+-- definer rights would add risk (callable-by-PUBLIC endpoint in an exposed schema) for nothing.
 create or replace function public.job_run_start(p_job text, p_meta jsonb default '{}'::jsonb)
 returns uuid
 language plpgsql
-security definer
+security invoker
 set search_path = ''
 as $$
 declare
@@ -74,7 +76,7 @@ create or replace function public.job_run_finish(
 )
 returns void
 language plpgsql
-security definer
+security invoker
 set search_path = ''
 as $$
 begin

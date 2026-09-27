@@ -139,3 +139,24 @@ Append-only. One dated entry per product decision, with the reason. Carried over
 - 2026-09-27 (phase 0): gitleaks runs from its pinned Docker image
   (`zricethezav/gitleaks:v8.28.0`), not gitleaks-action, which needs a paid
   licence for organisation-owned repos.
+- 2026-09-27: Supabase CLI runs only in CI (Ahmed's call). Every PR:
+  local stack → db reset → pgTAP → stale types → `db advisors --fail-on
+  warn`. Merge to `main`: link with `SUPABASE_ACCESS_TOKEN` /
+  `SUPABASE_PROJECT_REF` / `SUPABASE_DB_PASSWORD` and `supabase db push`,
+  after every gate passes; runs on main are never cancelled mid-push. For
+  now this pushes to the single hosted project; the PRD's staging project
+  and per-PR branches come later. Vercel builds `main` in parallel, so an app
+  change that needs a new column should land after its migration.
+- 2026-09-27: Supabase agent skills (`supabase`, `supabase-postgres-best-
+  practices`) vendored in `.claude/skills/` via `npx skills add` (pinned in
+  `skills-lock.json`). Rule: use the Postgres skill for every migration, RLS
+  policy and query; the PRD and this log win where they differ.
+- 2026-09-27: Phase 0 migration reviewed against the Postgres skill.
+  `job_run_start` / `job_run_finish` changed from security definer to
+  security invoker (only service_role calls them and it already bypasses
+  RLS, so definer rights only added risk in the exposed schema). The
+  migration hadn't been applied to any hosted database, so it was edited in
+  place. New pgTAP guard: no security definer function in `public` may be
+  executable by anon or authenticated. Kept despite the skill: uuid v4
+  primary keys (`gen_random_uuid()`, PRD 6 convention; Postgres 17 has no
+  built-in uuidv7) and Postgres enums (PRD 6).

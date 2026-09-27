@@ -8,7 +8,8 @@ on:
 
 concurrency:
   group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  # Never cancel a run on main: it may be mid-way through `supabase db push`.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   contents: read
@@ -50,6 +51,8 @@ jobs:
         run: pnpm exec supabase db reset
       - name: pgTAP
         run: pnpm exec supabase test db
+      - name: Supabase advisors (security + performance, fail on warn)
+        run: pnpm exec supabase db advisors --local --type all --fail-on warn
       - name: Generated types are up to date
         run: |
           pnpm db:types
@@ -128,3 +131,41 @@ jobs:
             size-limit.txt
             .lighthouseci/
           retention-days: 14
+
+  migrate-production:
+    name: Apply migrations to Supabase (main only)
+    # Runs only after every gate above is green on the merged commit.
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [checks, database-and-e2e, gitleaks, audit]
+    runs-on: ubuntu-latest
+    environment: production
+    concurrency:
+      group: supabase-migrate-production
+      cancel-in-progress: false
+    env:
+      # Scoped personal access token (Supabase dashboard → Account → Access tokens).
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Check secrets are set
+        run: |
+          for v in SUPABASE_ACCESS_TOKEN SUPABASE_PROJECT_REF SUPABASE_DB_PASSWORD; do
+            if [ -z "${!v}" ]; then echo "::error::Repository secret $v is not set"; exit 1; fi
+          done
+      - name: Link project
+        run: pnpm exec supabase link --project-ref "$SUPABASE_PROJECT_REF"
+      - name: Show pending migrations
+        run: pnpm exec supabase db push --linked --dry-run
+      - name: Apply migrations
+        run: pnpm exec supabase db push --linked
+      - name: Supabase advisors on the live project (report)
+        run: pnpm exec supabase db advisors --linked --type all --level warn
+        continue-on-error: true

@@ -8,6 +8,7 @@ Claude Code can't create these accounts or keys. Do them before (or alongside) p
 - [ ] **Domain** for Skilient; DNS at a provider you control.
 - [ ] **Vercel** project linked to the repo; functions region `bom1` (Mumbai); preview deploys per PR.
 - [ ] **Supabase** project in **Mumbai (`ap-south-1`)**, **Pro plan** (daily backups; free projects pause). Note the URL, publishable key (`sb_publishable_…`) and service-role key. Install the Supabase CLI locally (needs Docker).
+- [ ] **GitHub repo secrets** for migrations on merge to `main` (Settings → Secrets and variables → Actions; put them on a `production` environment if you want an approval step): `SUPABASE_ACCESS_TOKEN` (a *scoped* personal access token limited to the Skilient project, not a classic full-account token), `SUPABASE_PROJECT_REF` (from the project URL), `SUPABASE_DB_PASSWORD`.
 - [ ] **Sentry** project (Developer plan): DSN + auth token.
 - [ ] **Resend**: verify the Skilient sending domain; API key; then set it as Supabase Auth custom SMTP.
 

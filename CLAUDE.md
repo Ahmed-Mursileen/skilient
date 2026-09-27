@@ -30,6 +30,10 @@ Next.js 16 App Router, React 19, TypeScript strict, Tailwind CSS v4 (CSS-first, 
 - No schema changes outside `supabase/migrations/`; never edit the database by hand.
 - Never commit secrets (gitleaks blocks it).
 
+## Skills
+
+Use the Postgres best-practices skill for every migration, RLS policy and query; the PRD and decisions.md take precedence where they differ.
+
 ## How to work
 
 1. At the start of a session: read this file, `docs/build-plan.md`, and only the PRD sections for the current phase.
@@ -54,6 +58,8 @@ pnpm db:reset       # supabase db reset: rebuild local DB from migrations + seed
 pnpm db:test        # supabase test db: pgTAP (supabase/tests)
 pnpm db:types       # regenerate types/database.ts (CI fails if stale)
 ```
+
+Supabase CLI: Ahmed doesn't run it locally. CI runs the local stack for pgTAP, the stale-types check and `supabase db advisors --fail-on warn` on every PR, and on merge to `main` links the hosted project (`SUPABASE_ACCESS_TOKEN`, `SUPABASE_PROJECT_REF`, `SUPABASE_DB_PASSWORD` repo secrets) and runs `supabase db push`. The `db:*` scripts are for sessions or machines that have Docker.
 
 Local setup: `cp .env.example .env.local`, then `pnpm db:start` and fill `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` from `pnpm exec supabase status`. If Playwright's own browser isn't installed, set `PW_CHROMIUM_PATH` to a local Chromium.
 

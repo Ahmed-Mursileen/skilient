@@ -1,6 +1,6 @@
 -- Guard: every table in the exposed schemas has RLS enabled (default deny).
 begin;
-select plan(2);
+select plan(3);
 
 select is_empty(
   $$
@@ -26,6 +26,19 @@ select is_empty(
        )
   $$,
   'every security definer function in public pins its search_path'
+);
+
+select is_empty(
+  $$
+    select p.proname
+      from pg_proc p
+      join pg_namespace n on n.oid = p.pronamespace
+     where n.nspname = 'public'
+       and p.prosecdef
+       and (has_function_privilege('anon', p.oid, 'execute')
+            or has_function_privilege('authenticated', p.oid, 'execute'))
+  $$,
+  'no security definer function in public is callable by anon or authenticated'
 );
 
 select * from finish();
