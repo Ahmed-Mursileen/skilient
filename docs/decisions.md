@@ -171,3 +171,10 @@ Append-only. One dated entry per product decision, with the reason. Carried over
   checksum-verified engine binary from GitHub releases on first use.
   taste-skill targets landing pages and marketing surfaces, so for app screens
   only its pre-flight checklist applies, as the screen spec requires.
+- 2026-09-27: GitHub Actions pinned to full commit SHAs with the release as a
+  comment (checkout v7.0.1, setup-node v7.0.0, upload-artifact v7.0.1,
+  pnpm/action-setup v6.1.0), superseding Dependabot PRs #2–#5. Dependabot
+  updates SHA pins and now groups all Actions bumps into one PR. Fixed:
+  Lighthouse reports weren't uploaded (`.lighthouseci/` is hidden;
+  `include-hidden-files: true`). The gitleaks Docker image is still pinned
+  by tag, not digest.
