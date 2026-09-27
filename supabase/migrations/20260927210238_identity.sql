@@ -506,8 +506,9 @@ as $$
 $$;
 revoke all on function private.signin_ip_key(text) from public;
 
--- Before a password sign-in: is the account or IP locked, and is Turnstile needed?
--- 5 failures in 15 minutes need Turnstile; 10 lock for 15 minutes (PRD 10).
+-- Before a password sign-in: is the account locked, and is Turnstile needed?
+-- 5 failures in 15 minutes for the account or the IP need Turnstile; 10 for the account
+-- lock that account for 15 minutes (PRD 10). IPs are never locked, only challenged.
 create function private.signin_status(p_email text, p_ip_hash text)
 returns jsonb
 language sql
@@ -597,7 +598,7 @@ create index security_alert_tokens_user_idx on private.security_alert_tokens (us
 alter table private.security_alert_tokens enable row level security;
 
 -- After a failed password sign-in. Returns whether Turnstile is now needed, whether the
--- account just got locked, and whether to email the owner (only when the account exists).
+-- account is locked, and whether to email the owner (once, and only when the account exists).
 create function private.signin_failed(p_email text, p_ip_hash text)
 returns jsonb
 language plpgsql
@@ -642,15 +643,10 @@ begin
     end if;
   end if;
 
-  if v_ip is not null and v_ip_failures >= 10 then
-    insert into private.auth_lockouts (key, locked_until) values (v_ip, now() + interval '15 minutes')
-    on conflict (key) do update set locked_until = greatest(private.auth_lockouts.locked_until, excluded.locked_until);
-  end if;
-
   return jsonb_build_object(
     'failures', greatest(v_acct_failures, v_ip_failures),
     'captcha_required', greatest(v_acct_failures, v_ip_failures) >= 5,
-    'locked', v_acct_failures >= 10 or v_ip_failures >= 10,
+    'locked', v_acct_failures >= 10,
     'notify', v_locked_now and v_user is not null
   );
 end;

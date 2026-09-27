@@ -218,8 +218,9 @@ Append-only. One dated entry per product decision, with the reason. Carried over
   teammates, competitions, learning) rather than 5.4's free text ≤ 120 chars.
   `recruiter_visible` defaults to off until the student chooses in onboarding step 5.
   Batch is stored as `graduation_year`. **Needs Ahmed's OK.**
-- 2026-09-27 (phase 1): Failed sign-in throttling (Turnstile after 5, 15-minute lock
-  after 10, owner emailed) lives in `signin_status()`/`signin_failed()` and guards the
+- 2026-09-27 (phase 1): Failed sign-in throttling (Turnstile after 5 failures for the
+  account or the IP; after 10 the account, never the IP, is locked for 15 minutes and
+  the owner emailed) lives in `signin_status()`/`signin_failed()` and guards the
   app's sign-in form. Direct calls to Supabase Auth's password endpoint bypass it and
   fall back to Supabase's own per-IP limits; the Pro-plan-only password verification
   hook would close that gap. Throttling rows are purged daily by pg_cron

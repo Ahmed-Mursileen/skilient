@@ -1,7 +1,7 @@
 -- Sign-in throttling, security events, new-device alerts and "This wasn't me",
 -- rate limits and staff checks (PRD 8, 10 "Accounts and sign-in").
 begin;
-select plan(30);
+select plan(31);
 
 insert into auth.users (id, email) values
   ('40000000-0000-0000-0000-00000000000a', 'a@nutech.edu.pk'),
@@ -48,6 +48,8 @@ select results_eq(
   $$ values (true, false) $$,
   'further failures while locked do not email again');
 select isnt((public.signin_status('a@nutech.edu.pk', null) ->> 'locked_until'), null, 'the account reports a lock');
+select is((public.signin_status('someone@nutech.edu.pk', repeat('1', 64)) ->> 'locked_until'), null,
+  'the IP behind those failures is challenged, never locked');
 select results_eq(
   $$ select (r ->> 'locked')::boolean, (r ->> 'notify')::boolean from (select pg_temp.fail('nobody@nutech.edu.pk', null, 10) r) s $$,
   $$ values (true, false) $$,
