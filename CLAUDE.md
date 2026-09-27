@@ -72,3 +72,13 @@ Next.js 16 differs from older versions (`proxy.ts`, not `middleware.ts`; async `
 - `lib/supabase/{client,server,proxy,service}.ts`, `lib/log.ts` (JSON lines), `lib/request-id.ts`, `lib/health.ts`, `lib/sentry-scrub.ts`, `lib/security/headers.ts`, `lib/motion.ts`, `lib/hooks/`.
 - `proxy.ts`: mints `x-request-id` and refreshes the session with `getClaims()`.
 - `supabase/migrations/`, `supabase/tests/` (pgTAP; `00_rls_everywhere` fails if any public table lacks RLS), `supabase/seed.sql`.
+
+## Code map (phase 1)
+
+- Database: `supabase/migrations/*_identity.sql`. Security-definer functions live in the unexposed `private` schema; `public` wrappers are security invoker. HEC list: edit `supabase/seed/hec_universities.csv`, then `pnpm universities:sync` (writes a new sync migration; a unit test fails if you forget).
+- Auth hook: `public.hook_before_user_created` → `private.validate_signup`; `private.handle_new_user` creates profile, onboarding state and acceptance. Email templates in `supabase/templates/`.
+- Gates: `lib/auth/gate.ts` (pure decision table, unit-tested) used by `proxy.ts` (nonce CSP + `getUser()` + `my_gate_state()`) and `/auth/callback`.
+- Server actions: `lib/actions/{auth,mfa,agreement,onboarding,profile}.ts`, each via `actionContext()` (`lib/actions/context.ts`) returning `ActionResult` (`lib/actions/result.ts`).
+- Identity on the client: `useCurrentUser()` from `components/providers/current-user-provider.tsx`; sign-out goes through `components/auth/sign-out-button.tsx` (clears state in every tab).
+- Security helpers: `lib/security/{turnstile,hibp,hash,rate-limit,request-meta,headers}.ts`; images: `lib/images/reencode.ts`.
+- E2E fixtures: `tests/e2e/support.ts` (Auth admin API on the local stack, Mailpit reader, TOTP).

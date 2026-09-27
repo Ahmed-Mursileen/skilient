@@ -265,3 +265,22 @@ Append-only. One dated entry per product decision, with the reason. Carried over
   offers the student role only (faculty with phase 7), and for a domain only one
   university uses, "Not your university?" explains that instead of opening a
   one-item picker.
+- 2026-09-27 (phase 1): Profile images are re-encoded by the app, not a Supabase Edge
+  Function (PRD 10's build note): a server action decodes with sharp (already in the
+  tree through Next), detects the type from the bytes, refuses anything over 6,000 px,
+  and writes a fresh WebP (512×512 avatar, 1500×500 cover) with no metadata to
+  `avatars/` or `covers/{user_id}/{uuid}.webp`, then deletes the old file. Edge
+  Functions' CPU limit can't decode large phone photos. The browser crops first
+  (react-easy-crop), so uploads stay far under Vercel's 4.5 MB request cap; the action
+  body limit is 9 MB to honour the PRD's 5/8 MB. Buckets are public-read with
+  unguessable paths, so avatars need no signed URL per render.
+- 2026-09-27 (phase 1): Onboarding steps 3, 4 and 6 are honest shells until their data
+  exists: GitHub offers "Skip for now" (the App arrives in phase 2), Skills explains
+  levels over an empty state, and Find your people lists classmates (same university,
+  department and batch, RLS-visible) without a friend button (phase 3) and with no
+  ventures yet (phase 2). Departments are a platform-wide list until universities set
+  their own (phase 9); programme is free text.
+- 2026-09-27 (phase 1): Profile overview lives at `/profile/[username]`; Ventures,
+  Skills and Activity are nested segments with teaching empty states until their phases.
+  Add friend, Message and Report arrive with phase 3. Opening someone else's profile
+  counts toward PRD 10's 300 profiles a day.

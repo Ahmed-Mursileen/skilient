@@ -31,11 +31,13 @@ Legend: 📖 = PRD files to read (in `docs/prd/`), ✅ = done-when checks.
 - [x] Signup: email/password and university-only Google; Auth hook `validate_signup`; breached-password check; Turnstile — *Google needs the hook enabled in the dashboard; see decisions.md*
 - [x] Email verification (code + magic link); agreement versions + acceptance + re-accept gate (template headings only)
 - [x] 2FA plumbing (TOTP, `aal2` checks) ready for later required roles; new-device alert email; `security_events` — *recovery codes are an open question (decisions.md)*
-- [ ] Six-step onboarding wizard with resume; `proxy.ts` gates; `CurrentUserProvider`
-- [ ] Profiles: view/edit, visibility, avatar/cover with server-side image re-encode (EXIF/GPS stripped); signed-in only
+- [x] Six-step onboarding wizard with resume; `proxy.ts` gates; `CurrentUserProvider` — *GitHub, skills and ventures steps are shells until phase 2/3*
+- [x] Profiles: view/edit, visibility, avatar/cover with server-side image re-encode (EXIF/GPS stripped); signed-in only — *re-encode runs in a server action with sharp, not an Edge Function (decisions.md)*
 - [x] `staff_roles` + `is_staff()` (no ops UI yet) — *a role counts only on an aal2 session*
 
 ✅ Two students at different universities sign up and onboard · neither can read the other's university data (pgTAP + E2E) · personal and non-university Google emails refused · sign out → sign in as another user shows zero residue
+
+*Status 2026-09-27: every box ticked, in three stacked PRs (slice 1 database, slice 2 auth, slice 3 onboarding and profiles). Done-when: two students (NUTECH and FAST) sign up through the UI and onboard (E2E); cross-university reads are refused in pgTAP (`05_profiles_rls`) and in E2E through the UI and the API; personal and non-university Google emails are refused by the hook (pgTAP `04_signup_gate`, E2E for the callback); zero residue after switching accounts, across tabs (E2E). Hosted-project settings still to do by hand are listed in the PRs. Only NUTECH's email domain is verified; the rest need checking before public launch.*
 
 ## Phase 2 — Proof core
 
