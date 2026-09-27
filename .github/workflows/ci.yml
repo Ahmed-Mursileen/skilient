@@ -72,7 +72,7 @@ jobs:
         run: pnpm test:e2e
         env:
           E2E_EXPECT_HEALTHY: "1"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: playwright-report
@@ -123,7 +123,7 @@ jobs:
         run: pnpm size | tee size-limit.txt
       - name: Lighthouse CI
         run: pnpm dlx @lhci/cli@0.15.1 autorun
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: performance-reports
