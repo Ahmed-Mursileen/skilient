@@ -57,8 +57,10 @@ jobs:
         run: pnpm exec supabase test db
       - name: GitHub worker against the database (fake GitHub)
         run: pnpm test:worker
-      # The GitHub Edge Functions boot, reach the database and refuse strangers. They have no
-      # GitHub App secrets here, so the link function reports it isn't configured.
+      # The GitHub Edge Functions boot (imports resolve) and refuse strangers. They have no
+      # GitHub App secrets here, so the link function reports it isn't configured. Their
+      # database code is covered by test:worker above (the local edge runtime can't resolve
+      # the database container's hostname).
       - name: Edge Functions boot
         run: |
           # The first request boots the worker (and fetches its npm imports), so allow a minute.
