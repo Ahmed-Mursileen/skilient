@@ -23,7 +23,12 @@ export async function GET(request: Request) {
   });
 
   return Response.json(
-    { status: report.ok ? "ok" : "degraded", checks: report.checks },
+    {
+      status: report.ok ? "ok" : "degraded",
+      // Which build answered: tells an old deployment apart from a new failure.
+      version: process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7) ?? "local",
+      checks: report.checks,
+    },
     { status, headers: { "Cache-Control": "no-store" } },
   );
 }
