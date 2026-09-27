@@ -17,7 +17,8 @@
     "db:test": "supabase test db",
     "db:types": "supabase gen types typescript --local > types/database.ts",
     "size": "size-limit",
-    "universities:sync": "node scripts/universities.mjs --write"
+    "universities:sync": "node scripts/universities.mjs --write",
+    "skills:sync": "node scripts/skills.mjs --write"
   },
   "dependencies": {
     "@phosphor-icons/react": "2.1.10",
@@ -64,7 +65,8 @@
     "supabase": "2.118.0",
     "tailwindcss": "4.3.3",
     "typescript": "5.9.3",
-    "vitest": "5.0.2"
+    "vitest": "5.0.2",
+    "yaml": "2.9.1"
   },
   "packageManager": "pnpm@10.33.0",
   "engines": {
