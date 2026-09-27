@@ -1,0 +1,171 @@
+name: CI
+
+on:
+  pull_request:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  # Never cancel a run on main: it may be mid-way through `supabase db push`.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+env:
+  NEXT_TELEMETRY_DISABLED: "1"
+
+jobs:
+  checks:
+    name: Typecheck, lint, unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck
+      - run: pnpm lint
+      - run: pnpm test
+
+  database-and-e2e:
+    name: pgTAP, types, E2E + axe
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      - name: Start local Supabase
+        run: pnpm exec supabase start -x studio,imgproxy,mailpit,logflare,vector,supavisor,edge-runtime
+      - name: Rebuild the database from migrations + seed
+        run: pnpm exec supabase db reset
+      - name: pgTAP
+        run: pnpm exec supabase test db
+      - name: Supabase advisors (security + performance, fail on warn)
+        run: pnpm exec supabase db advisors --local --type all --fail-on warn
+      - name: Generated types are up to date
+        run: |
+          pnpm db:types
+          git diff --exit-code types/database.ts || (echo "types/database.ts is stale: run pnpm db:types" && exit 1)
+
+      - name: Point the app at local Supabase
+        run: |
+          eval "$(pnpm exec supabase status -o env)"
+          echo "NEXT_PUBLIC_SUPABASE_URL=$API_URL" >> "$GITHUB_ENV"
+          echo "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=$PUBLISHABLE_KEY" >> "$GITHUB_ENV"
+      - name: Build (gallery enabled)
+        run: pnpm build
+        env:
+          ENABLE_UI_GALLERY: "1"
+      - run: pnpm exec playwright install --with-deps chromium
+      - name: E2E (gallery in both themes, axe-core, health)
+        run: pnpm test:e2e
+        env:
+          E2E_EXPECT_HEALTHY: "1"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 14
+
+  gitleaks:
+    name: gitleaks (blocking)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Scan history for secrets
+        run: |
+          docker run --rm -v "$PWD:/repo" -w /repo \
+            -e GIT_CONFIG_COUNT=1 -e GIT_CONFIG_KEY_0=safe.directory -e GIT_CONFIG_VALUE_0='*' \
+            zricethezav/gitleaks:v8.28.0 git /repo --redact --no-banner -v
+
+  audit:
+    name: Dependency audit (critical)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+      - run: pnpm audit --audit-level critical --prod
+
+  performance:
+    name: Lighthouse CI + size-limit (report only)
+    runs-on: ubuntu-latest
+    # PRD 10: performance budgets have leeway; they report on every PR but never block a merge.
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+      - name: size-limit
+        run: pnpm size | tee size-limit.txt
+      - name: Lighthouse CI
+        run: pnpm dlx @lhci/cli@0.15.1 autorun
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: performance-reports
+          path: |
+            size-limit.txt
+            .lighthouseci/
+          retention-days: 14
+
+  migrate-production:
+    name: Apply migrations to Supabase (main only)
+    # Runs only after every gate above is green on the merged commit.
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [checks, database-and-e2e, gitleaks, audit]
+    runs-on: ubuntu-latest
+    environment: production
+    concurrency:
+      group: supabase-migrate-production
+      cancel-in-progress: false
+    env:
+      # Scoped personal access token (Supabase dashboard → Account → Access tokens).
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Check secrets are set
+        run: |
+          for v in SUPABASE_ACCESS_TOKEN SUPABASE_PROJECT_REF SUPABASE_DB_PASSWORD; do
+            if [ -z "${!v}" ]; then echo "::error::Repository secret $v is not set"; exit 1; fi
+          done
+      - name: Link project
+        run: pnpm exec supabase link --project-ref "$SUPABASE_PROJECT_REF"
+      - name: Show pending migrations
+        run: pnpm exec supabase db push --linked --dry-run
+      - name: Apply migrations
+        run: pnpm exec supabase db push --linked
+      - name: Supabase advisors on the live project (report)
+        run: pnpm exec supabase db advisors --linked --type all --level warn
+        continue-on-error: true

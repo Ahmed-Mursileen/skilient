@@ -1,0 +1,169 @@
+@import "tailwindcss";
+@import "./styles/tokens.css";
+
+/* Theme is a class on <html> set by next-themes (attribute: class). */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+ * Map the CSS-variable tokens into Tailwind v4 utilities.
+ * `inline` keeps utilities pointing at the variables, so .light/.dark
+ * subtrees re-theme without new classes.
+ */
+@theme inline {
+  /* Fonts (variables set by next/font in app/fonts.ts) */
+  --font-display: var(--font-spectral), Georgia, "Times New Roman", serif;
+  --font-sans: var(--font-barlow), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* Type scale (PRD 9.2) */
+  --text-display: clamp(2.75rem, 5.5vw, 4.5rem);
+  --text-display--line-height: 1.05;
+  --text-display--letter-spacing: -0.025em;
+  --text-display--font-weight: 500;
+  --text-h1: 40px;
+  --text-h1--line-height: 1.1;
+  --text-h1--letter-spacing: -0.02em;
+  --text-h1--font-weight: 500;
+  --text-h2: 30px;
+  --text-h2--line-height: 1.15;
+  --text-h2--letter-spacing: -0.015em;
+  --text-h2--font-weight: 500;
+  --text-h3: 22px;
+  --text-h3--line-height: 1.25;
+  --text-h3--letter-spacing: -0.005em;
+  --text-h3--font-weight: 600;
+  --text-h4: 17px;
+  --text-h4--line-height: 1.3;
+  --text-h4--font-weight: 600;
+  --text-body-lg: 18px;
+  --text-body-lg--line-height: 1.65;
+  --text-body: 15px;
+  --text-body--line-height: 1.6;
+  --text-body-sm: 13px;
+  --text-body-sm--line-height: 1.55;
+  --text-label: 12px;
+  --text-label--line-height: 1.4;
+  --text-label--letter-spacing: 0.08em;
+  --text-label--font-weight: 600;
+  --text-caption: 11px;
+  --text-caption--line-height: 1.45;
+  --text-caption--font-weight: 500;
+  --text-code: 13px;
+  --text-code--line-height: 1.55;
+  --text-code-sm: 11px;
+  --text-code-sm--line-height: 1.5;
+
+  /* Colour (PRD 9.3, semantic only) */
+  --color-bg-page: var(--bg-page);
+  --color-bg-surface: var(--bg-surface);
+  --color-bg-elevated: var(--bg-elevated);
+  --color-bg-muted: var(--bg-muted);
+  --color-bg-subtle: var(--bg-subtle);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
+  --color-text-subtle: var(--text-subtle);
+  --color-text-disabled: var(--text-disabled);
+  --color-text-on-primary: var(--text-on-primary);
+  --color-text-on-accent: var(--text-on-accent);
+  --color-text-on-verified: var(--text-on-verified);
+  --color-border-default: var(--border-default);
+  --color-border-strong: var(--border-strong);
+  --color-border-muted: var(--border-muted);
+  --color-primary: var(--interactive-primary);
+  --color-primary-hover: var(--interactive-primary-hover);
+  --color-primary-active: var(--interactive-primary-active);
+  --color-primary-subtle: var(--interactive-primary-subtle);
+  --color-accent: var(--interactive-accent);
+  --color-accent-hover: var(--interactive-accent-hover);
+  --color-accent-subtle: var(--interactive-accent-subtle);
+  --color-focus-ring: var(--focus-ring);
+  --color-verified: var(--verified);
+  --color-verified-subtle: var(--verified-subtle);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-error: var(--error);
+  --color-text-error: var(--text-error);
+  --color-info: var(--info);
+  --color-tier-raw: var(--tier-raw);
+  --color-tier-raw-text: var(--tier-raw-text);
+  --color-tier-spark: var(--tier-spark);
+  --color-tier-spark-text: var(--tier-spark-text);
+  --color-tier-flare: var(--tier-flare);
+  --color-tier-flare-text: var(--tier-flare-text);
+  --color-tier-shine: var(--tier-shine);
+  --color-tier-shine-text: var(--tier-shine-text);
+  --color-tier-radiant: var(--tier-radiant);
+  --color-tier-radiant-text: var(--tier-radiant-text);
+  --color-tier-luminary: var(--tier-luminary);
+  --color-tier-luminary-text: var(--tier-luminary-text);
+
+  /* Radius (PRD 9.4) */
+  --radius-none: 0;
+  --radius-sm: 3px;
+  --radius-md: 6px;
+  --radius-lg: 10px;
+  --radius-xl: 16px;
+  --radius-full: 9999px;
+
+  /* Elevation */
+  --shadow-1: var(--elevation-1);
+  --shadow-2: var(--elevation-2);
+  --shadow-3: var(--elevation-3);
+  --shadow-4: var(--elevation-4);
+  --inset-shadow-1: var(--elevation-inset);
+
+  /* Motion */
+  --ease-standard: var(--motion-ease-standard);
+  --ease-decelerate: var(--motion-ease-decelerate);
+  --ease-accelerate: var(--motion-ease-accelerate);
+  --ease-sharp: var(--motion-ease-sharp);
+
+  /* Layout */
+  --container-page: var(--page-max);
+}
+
+@layer base {
+  html {
+    background-color: var(--bg-page);
+    color: var(--text-primary);
+    font-family: var(--font-sans);
+    font-size: 15px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body {
+    background-color: var(--bg-page);
+    color: var(--text-primary);
+  }
+
+  /* Themed browser surfaces (Gate B craft floor) */
+  ::selection {
+    background-color: var(--interactive-primary-subtle);
+    color: var(--text-primary);
+  }
+
+  html {
+    caret-color: var(--interactive-primary);
+    scrollbar-color: var(--border-strong) var(--bg-page);
+    accent-color: var(--interactive-primary);
+  }
+
+  /* 2px focus ring, 2px offset, primary (PRD 9.5) */
+  :focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
