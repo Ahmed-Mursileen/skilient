@@ -182,3 +182,49 @@ Append-only. One dated entry per product decision, with the reason. Carried over
   sessions only, synchronous): `pnpm install`, start Docker, point Playwright
   at the preinstalled Chromium. Local Supabase stays on demand (`pnpm
   db:start`) to keep startup around 5 s; CI remains the gate for pgTAP.
+- 2026-09-27 (phase 1): HEC universities load through a generated data migration,
+  not seed.sql, because `supabase db push` never runs seed.sql on the hosted project.
+  `supabase/seed/hec_universities.csv` is the source; `node scripts/universities.mjs
+  --write` turns it into a `*_sync_hec_universities.sql` migration that calls the
+  idempotent `private.sync_hec_universities()` (upserts by name, keeps ops-added
+  domains, never deletes universities). A unit test fails CI if the CSV changes without
+  a new sync migration. Only name, city, province and domains load; the other columns
+  are reference notes.
+- 2026-09-27 (phase 1): **Launch blocker:** only NUTECH's domain (`nutech.edu.pk`,
+  status `confirmed`) is verified. The other 282 rows' domains are seeded and live for
+  signup but still need human verification before public launch (edit the CSV, then
+  run the script). `preston.edu.pk` is shared by Preston Karachi and Preston Kohat
+  (the signup picker handles it); 5 universities have no domain and can't sign up
+  students yet; the notes flag military academies and two institutes with stopped
+  admissions as "probably exclude".
+- 2026-09-27 (phase 1): Domain matching is exact (`student.uet.edu.pk` must be listed
+  itself; no subdomain wildcard), per 5.27 "rejects any email whose domain isn't in
+  university_domains". Seeded domains are `kind = both` since the CSV doesn't say.
+- 2026-09-27 (phase 1): Security-definer functions live in an unexposed `private`
+  schema (Supabase guidance; keeps the phase 0 pgTAP guard and advisors green). Where
+  users need one over the API, a `public` security-invoker wrapper calls it and the
+  private function checks `auth.uid()` itself.
+- 2026-09-27 (phase 1): Phase 1 opens student signup only. `validate_signup()` refuses
+  faculty, recruiter and university-admin roles until their phases add their checks.
+  Besides the before-user-created hook, `handle_new_user()` itself refuses a
+  non-university domain (so an unconfigured hook can't let one through), and a trigger
+  refuses an email change to a domain outside the student's university.
+- 2026-09-27 (phase 1): `profiles_public_card` is a trigger-maintained table with no
+  direct access; restricted viewers read it only through `get_profile_card(username)`
+  (exact username), so it can't be listed or scraped. `is_friend_of()` and
+  `is_blocked_with()` are stubs returning false until phase 3 creates friendships and
+  blocks (friends-only profiles stay owner-only until then).
+- 2026-09-27 (phase 1): `looking_for` follows 5.27 (multi-select: internships, jobs,
+  teammates, competitions, learning) rather than 5.4's free text ≤ 120 chars.
+  `recruiter_visible` defaults to off until the student chooses in onboarding step 5.
+  Batch is stored as `graduation_year`. **Needs Ahmed's OK.**
+- 2026-09-27 (phase 1): Failed sign-in throttling (Turnstile after 5 failures for the
+  account or the IP; after 10 the account, never the IP, is locked for 15 minutes and
+  the owner emailed) lives in `signin_status()`/`signin_failed()` and guards the
+  app's sign-in form. Direct calls to Supabase Auth's password endpoint bypass it and
+  fall back to Supabase's own per-IP limits; the Pro-plan-only password verification
+  hook would close that gap. Throttling rows are purged daily by pg_cron
+  (`purge-security-data`, logged in `job_runs`), security events after a year.
+- 2026-09-27 (phase 1): Staff roles count only on a two-factor (`aal2`) session;
+  `super_admin` implies every role. Staff can now read `job_runs`. The first super
+  admin has to be granted by a human in the SQL editor until the ops UI (phase 11).
