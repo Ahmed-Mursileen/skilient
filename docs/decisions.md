@@ -1,0 +1,141 @@
+# Decisions log
+
+Append-only. One dated entry per product decision, with the reason. Carried over from the planning sessions (TechShiner repo, `.claude/wiki/decisions.md`); the PRD already reflects every entry below. Add new entries at the bottom.
+
+- 2026-09-24: Product renamed TechShiner → Skilient. The PRD is re-scoped
+  from MVP to the full production platform plus business model; the stack
+  stays on Next.js. Why: Ahmed's call via comments on the rebuild PRD doc.
+- 2026-09-25: Rebuild PRD is one single launch of the full platform (no
+  R1–R4 releases). Visual direction "Editorial": Spectral for the platform,
+  Montserrat only in the wordmark, logo ink #0E0D0B + vermillion #C03910.
+  No Claude/AI API anywhere. Mentorship and the other revenue streams are
+  post-launch (separate doc). Why: Ahmed's calls while fleshing out the PRD.
+- 2026-09-25: Ranking v1 = Proof (Work 45, Skills 20, Endorsements 15,
+  Credentials 5) + Momentum 15; creator 1.3x; decay after 14 idle days,
+  paused in exam periods. Why: Ahmed resolved the formula conflict.
+- 2026-09-25: University records of individual students only on Growth and
+  Campus plans, no student opt-out (covered by the signup user agreement);
+  the student sees who viewed their record only on Pro.
+- 2026-09-25: Student portal: five tabs (Home, Opportunities, Ventures, Chat,
+  Me), progress card on the feed, opportunities hub, graduate accounts. No
+  installable app or web push at launch (in-app + email only), and no
+  "download my data" export.
+- 2026-09-25: Admin portal (`/ops`): four staff roles (moderator, trust
+  reviewer, accounts, super admin) with 2FA and an append-only audit log;
+  read-only "view as user", logged and the user is notified; one appeal
+  per decision, decided by different staff, final; recruiter orgs are
+  verified manually before contact requests; prices, weights and flags are
+  editable in the ops UI (versioned); staff see only the chat messages
+  attached to a report.
+- 2026-09-25: Signup/onboarding: students need a verified university email
+  AND a student ID card reviewed by Trust staff before full access (they can
+  finish onboarding while pending; ID images deleted 30 days after review).
+  Google sign-in allowed only for university-domain accounts. GitHub step
+  skippable. Guided nav tour auto-starts; nav tooltips, first-visit tips and
+  a getting-started checklist included. No help centre at launch; a feedback
+  centre instead. User agreement ships as a headings-only template that
+  Ahmed will write later.
+- 2026-09-25: Student ID card check dropped. Students sign up with their
+  university email (or university Google account) only.
+- 2026-09-25: Feed has no likes, reactions, saves or share-to-chat. The
+  micro-survey replaces likes; the only public signal is "X find this
+  informative / X find this interesting". A hidden algorithm ranks posts
+  from trigger conditions (seed -> full -> global boost), survey answers
+  and comments, with time decay. Two feeds: University Feed and Global Feed.
+  Invite posts always link a venture. No image alt text.
+- 2026-09-25: Ventures: max 6 members; deliverables and chat are members
+  only; cross-university allowed for public ventures. Chat: images only (no
+  PDFs), typing indicator, DM read receipts that can be turned off, no
+  friend group chats.
+- 2026-09-25: Micro-survey is a permanent tick/cross strip under every
+  surveyable post: readers may ignore it but can't dismiss or skip it. Up to
+  3 questions per reader per post, drawn from 12 dimensions (~25 questions).
+  Full per-post survey breakdown for authors is a paid feature
+  (entitlement `insights.post_survey`).
+- 2026-09-25: Micro-survey: one question per reader per post (replaces
+  "up to 3"). The question is assigned on first view and never changes;
+  dimensions are balanced by target shares (Informative 25%, Interesting
+  25%, the rest split the other 50%).
+- 2026-09-25: Landing page: hero subline "Build with classmates, prove your
+  skills with real work, and get recognised by recruiters. No more rejected
+  CVs."; feed line "Posts go viral because they provide value, not
+  entertainment"; evidence levels not explained on the landing page.
+  Marketing pages default to dark. No fade-and-rise reveals: one focal hero
+  sequence plus a scroll-linked tier ladder (impeccable/taste-skill
+  compliant). Separate /recruiters, /universities, /faculty pages;
+  university email field with live detection; live numbers shown once each
+  passes 200; no per-university landing pages; /demo dropped; English only.
+- 2026-09-25: Theme: marketing pages and the signed-in app both follow the
+  device setting (next-themes default "system"), with a manual toggle.
+  Supersedes the earlier "marketing pages default to dark" line.
+- 2026-09-25: Performance: baseline is a mid-range Android on 4G (3G must
+  work). Hosting in Mumbai (Supabase ap-south-1, Vercel bom1). Launch
+  capacity 5,000 accounts, 500 daily actives, 100 online at once, sized for
+  a 3x busy-moment peak (300 online). No video in posts (images only). No
+  data-saver mode. CI performance budgets are report-only with ~10% leeway,
+  never blocking a merge.
+- 2026-09-25: Observability: Sentry for errors, Axiom for logs (30 days),
+  PostHog (EU cloud) for product analytics plus session replays and heatmaps
+  on the free tier only (billing limit $0, 20% replay sampling, content
+  masked, chat/billing/ops/auth pages never recorded). Alerts by email to
+  Ahmed. No public status page.
+- 2026-09-25: Security: two-factor (TOTP) required for recruiters,
+  university admins and staff, optional for students and faculty.
+  Cloudflare Turnstile on signup, repeated failed sign-ins and public forms.
+  Supabase's included daily backups only (no paid PITR). Free security
+  testing route (ASVS L1 checklist, ZAP scan, per-PR security review), no
+  paid pen test. Profiles visible only to signed-in users. New-device
+  sign-in email alerts.
+- 2026-09-25: Typography stays as in the Figma frames: Spectral (display, h1,
+  h2), Barlow (h3 down and body), JetBrains Mono (code/data). Montserrat only
+  in the SVG wordmark.
+- 2026-09-25: Skill taxonomy is owned by Skilient Trust staff (edited in
+  /ops; faculty/student suggestions via the feedback centre; quarterly
+  review). Landing trust-gap cards use three verified stats: ResumeLab 2023
+  (70% admit CV lies), Gallup Pakistan 2020 (~5,000 of ~25,000 IT grads hired
+  by leading firms; P@SHA 10% employable), PBS LFS 2024-25 (23.9% of female
+  degree holders unemployed). Recheck against primary reports before launch.
+- 2026-09-25: Build order is vertical slice first (student journey end to end, then widen), with no calendar dates. Closed beta at NUTECH. Public launch opens signup to every HEC university at once. The PRD is handed to Claude Code as split Markdown files in a new repo, one phase per session.
+- 2026-09-27 (phase 0): Dark-mode error text. The spec's dark error #E83030
+  is only 4.34:1 on bg/surface and 3.94:1 on bg/elevated, below 4.5:1 for
+  body text. Added `text/error` (light #C41010, dark #F04848, ≥ 4.6:1 on every
+  dark surface) for error text; #E83030 stays for icons and borders.
+  **Needs Ahmed's OK** (colour change to the Figma system).
+- 2026-09-27 (phase 0): Contrast fixes found by axe-core on the gallery.
+  Badges keep their text on text tokens and carry tone in the border and
+  icon (dark primary-on-primary-subtle was 4.04:1, accent 4.1:1, light
+  success on surface 4.32:1). Placeholders use text/secondary (dark
+  text/muted on bg/subtle is 4.42:1). Skeletons use bg/subtle (dark bg/muted
+  is invisible on bg/surface).
+- 2026-09-27 (phase 0): Added `verified-subtle` token (teal 50 light, teal
+  900 dark) because the Verified Stamp in 9.4 tints to it but 9.3 doesn't
+  define it.
+- 2026-09-27 (phase 0): The service-role client lives in its own module
+  `lib/supabase/service.ts` (PRD 7 put it in `server.ts`) so ESLint can
+  restrict it by import. Allowed: `lib/jobs/**`, `lib/billing/**`,
+  `app/api/webhooks/**`, `app/api/jobs/**`. Only `service.ts` may read
+  `SUPABASE_SERVICE_ROLE_KEY`.
+- 2026-09-27 (phase 0): Phase 0 installs only the dependencies it uses. The
+  rest of the PRD 7 list (resend, octokit, puppeteer/chromium, posthog,
+  react-query, react-hook-form, noble-ed25519, qrcode, floating-ui) is added
+  in the phase that first needs it, so versions get pinned when they're used.
+  Also added: more Radix primitives (Select, Checkbox, Switch, Avatar, Slot),
+  clsx + tailwind-merge, server-only.
+- 2026-09-27 (phase 0): Security headers ship now from `next.config.ts`
+  (HSTS, frame-ancestors 'none', referrer, permissions, nosniff). The full
+  nonce-based CSP comes with phase 1's `proxy.ts` gates, when auth pages
+  exist to test it against.
+- 2026-09-27 (phase 0): Env additions: `NEXT_PUBLIC_SENTRY_DSN` (the browser
+  SDK can't read `SENTRY_DSN`), `SENTRY_ORG` / `SENTRY_PROJECT` (source map
+  upload), `ENABLE_UI_GALLERY` (serve the dev-only gallery from a production
+  build in CI).
+- 2026-09-27 (phase 0): `/api/health` uses the publishable key only:
+  `health_check()` RPC, Storage `/storage/v1/status`, Realtime
+  `/realtime/v1/api/ping`.
+- 2026-09-27 (phase 0): Visual regression starts as report-only. CI attaches
+  gallery screenshots (both themes, desktop and phone) to the Playwright
+  report. Pixel baselines get committed once CI's runner has produced them,
+  because local and CI font rendering differ.
+- 2026-09-27 (phase 0): gitleaks runs from its pinned Docker image
+  (`zricethezav/gitleaks:v8.28.0`), not gitleaks-action, which needs a paid
+  licence for organisation-owned repos.

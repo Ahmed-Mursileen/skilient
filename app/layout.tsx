@@ -1,0 +1,36 @@
+import type { Metadata, Viewport } from "next";
+import { ThemeProvider } from "@/components/providers/theme-provider";
+import { fontVariables } from "./fonts";
+import "./globals.css";
+
+export const metadata: Metadata = {
+  title: {
+    default: "Skilient — Prove it. Don't claim it.",
+    template: "%s · Skilient",
+  },
+  description:
+    "Build with classmates, prove your skills with real work, and get recognised by recruiters.",
+  applicationName: "Skilient",
+  icons: {
+    icon: [{ url: "/icon.svg", type: "image/svg+xml" }],
+    apple: [{ url: "/brand/skilient-app-icon.svg", type: "image/svg+xml" }],
+  },
+  manifest: "/manifest.webmanifest",
+};
+
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#F0EFED" },
+    { media: "(prefers-color-scheme: dark)", color: "#0A0A09" },
+  ],
+};
+
+export default function RootLayout({ children }: LayoutProps<"/">) {
+  return (
+    <html lang="en" className={fontVariables} suppressHydrationWarning>
+      <body className="min-h-dvh bg-bg-page font-sans text-body text-text-primary">
+        <ThemeProvider>{children}</ThemeProvider>
+      </body>
+    </html>
+  );
+}

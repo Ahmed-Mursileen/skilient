@@ -1,0 +1,18 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 10
+    groups:
+      radix:
+        patterns: ["@radix-ui/*"]
+      supabase:
+        patterns: ["@supabase/*", "supabase"]
+      testing:
+        patterns: ["vitest", "@vitest/*", "@testing-library/*", "@playwright/test", "@axe-core/*", "jsdom"]
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
