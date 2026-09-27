@@ -130,8 +130,11 @@ Append-only. One dated entry per product decision, with the reason. Carried over
   upload), `ENABLE_UI_GALLERY` (serve the dev-only gallery from a production
   build in CI).
 - 2026-09-27 (phase 0): `/api/health` uses the publishable key only:
-  `health_check()` RPC, Storage `/storage/v1/status`, Realtime
-  `/realtime/v1/api/ping`.
+  `health_check()` RPC, Storage `/storage/v1/status`, and a Realtime channel
+  join over the WebSocket (5 s budget). Changed from `/realtime/v1/api/ping`
+  after it failed on the hosted project: that route is only served by the
+  local stack. If the project is ever set to private-channels-only, the
+  probe needs an allowing policy.
 - 2026-09-27 (phase 0): Visual regression starts as report-only. CI attaches
   gallery screenshots (both themes, desktop and phone) to the Playwright
   report. Pixel baselines get committed once CI's runner has produced them,
