@@ -28,9 +28,9 @@ Legend: 📖 = PRD files to read (in `docs/prd/`), ✅ = done-when checks.
 📖 `05-02-authentication.md`, `05-27-signup-onboarding-and-learning-the-platform.md`, `05-04-profiles.md`, `05-23-university-portal.md` (HEC seed only), `08-security-privacy-and-rls.md`, `10-…` (Security: accounts and sign-in)
 
 - [x] HEC universities + `university_domains` seed; cached public domain list — *283 universities from `supabase/seed/hec_universities.csv` via a generated sync migration; `/api/universities/domains`. Only NUTECH's domain is verified so far (see decisions.md)*
-- [ ] Signup: email/password and university-only Google; Auth hook `validate_signup`; breached-password check; Turnstile
-- [ ] Email verification (code + magic link); agreement versions + acceptance + re-accept gate (template headings only)
-- [ ] 2FA plumbing (TOTP, `aal2` checks) ready for later required roles; new-device alert email; `security_events`
+- [x] Signup: email/password and university-only Google; Auth hook `validate_signup`; breached-password check; Turnstile — *Google needs the hook enabled in the dashboard; see decisions.md*
+- [x] Email verification (code + magic link); agreement versions + acceptance + re-accept gate (template headings only)
+- [x] 2FA plumbing (TOTP, `aal2` checks) ready for later required roles; new-device alert email; `security_events` — *recovery codes are an open question (decisions.md)*
 - [ ] Six-step onboarding wizard with resume; `proxy.ts` gates; `CurrentUserProvider`
 - [ ] Profiles: view/edit, visibility, avatar/cover with server-side image re-encode (EXIF/GPS stripped); signed-in only
 - [x] `staff_roles` + `is_staff()` (no ops UI yet) — *a role counts only on an aal2 session*

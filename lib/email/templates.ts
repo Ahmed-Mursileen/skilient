@@ -1,0 +1,84 @@
+import type { Email } from "./send";
+
+/** Escapes text for HTML email bodies; user-controlled strings never go in raw. */
+export function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function layout(title: string, bodyHtml: string, footer: string): string {
+  return `<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${escapeHtml(title)}</title></head>
+<body style="margin:0;padding:0;background:#F0EFED;color:#0E0D0B;font-family:Arial,Helvetica,sans-serif;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#F0EFED;padding:32px 16px;"><tr><td align="center">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background:#FFFFFF;border:1px solid #DAD8D3;border-radius:12px;">
+<tr><td style="padding:32px 32px 8px 32px;">
+<p style="margin:0 0 24px 0;font-family:Georgia,'Times New Roman',serif;font-size:22px;font-weight:700;">Skilient<span style="color:#C03910;">.</span></p>
+<h1 style="margin:0 0 16px 0;font-family:Georgia,'Times New Roman',serif;font-size:24px;line-height:32px;">${escapeHtml(title)}</h1>
+${bodyHtml}
+</td></tr>
+<tr><td style="padding:16px 32px 32px 32px;border-top:1px solid #ECEAE6;"><p style="margin:0;font-size:13px;line-height:20px;color:#5C5A55;">${escapeHtml(footer)}</p></td></tr>
+</table></td></tr></table></body></html>`;
+}
+
+const p = (text: string) => `<p style="margin:0 0 16px 0;font-size:15px;line-height:24px;">${escapeHtml(text)}</p>`;
+const button = (href: string, label: string) =>
+  `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 24px 0;"><tr><td style="border-radius:8px;background:#0E0D0B;"><a href="${escapeHtml(href)}" style="display:inline-block;padding:12px 20px;font-size:15px;font-weight:700;color:#FFFFFF;text-decoration:none;border-radius:8px;">${escapeHtml(label)}</a></td></tr></table>`;
+
+export interface NewDeviceDetails {
+  device: string;
+  location: string | null;
+  at: Date;
+  notMeUrl: string;
+}
+
+const timeFormat = new Intl.DateTimeFormat("en-GB", {
+  dateStyle: "medium",
+  timeStyle: "short",
+  timeZone: "Asia/Karachi",
+});
+
+/** New-device sign-in alert (PRD 10): device, browser, approximate location, time, "This wasn't me". */
+export function newDeviceEmail(to: string, d: NewDeviceDetails): Email {
+  const when = `${timeFormat.format(d.at)} (Pakistan time)`;
+  const where = d.location ?? "an unknown location";
+  const title = "New sign-in to your Skilient account";
+  const lines = [
+    `Your account was just signed in from a device we haven't seen before.`,
+    `Device: ${d.device}`,
+    `Where: ${where} (approximate)`,
+    `When: ${when}`,
+  ];
+  return {
+    to,
+    subject: title,
+    html: layout(
+      title,
+      lines.map(p).join("") +
+        p("If this was you, there's nothing to do. If it wasn't, sign out everywhere and choose a new password:") +
+        button(d.notMeUrl, "This wasn't me"),
+      "This link works once, for 7 days. We send this email for every new device.",
+    ),
+    text: `${lines.join("\n")}\n\nIf this wasn't you, open this link to sign out everywhere and reset your password:\n${d.notMeUrl}\n`,
+  };
+}
+
+/** Account locked after 10 failed sign-ins in 15 minutes (PRD 10). */
+export function accountLockedEmail(to: string, resetUrl: string): Email {
+  const title = "Your Skilient account is locked for 15 minutes";
+  const body = "Someone tried to sign in to your account with the wrong password 10 times, so we've paused sign-ins for 15 minutes.";
+  return {
+    to,
+    subject: title,
+    html: layout(
+      title,
+      p(body) + p("If this wasn't you, reset your password now:") + button(resetUrl, "Reset my password"),
+      "You'll be able to sign in again after 15 minutes.",
+    ),
+    text: `${body}\n\nIf this wasn't you, reset your password: ${resetUrl}\n`,
+  };
+}
