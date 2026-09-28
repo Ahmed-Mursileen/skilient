@@ -99,6 +99,31 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"blocks": {
+                  Row: {
+                    "blocked_id": string,"blocker_id": string,"created_at": string
+                  }
+                  Insert: {
+                    "blocked_id": string,"blocker_id": string,"created_at"?: string
+                  }
+                  Update: {
+                    "blocked_id"?: string,"blocker_id"?: string,"created_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "blocks_blocked_id_fkey"
+      columns: ["blocked_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["user_id"]
+    },{
+      foreignKeyName: "blocks_blocker_id_fkey"
+      columns: ["blocker_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["user_id"]
+    }
+                  ]
                 },"contribution_confirmations": {
                   Row: {
                     "confirmer_id": string,"contribution_id": string,"created_at": string
@@ -165,6 +190,56 @@ isOneToOne: false
 isOneToOne: false
       referencedRelation: "ventures"
       referencedColumns: ["id"]
+    }
+                  ]
+                },"friend_requests": {
+                  Row: {
+                    "created_at": string,"id": string,"receiver_id": string,"responded_at": string | null,"sender_id": string,"status": Database["public"]['Enums']["friend_request_status"]
+                  }
+                  Insert: {
+                    "created_at"?: string,"id"?: string,"receiver_id": string,"responded_at"?: string | null,"sender_id": string,"status"?: Database["public"]['Enums']["friend_request_status"]
+                  }
+                  Update: {
+                    "created_at"?: string,"id"?: string,"receiver_id"?: string,"responded_at"?: string | null,"sender_id"?: string,"status"?: Database["public"]['Enums']["friend_request_status"]
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "friend_requests_receiver_id_fkey"
+      columns: ["receiver_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["user_id"]
+    },{
+      foreignKeyName: "friend_requests_sender_id_fkey"
+      columns: ["sender_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["user_id"]
+    }
+                  ]
+                },"friendships": {
+                  Row: {
+                    "created_at": string,"user_id_a": string,"user_id_b": string
+                  }
+                  Insert: {
+                    "created_at"?: string,"user_id_a": string,"user_id_b": string
+                  }
+                  Update: {
+                    "created_at"?: string,"user_id_a"?: string,"user_id_b"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "friendships_user_id_a_fkey"
+      columns: ["user_id_a"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["user_id"]
+    },{
+      foreignKeyName: "friendships_user_id_b_fkey"
+      columns: ["user_id_b"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["user_id"]
     }
                   ]
                 },"github_accounts": {
@@ -304,6 +379,19 @@ isOneToOne: false
                   }
                   Update: {
                     "completed_at"?: string | null,"created_at"?: string,"data"?: NonNullable<Json>,"role"?: Database["public"]['Enums']["account_role"],"step"?: number,"updated_at"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"ops_audit_log": {
+                  Row: {
+                    "action": string,"after": Json | null,"before": Json | null,"created_at": string,"id": string,"reason": string,"staff_id": string,"target_id": string,"target_type": string
+                  }
+                  Insert: {
+                    "action": string,"after"?: Json | null,"before"?: Json | null,"created_at"?: string,"id"?: string,"reason": string,"staff_id": string,"target_id": string,"target_type": string
+                  }
+                  Update: {
+                    "action"?: string,"after"?: Json | null,"before"?: Json | null,"created_at"?: string,"id"?: string,"reason"?: string,"staff_id"?: string,"target_id"?: string,"target_type"?: string
                   }
                   Relationships: [
                     
@@ -704,10 +792,16 @@ isOneToOne: false
 "apply_to_venture":
 { Args: { "p_answers"?: (string)[],"p_message": string,"p_role"?: string,"p_venture": string }; Returns: string
                            },
+"block_user":
+{ Args: { "p_username": string }; Returns: undefined
+                           },
 "browse_ventures":
 { Args: { "p_before"?: string,"p_limit"?: number,"p_my_university"?: boolean,"p_open_roles"?: boolean,"p_status"?: Database["public"]['Enums']["venture_status"],"p_type": Database["public"]['Enums']["venture_type"] }; Returns: {
               "created_at": string,"id": string,"members": number,"open_slots": number,"owner_name": string,"owner_username": string,"skill_ids": (string)[],"stage": Database["public"]['Enums']["venture_stage"],"status": Database["public"]['Enums']["venture_status"],"summary": string,"team_size": number,"title": string,"type": Database["public"]['Enums']["venture_type"],"university_name": string,"visibility": Database["public"]['Enums']["venture_visibility"]
             }[]
+                           },
+"cancel_friend_request":
+{ Args: { "p_request": string }; Returns: undefined
                            },
 "complete_onboarding":
 { Args: Record<PropertyKey, never>; Returns: boolean
@@ -741,6 +835,11 @@ isOneToOne: false
                            },
 "follow_venture":
 { Args: { "p_follow": boolean,"p_venture": string }; Returns: boolean
+                           },
+"friendship_state":
+{ Args: { "p_username": string }; Returns: {
+              "request_id": string,"state": string
+            }[]
                            },
 "get_profile_card":
 { Args: { "p_username": string }; Returns: {
@@ -780,6 +879,21 @@ isOneToOne: false
 "mfa_backup_codes_remaining":
 { Args: Record<PropertyKey, never>; Returns: number
                            },
+"my_blocks":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "created_at": string,"full_name": string,"username": string
+            }[]
+                           },
+"my_friend_requests":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "avatar_path": string,"created_at": string,"department": string,"direction": string,"full_name": string,"graduation_year": number,"id": string,"user_id": string,"username": string
+            }[]
+                           },
+"my_friends":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "avatar_path": string,"department": string,"full_name": string,"graduation_year": number,"since": string,"user_id": string,"username": string
+            }[]
+                           },
 "my_gate_state":
 { Args: Record<PropertyKey, never>; Returns: Json
                            },
@@ -787,6 +901,9 @@ isOneToOne: false
 { Args: Record<PropertyKey, never>; Returns: {
               "active_days": number,"hits": number,"last_used_at": string,"level": number,"lines": number,"repos": number,"skill_id": string
             }[]
+                           },
+"pending_friend_request_count":
+{ Args: Record<PropertyKey, never>; Returns: number
                            },
 "post_venture_update":
 { Args: { "p_body": string,"p_venture": string }; Returns: string
@@ -817,6 +934,9 @@ isOneToOne: false
 "resolve_review_flag":
 { Args: { "p_flag": number,"p_note": string,"p_upheld": boolean }; Returns: boolean
                            },
+"respond_friend_request":
+{ Args: { "p_accept": boolean,"p_request": string }; Returns: undefined
+                           },
 "respond_invite":
 { Args: { "p_accept": boolean,"p_invite": string }; Returns: Database["public"]['Enums']["venture_invite_status"]
                            },
@@ -833,6 +953,11 @@ isOneToOne: false
                            },
 "security_not_me":
 { Args: { "p_token": string }; Returns: Json
+                           },
+"send_friend_request":
+{ Args: { "p_username": string }; Returns: {
+              "request_id": string,"status": Database["public"]['Enums']["friend_request_status"]
+            }[]
                            },
 "set_member_role":
 { Args: { "p_member": string,"p_role": Database["public"]['Enums']["venture_team_role"],"p_venture": string }; Returns: undefined
@@ -857,6 +982,12 @@ isOneToOne: false
                            },
 "transition_venture":
 { Args: { "p_to": Database["public"]['Enums']["venture_status"],"p_venture": string }; Returns: undefined
+                           },
+"unblock_user":
+{ Args: { "p_username": string }; Returns: undefined
+                           },
+"unfriend":
+{ Args: { "p_username": string }; Returns: undefined
                            },
 "update_venture":
 { Args: { "p": Json,"p_venture": string }; Returns: undefined
@@ -890,7 +1021,7 @@ isOneToOne: false
                            }
           }
           Enums: {
-            "account_role": "student"|"faculty"|"recruiter"|"university_admin","application_status": "pending"|"accepted"|"declined"|"withdrawn"|"closed","contribution_kind": "code"|"design"|"research"|"docs"|"management"|"other","contribution_source": "manual"|"github","domain_kind": "student"|"faculty"|"both","github_commit_status": "pending"|"counted"|"held"|"excluded","github_repo_kind": "owned"|"collaborator"|"fork"|"template","job_run_status": "running"|"succeeded"|"failed","looking_for_option": "internship"|"job"|"teammates"|"project"|"mentorship","profile_visibility": "friends"|"university"|"global","review_flag_kind": "burst"|"backdating"|"cross_account_duplicate","review_flag_status": "open"|"cleared"|"upheld","skill_category": "language"|"framework"|"library"|"tool"|"platform"|"practice","staff_role": "moderator"|"trust_reviewer"|"accounts"|"super_admin","sync_status": "queued"|"running"|"done"|"failed"|"cancelled","venture_invite_status": "pending"|"accepted"|"declined"|"revoked","venture_stage": "idea"|"prototype"|"launched"|"revenue","venture_status": "recruiting"|"in_progress"|"completed"|"abandoned","venture_team_role": "lead"|"developer"|"designer"|"researcher"|"other","venture_type": "project"|"startup","venture_visibility": "public"|"university"|"unlisted"
+            "account_role": "student"|"faculty"|"recruiter"|"university_admin","application_status": "pending"|"accepted"|"declined"|"withdrawn"|"closed","contribution_kind": "code"|"design"|"research"|"docs"|"management"|"other","contribution_source": "manual"|"github","domain_kind": "student"|"faculty"|"both","friend_request_status": "pending"|"accepted"|"declined","github_commit_status": "pending"|"counted"|"held"|"excluded","github_repo_kind": "owned"|"collaborator"|"fork"|"template","job_run_status": "running"|"succeeded"|"failed","looking_for_option": "internship"|"job"|"teammates"|"project"|"mentorship","profile_visibility": "friends"|"university"|"global","review_flag_kind": "burst"|"backdating"|"cross_account_duplicate","review_flag_status": "open"|"cleared"|"upheld","skill_category": "language"|"framework"|"library"|"tool"|"platform"|"practice","staff_role": "moderator"|"trust_reviewer"|"accounts"|"super_admin","sync_status": "queued"|"running"|"done"|"failed"|"cancelled","venture_invite_status": "pending"|"accepted"|"declined"|"revoked","venture_stage": "idea"|"prototype"|"launched"|"revenue","venture_status": "recruiting"|"in_progress"|"completed"|"abandoned","venture_team_role": "lead"|"developer"|"designer"|"researcher"|"other","venture_type": "project"|"startup","venture_visibility": "public"|"university"|"unlisted"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -1010,7 +1141,7 @@ export const Constants = {
           }
         },"public": {
           Enums: {
-            "account_role": ["student", "faculty", "recruiter", "university_admin"],"application_status": ["pending", "accepted", "declined", "withdrawn", "closed"],"contribution_kind": ["code", "design", "research", "docs", "management", "other"],"contribution_source": ["manual", "github"],"domain_kind": ["student", "faculty", "both"],"github_commit_status": ["pending", "counted", "held", "excluded"],"github_repo_kind": ["owned", "collaborator", "fork", "template"],"job_run_status": ["running", "succeeded", "failed"],"looking_for_option": ["internship", "job", "teammates", "project", "mentorship"],"profile_visibility": ["friends", "university", "global"],"review_flag_kind": ["burst", "backdating", "cross_account_duplicate"],"review_flag_status": ["open", "cleared", "upheld"],"skill_category": ["language", "framework", "library", "tool", "platform", "practice"],"staff_role": ["moderator", "trust_reviewer", "accounts", "super_admin"],"sync_status": ["queued", "running", "done", "failed", "cancelled"],"venture_invite_status": ["pending", "accepted", "declined", "revoked"],"venture_stage": ["idea", "prototype", "launched", "revenue"],"venture_status": ["recruiting", "in_progress", "completed", "abandoned"],"venture_team_role": ["lead", "developer", "designer", "researcher", "other"],"venture_type": ["project", "startup"],"venture_visibility": ["public", "university", "unlisted"]
+            "account_role": ["student", "faculty", "recruiter", "university_admin"],"application_status": ["pending", "accepted", "declined", "withdrawn", "closed"],"contribution_kind": ["code", "design", "research", "docs", "management", "other"],"contribution_source": ["manual", "github"],"domain_kind": ["student", "faculty", "both"],"friend_request_status": ["pending", "accepted", "declined"],"github_commit_status": ["pending", "counted", "held", "excluded"],"github_repo_kind": ["owned", "collaborator", "fork", "template"],"job_run_status": ["running", "succeeded", "failed"],"looking_for_option": ["internship", "job", "teammates", "project", "mentorship"],"profile_visibility": ["friends", "university", "global"],"review_flag_kind": ["burst", "backdating", "cross_account_duplicate"],"review_flag_status": ["open", "cleared", "upheld"],"skill_category": ["language", "framework", "library", "tool", "platform", "practice"],"staff_role": ["moderator", "trust_reviewer", "accounts", "super_admin"],"sync_status": ["queued", "running", "done", "failed", "cancelled"],"venture_invite_status": ["pending", "accepted", "declined", "revoked"],"venture_stage": ["idea", "prototype", "launched", "revenue"],"venture_status": ["recruiting", "in_progress", "completed", "abandoned"],"venture_team_role": ["lead", "developer", "designer", "researcher", "other"],"venture_type": ["project", "startup"],"venture_visibility": ["public", "university", "unlisted"]
           }
         }
 } as const

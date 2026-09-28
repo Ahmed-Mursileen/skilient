@@ -4,71 +4,15 @@ import type { Route } from "next";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { actionContext, type ActionContext } from "@/lib/actions/context";
+import { actionContext } from "@/lib/actions/context";
 import { fail, fieldErrors, ok, type ActionResult } from "@/lib/actions/result";
-import { createClient } from "@/lib/supabase/server";
+import { call, NO_SESSION, signedIn } from "@/lib/actions/rpc";
 
 /**
  * Ventures (PRD 5.7, 5.15, 5.28). Each action validates its input, checks the session,
  * and calls one SQL function that re-checks ownership, membership and the lifecycle
  * itself (supabase/migrations/*_ventures.sql). The user id never comes from the browser.
  */
-
-type Supabase = Awaited<ReturnType<typeof createClient>>;
-
-/** SQL refusals carry a message written for the student; everything else is generic. */
-const REFUSALS: Record<string, string> = {
-  "42501": "forbidden",
-  P0002: "not_found",
-  "23505": "duplicate",
-  "23514": "limit",
-  "55000": "not_now",
-  "22023": "invalid_input",
-  "54000": "rate_limited",
-};
-
-function sentence(message: string): string {
-  const text = message.trim();
-  return text ? `${text[0].toUpperCase()}${text.slice(1)}${/[.!?]$/.test(text) ? "" : "."}` : "That didn't work.";
-}
-
-async function signedIn(ctx: ActionContext): Promise<{ supabase: Supabase; userId: string } | null> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) {
-    ctx.done("refused", { error_code: "no_session" });
-    return null;
-  }
-  return { supabase, userId: user.id };
-}
-
-const NO_SESSION = fail("no_session", "Your session expired. Sign in again to continue.");
-
-/** Calls one venture function and turns its outcome into an ActionResult. */
-async function call<T = null>(
-  ctx: ActionContext,
-  supabase: Supabase,
-  userId: string,
-  fn: string,
-  args: Record<string, unknown>,
-  revalidate: string[] = [],
-): Promise<ActionResult<T>> {
-  const { data, error } = await supabase.rpc(fn as never, args as never);
-  if (error) {
-    const code = REFUSALS[error.code ?? ""];
-    if (code) {
-      ctx.done("refused", { error_code: code, user_id: userId });
-      return fail(code, code === "rate_limited" ? "You're doing that too often. Try again later." : sentence(error.message));
-    }
-    ctx.done("error", { error_code: error.code ?? "unknown", user_id: userId });
-    return fail("unavailable", "Something went wrong on our side. Try again.", { requestId: ctx.requestId });
-  }
-  ctx.done("ok", { user_id: userId });
-  for (const path of revalidate) revalidatePath(path as Route);
-  return ok(data as T);
-}
 
 const uuid = z.uuid();
 const skillIds = z.array(z.string().regex(/^[a-z0-9][a-z0-9-]{0,39}$/)).max(10);

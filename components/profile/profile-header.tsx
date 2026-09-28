@@ -14,6 +14,7 @@ export function ProfileHeader({
   coverUrl,
   isOwner,
   githubLogin,
+  actions,
   note,
 }: {
   fullName: string;
@@ -26,6 +27,8 @@ export function ProfileHeader({
   isOwner?: boolean;
   /** The linked GitHub account (readable wherever the full profile is). */
   githubLogin?: string | null;
+  /** Friend and block controls on someone else's profile. */
+  actions?: ReactNode;
   note?: ReactNode;
 }) {
   const meta = [department, graduationYear ? `Class of ${graduationYear}` : null].filter(Boolean).join(" · ");
@@ -65,6 +68,7 @@ export function ProfileHeader({
             <span className="sr-only">{" on GitHub (opens GitHub)"}</span>
           </a>
         ) : null}
+        {actions ? <div className="mt-4">{actions}</div> : null}
         {note ? <div className="mt-4">{note}</div> : null}
       </div>
     </header>

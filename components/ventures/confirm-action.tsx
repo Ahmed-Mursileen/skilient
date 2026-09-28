@@ -20,7 +20,7 @@ export function ConfirmAction({
   danger = false,
   ariaLabel,
 }: {
-  action: () => Promise<ActionResult>;
+  action: () => Promise<ActionResult<unknown>>;
   label: string;
   confirm?: { title: string; description: string };
   confirmLabel?: string;

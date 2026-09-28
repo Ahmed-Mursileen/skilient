@@ -1,9 +1,11 @@
 import { LockSimple } from "@phosphor-icons/react/dist/ssr";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { ProfileFriendActions } from "@/components/friends/profile-friend-actions";
 import { ProfileHeader } from "@/components/profile/profile-header";
 import { ProfileTabs } from "@/components/profile/profile-tabs";
 import { EmptyState } from "@/components/ui";
+import { getFriendshipState } from "@/lib/data/friends";
 import { getProfile } from "@/lib/data/profiles";
 import { getGithubLogin } from "@/lib/data/skills";
 
@@ -35,6 +37,7 @@ export default async function ProfileLayout({ params, children }: LayoutProps<"/
   }
   if (lookup.kind === "card") {
     const { card } = lookup;
+    const relation = await getFriendshipState(card.username);
     return (
       <main className="mx-auto flex max-w-[680px] flex-col gap-6 px-[var(--page-gutter)] py-8">
         <ProfileHeader
@@ -42,6 +45,7 @@ export default async function ProfileLayout({ params, children }: LayoutProps<"/
           username={card.username}
           department={card.department}
           graduationYear={card.graduationYear}
+          actions={relationActions(card.username, card.fullName, relation)}
           note={
             <p className="flex items-start gap-2 rounded-md border border-border-default bg-bg-surface px-3 py-2.5 text-body-sm text-text-secondary" data-testid="restricted-card">
               <LockSimple aria-hidden weight="bold" className="mt-0.5 size-4 shrink-0" />
@@ -54,7 +58,10 @@ export default async function ProfileLayout({ params, children }: LayoutProps<"/
   }
 
   const { profile } = lookup;
-  const githubLogin = await getGithubLogin(profile.userId);
+  const [githubLogin, relation] = await Promise.all([
+    getGithubLogin(profile.userId),
+    profile.isOwner ? null : getFriendshipState(profile.username),
+  ]);
   return (
     <main className="mx-auto flex max-w-[680px] flex-col gap-6 px-[var(--page-gutter)] py-8">
       <ProfileHeader
@@ -67,9 +74,19 @@ export default async function ProfileLayout({ params, children }: LayoutProps<"/
         coverUrl={profile.coverUrl}
         isOwner={profile.isOwner}
         githubLogin={githubLogin}
+        actions={relationActions(profile.username, profile.fullName, relation)}
       />
       <ProfileTabs username={profile.username} />
       <div>{children}</div>
     </main>
   );
+}
+
+function relationActions(
+  username: string,
+  fullName: string,
+  relation: Awaited<ReturnType<typeof getFriendshipState>>,
+) {
+  if (!relation || relation.state === "self") return null;
+  return <ProfileFriendActions username={username} fullName={fullName} state={relation.state} requestId={relation.requestId} />;
 }
