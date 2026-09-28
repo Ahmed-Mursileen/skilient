@@ -370,6 +370,76 @@ isOneToOne: false
                   Relationships: [
                     
                   ]
+                },"notification_categories": {
+                  Row: {
+                    "allow_instant": boolean,"category": string,"default_channel": Database["public"]['Enums']["email_channel"],"description": string,"label": string,"position": number
+                  }
+                  Insert: {
+                    "allow_instant"?: boolean,"category": string,"default_channel": Database["public"]['Enums']["email_channel"],"description": string,"label": string,"position": number
+                  }
+                  Update: {
+                    "allow_instant"?: boolean,"category"?: string,"default_channel"?: Database["public"]['Enums']["email_channel"],"description"?: string,"label"?: string,"position"?: number
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"notification_prefs": {
+                  Row: {
+                    "category": string,"channel": Database["public"]['Enums']["email_channel"],"updated_at": string,"user_id": string
+                  }
+                  Insert: {
+                    "category": string,"channel": Database["public"]['Enums']["email_channel"],"updated_at"?: string,"user_id": string
+                  }
+                  Update: {
+                    "category"?: string,"channel"?: Database["public"]['Enums']["email_channel"],"updated_at"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "notification_prefs_category_fkey"
+      columns: ["category"]
+isOneToOne: false
+      referencedRelation: "notification_categories"
+      referencedColumns: ["category"]
+    }
+                  ]
+                },"notification_types": {
+                  Row: {
+                    "category": string,"emailed": boolean,"type": string
+                  }
+                  Insert: {
+                    "category": string,"emailed"?: boolean,"type": string
+                  }
+                  Update: {
+                    "category"?: string,"emailed"?: boolean,"type"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "notification_types_category_fkey"
+      columns: ["category"]
+isOneToOne: false
+      referencedRelation: "notification_categories"
+      referencedColumns: ["category"]
+    }
+                  ]
+                },"notifications": {
+                  Row: {
+                    "actor_id": string | null,"created_at": string,"data": NonNullable<Json>,"entity_id": string,"entity_type": string,"id": string,"read_at": string | null,"type": string,"user_id": string
+                  }
+                  Insert: {
+                    "actor_id"?: string | null,"created_at"?: string,"data"?: NonNullable<Json>,"entity_id": string,"entity_type": string,"id"?: string,"read_at"?: string | null,"type": string,"user_id": string
+                  }
+                  Update: {
+                    "actor_id"?: string | null,"created_at"?: string,"data"?: NonNullable<Json>,"entity_id"?: string,"entity_type"?: string,"id"?: string,"read_at"?: string | null,"type"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "notifications_type_fkey"
+      columns: ["type"]
+isOneToOne: false
+      referencedRelation: "notification_types"
+      referencedColumns: ["type"]
+    }
+                  ]
                 },"onboarding_state": {
                   Row: {
                     "completed_at": string | null,"created_at": string,"data": NonNullable<Json>,"role": Database["public"]['Enums']["account_role"],"step": number,"updated_at": string,"user_id": string
@@ -876,6 +946,12 @@ isOneToOne: false
 "log_security_event":
 { Args: { "p_ip_hash": string,"p_kind": string,"p_user_agent": string }; Returns: undefined
                            },
+"mark_all_notifications_read":
+{ Args: Record<PropertyKey, never>; Returns: number
+                           },
+"mark_notification_read":
+{ Args: { "p_id": string }; Returns: undefined
+                           },
 "mfa_backup_codes_remaining":
 { Args: Record<PropertyKey, never>; Returns: number
                            },
@@ -896,6 +972,16 @@ isOneToOne: false
                            },
 "my_gate_state":
 { Args: Record<PropertyKey, never>; Returns: Json
+                           },
+"my_notification_settings":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "allow_instant": boolean,"category": string,"channel": Database["public"]['Enums']["email_channel"],"description": string,"label": string
+            }[]
+                           },
+"my_notifications":
+{ Args: { "p_before"?: string,"p_limit"?: number }; Returns: {
+              "actor_avatar_path": string,"actor_name": string,"actor_username": string,"category": string,"created_at": string,"data": Json,"entity_id": string,"entity_type": string,"id": string,"read_at": string,"type": string
+            }[]
                            },
 "my_skills":
 { Args: Record<PropertyKey, never>; Returns: {
@@ -965,6 +1051,9 @@ isOneToOne: false
 "set_my_university":
 { Args: { "p_university_id": string }; Returns: boolean
                            },
+"set_notification_pref":
+{ Args: { "p_category": string,"p_channel": Database["public"]['Enums']["email_channel"] }; Returns: undefined
+                           },
 "set_venture_questions":
 { Args: { "p_questions": (string)[],"p_venture": string }; Returns: undefined
                            },
@@ -977,6 +1066,9 @@ isOneToOne: false
 "start_github_link":
 { Args: { "p_code": string,"p_installation_id"?: number }; Returns: string
                            },
+"touch_activity":
+{ Args: Record<PropertyKey, never>; Returns: undefined
+                           },
 "transfer_venture_ownership":
 { Args: { "p_member": string,"p_venture": string }; Returns: undefined
                            },
@@ -988,6 +1080,9 @@ isOneToOne: false
                            },
 "unfriend":
 { Args: { "p_username": string }; Returns: undefined
+                           },
+"unread_notification_count":
+{ Args: Record<PropertyKey, never>; Returns: number
                            },
 "update_venture":
 { Args: { "p": Json,"p_venture": string }; Returns: undefined
@@ -1021,7 +1116,7 @@ isOneToOne: false
                            }
           }
           Enums: {
-            "account_role": "student"|"faculty"|"recruiter"|"university_admin","application_status": "pending"|"accepted"|"declined"|"withdrawn"|"closed","contribution_kind": "code"|"design"|"research"|"docs"|"management"|"other","contribution_source": "manual"|"github","domain_kind": "student"|"faculty"|"both","friend_request_status": "pending"|"accepted"|"declined","github_commit_status": "pending"|"counted"|"held"|"excluded","github_repo_kind": "owned"|"collaborator"|"fork"|"template","job_run_status": "running"|"succeeded"|"failed","looking_for_option": "internship"|"job"|"teammates"|"project"|"mentorship","profile_visibility": "friends"|"university"|"global","review_flag_kind": "burst"|"backdating"|"cross_account_duplicate","review_flag_status": "open"|"cleared"|"upheld","skill_category": "language"|"framework"|"library"|"tool"|"platform"|"practice","staff_role": "moderator"|"trust_reviewer"|"accounts"|"super_admin","sync_status": "queued"|"running"|"done"|"failed"|"cancelled","venture_invite_status": "pending"|"accepted"|"declined"|"revoked","venture_stage": "idea"|"prototype"|"launched"|"revenue","venture_status": "recruiting"|"in_progress"|"completed"|"abandoned","venture_team_role": "lead"|"developer"|"designer"|"researcher"|"other","venture_type": "project"|"startup","venture_visibility": "public"|"university"|"unlisted"
+            "account_role": "student"|"faculty"|"recruiter"|"university_admin","application_status": "pending"|"accepted"|"declined"|"withdrawn"|"closed","contribution_kind": "code"|"design"|"research"|"docs"|"management"|"other","contribution_source": "manual"|"github","domain_kind": "student"|"faculty"|"both","email_channel": "instant_email"|"digest"|"off","friend_request_status": "pending"|"accepted"|"declined","github_commit_status": "pending"|"counted"|"held"|"excluded","github_repo_kind": "owned"|"collaborator"|"fork"|"template","job_run_status": "running"|"succeeded"|"failed","looking_for_option": "internship"|"job"|"teammates"|"project"|"mentorship","profile_visibility": "friends"|"university"|"global","review_flag_kind": "burst"|"backdating"|"cross_account_duplicate","review_flag_status": "open"|"cleared"|"upheld","skill_category": "language"|"framework"|"library"|"tool"|"platform"|"practice","staff_role": "moderator"|"trust_reviewer"|"accounts"|"super_admin","sync_status": "queued"|"running"|"done"|"failed"|"cancelled","venture_invite_status": "pending"|"accepted"|"declined"|"revoked","venture_stage": "idea"|"prototype"|"launched"|"revenue","venture_status": "recruiting"|"in_progress"|"completed"|"abandoned","venture_team_role": "lead"|"developer"|"designer"|"researcher"|"other","venture_type": "project"|"startup","venture_visibility": "public"|"university"|"unlisted"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -1141,7 +1236,7 @@ export const Constants = {
           }
         },"public": {
           Enums: {
-            "account_role": ["student", "faculty", "recruiter", "university_admin"],"application_status": ["pending", "accepted", "declined", "withdrawn", "closed"],"contribution_kind": ["code", "design", "research", "docs", "management", "other"],"contribution_source": ["manual", "github"],"domain_kind": ["student", "faculty", "both"],"friend_request_status": ["pending", "accepted", "declined"],"github_commit_status": ["pending", "counted", "held", "excluded"],"github_repo_kind": ["owned", "collaborator", "fork", "template"],"job_run_status": ["running", "succeeded", "failed"],"looking_for_option": ["internship", "job", "teammates", "project", "mentorship"],"profile_visibility": ["friends", "university", "global"],"review_flag_kind": ["burst", "backdating", "cross_account_duplicate"],"review_flag_status": ["open", "cleared", "upheld"],"skill_category": ["language", "framework", "library", "tool", "platform", "practice"],"staff_role": ["moderator", "trust_reviewer", "accounts", "super_admin"],"sync_status": ["queued", "running", "done", "failed", "cancelled"],"venture_invite_status": ["pending", "accepted", "declined", "revoked"],"venture_stage": ["idea", "prototype", "launched", "revenue"],"venture_status": ["recruiting", "in_progress", "completed", "abandoned"],"venture_team_role": ["lead", "developer", "designer", "researcher", "other"],"venture_type": ["project", "startup"],"venture_visibility": ["public", "university", "unlisted"]
+            "account_role": ["student", "faculty", "recruiter", "university_admin"],"application_status": ["pending", "accepted", "declined", "withdrawn", "closed"],"contribution_kind": ["code", "design", "research", "docs", "management", "other"],"contribution_source": ["manual", "github"],"domain_kind": ["student", "faculty", "both"],"email_channel": ["instant_email", "digest", "off"],"friend_request_status": ["pending", "accepted", "declined"],"github_commit_status": ["pending", "counted", "held", "excluded"],"github_repo_kind": ["owned", "collaborator", "fork", "template"],"job_run_status": ["running", "succeeded", "failed"],"looking_for_option": ["internship", "job", "teammates", "project", "mentorship"],"profile_visibility": ["friends", "university", "global"],"review_flag_kind": ["burst", "backdating", "cross_account_duplicate"],"review_flag_status": ["open", "cleared", "upheld"],"skill_category": ["language", "framework", "library", "tool", "platform", "practice"],"staff_role": ["moderator", "trust_reviewer", "accounts", "super_admin"],"sync_status": ["queued", "running", "done", "failed", "cancelled"],"venture_invite_status": ["pending", "accepted", "declined", "revoked"],"venture_stage": ["idea", "prototype", "launched", "revenue"],"venture_status": ["recruiting", "in_progress", "completed", "abandoned"],"venture_team_role": ["lead", "developer", "designer", "researcher", "other"],"venture_type": ["project", "startup"],"venture_visibility": ["public", "university", "unlisted"]
           }
         }
 } as const

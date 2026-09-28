@@ -22,6 +22,10 @@ Claude Code can't create these accounts or keys. Do them before (or alongside) p
 
 - [x] **Skilient GitHub App**: name, homepage, callback URL `/api/github/callback`, webhook URL `/api/github/webhook`, webhook secret, private key (.pem), permissions read-only (contents, metadata, pull requests); events: push, pull_request, pull_request_review, installation_repositories.
 
+## Phase 3 ⏳
+
+- [ ] **Notification emails** (phase 3 slice 2): set three Edge Function secrets on the Supabase project (Dashboard → Edge Functions → Secrets): `RESEND_API_KEY` (the Resend key), `EMAIL_FROM` (e.g. `Skilient <notify@send.techshiner.tech>`), `APP_URL` (the production origin, no trailing slash). Until they're set the `notify-worker` answers "not configured" and notifications stay in-app only; the queue keeps them for up to 12 hours (instant) or until the next digest. It reuses the Vault secret `project_url` set for the GitHub worker.
+
 ## Before phase 10 ⏳
 
 - [ ] **Company registration** (needed by payment gateways).

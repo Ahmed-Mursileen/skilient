@@ -6,6 +6,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { SignOutButton } from "@/components/auth/sign-out-button";
 import { FriendsNavLink } from "@/components/friends/friends-nav-link";
+import { NotificationBell } from "@/components/notifications/notification-bell";
 import { useCurrentUser } from "@/components/providers/current-user-provider";
 import { Avatar } from "@/components/ui";
 
@@ -43,6 +44,7 @@ export function AppHeader() {
             <Link href="/requests" className="rounded-md px-2 py-1 text-body-sm text-text-secondary hover:bg-bg-subtle hover:text-text-primary">
               Requests
             </Link>
+            <NotificationBell userId={user.id} />
             <Link href="/settings" className="rounded-md px-2 py-1 text-body-sm text-text-secondary hover:bg-bg-subtle hover:text-text-primary">
               Settings
             </Link>

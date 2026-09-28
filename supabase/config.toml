@@ -413,6 +413,9 @@ verify_jwt = false
 [functions.github-worker]
 verify_jwt = false
 
+[functions.notify-worker]
+verify_jwt = false
+
 [analytics]
 enabled = true
 port = 54327
