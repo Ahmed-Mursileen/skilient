@@ -148,7 +148,11 @@ test.describe("GitHub connection", () => {
           user_id: student.id, repo_id: repos[0], sha: sha(i + 1), occurred_at: at, seen_via: "harvest",
           meaningful_lines: 60, status: "counted", extracted_at: at,
         })),
-        { user_id: student.id, repo_id: repos[0], sha: sha(9), occurred_at: days[2], seen_via: "push", status: "held", extracted_at: days[2] },
+        // Rows in one insert must share keys: PostgREST fills a missing key with null, not the default.
+        {
+          user_id: student.id, repo_id: repos[0], sha: sha(9), occurred_at: days[2], seen_via: "push",
+          meaningful_lines: 0, status: "held", extracted_at: days[2],
+        },
       ]),
     );
     must(
