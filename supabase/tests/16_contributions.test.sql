@@ -2,7 +2,7 @@
 -- with B as a member; C is a NUTECH outsider; D studies at FAST. A second, university-only
 -- venture checks who reads the log.
 begin;
-select plan(35);
+select plan(38);
 
 insert into auth.users (id, email) values
   ('91000000-0000-0000-0000-00000000000a', 'a@nutech.edu.pk'),
@@ -131,17 +131,28 @@ insert into public.github_repos (repo_id, full_name, owner_id, private) values (
 insert into public.github_user_repos (user_id, repo_id, installation_id) values
   ('91000000-0000-0000-0000-00000000000a', 91001, 9101),
   ('91000000-0000-0000-0000-00000000000b', 91001, 9101);
--- A commit from before the venture started never counts.
+-- Commits from before the venture: within 6 months they come in as "before Skilient".
 insert into public.github_commits (user_id, repo_id, sha, occurred_at, seen_via, status, meaningful_lines) values
+  ('91000000-0000-0000-0000-00000000000b', 91001, repeat('0', 40), now() - interval '7 months', 'harvest', 'counted', 40),
   ('91000000-0000-0000-0000-00000000000b', 91001, repeat('1', 40), now() - interval '30 days', 'harvest', 'counted', 40),
   ('91000000-0000-0000-0000-00000000000b', 91001, repeat('2', 40), now(), 'harvest', 'counted', 25);
 set local role authenticated;
 select pg_temp.as_user('91000000-0000-0000-0000-00000000000a');
 select lives_ok($$ select public.link_venture_repo(pg_temp.v('v1'), 91001) $$, 'the owner links the repository');
-select results_eq($$ select user_id::text, commit_sha, peer_verified from public.contributions_with_status
-  where venture_id = pg_temp.v('v1') and source = 'github' $$,
-  $$ values ('91000000-0000-0000-0000-00000000000b', repeat('2', 40), true) $$,
-  'linking imports the member''s counted commits since the venture started, already verified');
+select results_eq($$ select user_id::text, commit_sha, before_venture, peer_verified from public.contributions_with_status
+  where venture_id = pg_temp.v('v1') and source = 'github' order by commit_sha $$,
+  $$ values ('91000000-0000-0000-0000-00000000000b', repeat('1', 40), true, false),
+            ('91000000-0000-0000-0000-00000000000b', repeat('2', 40), false, true) $$,
+  'linking imports counted commits from 6 months before the venture (unverified) and since (verified); older ones never');
+select pg_temp.as_user('91000000-0000-0000-0000-00000000000b');
+select throws_ok($$ select public.confirm_contribution(
+  (select id from public.contributions where commit_sha = repeat('1', 40))) $$, '42501', null,
+  'the author cannot confirm their own pre-venture commit');
+select pg_temp.as_user('91000000-0000-0000-0000-00000000000a');
+select lives_ok($$ select public.confirm_contribution(
+  (select id from public.contributions where commit_sha = repeat('1', 40))) $$, 'a teammate confirms a pre-venture commit');
+select is((select peer_verified from public.contributions_with_status where commit_sha = repeat('1', 40)), true,
+  'which then counts as peer-verified');
 reset role;
 insert into public.github_commits (user_id, repo_id, sha, occurred_at, seen_via, status, meaningful_lines) values
   ('91000000-0000-0000-0000-00000000000a', 91001, repeat('3', 40), now(), 'push', 'pending', 12);

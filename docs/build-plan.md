@@ -23,6 +23,8 @@ Legend: 📖 = PRD files to read (in `docs/prd/`), ✅ = done-when checks.
 
 *Status 2026-09-27: every box ticked. db reset + pgTAP pass in CI; every primitive renders in both themes and axe-core is clean (desktop + phone); preview deploy green (`/api/health` 200 on 723db53). Vercel function region confirmed `bom1`. Phase 0 closes when the Realtime health-check fix is on `main` and production `/api/health` returns 200.*
 
+*Closed 2026-09-28: production `/api/health` returns 200 with `"status": "ok"` (database, storage and realtime ok) on version 32eaa36.*
+
 ## Phase 1 — Identity
 
 📖 `05-02-authentication.md`, `05-27-signup-onboarding-and-learning-the-platform.md`, `05-04-profiles.md`, `05-23-university-portal.md` (HEC seed only), `08-security-privacy-and-rls.md`, `10-…` (Security: accounts and sign-in)
@@ -51,7 +53,7 @@ Legend: 📖 = PRD files to read (in `docs/prd/`), ✅ = done-when checks.
 
 ✅ A real GitHub account produces the expected L2 skills · spoofed `user.email` commits never count · webhook replay is idempotent · a venture completes only with ≥ 2 members, a deliverable and peer-verified contributions · a 7th member can't join under parallel accepts
 
-*Status 2026-09-28: every box ticked, across the slice PRs (GitHub connect, taxonomy, evidence and levels, skill UI, ventures database, venture screens, contribution log). Done-when as tested: spoofed `user.email` commits never count and webhook replay is idempotent (`tests/worker` with a fake GitHub, pgTAP `09_github_connect`, E2E `github.spec.ts`); completion needs 2 members, a deliverable and peer-verified contributions from 2 current members (pgTAP `14_ventures`, `16_contributions`, E2E `ventures.spec.ts`); a 7th member is refused under parallel accepts (`tests/worker/ventures-concurrency`). Still for a human: "a real GitHub account produces the expected L2 skills" needs the hosted GitHub App and a real account on staging, since CI only has a fake GitHub.*
+*Status 2026-09-28: every box ticked, across the slice PRs (GitHub connect, taxonomy, evidence and levels, skill UI, ventures database, venture screens, contribution log). Done-when as tested: spoofed `user.email` commits never count and webhook replay is idempotent (`tests/worker` with a fake GitHub, pgTAP `09_github_connect`, E2E `github.spec.ts`); completion needs 2 members, a deliverable and peer-verified contributions from 2 current members (pgTAP `14_ventures`, `16_contributions`, E2E `ventures.spec.ts`); a 7th member is refused under parallel accepts (`tests/worker/ventures-concurrency`). The real-account check first failed on production (commit files are named `filename` in GitHub's API; the fake had both names), fixed in #23; a resync then finished with commit-based levels, so "a real GitHub account produces the expected L2 skills" passed on production on 2026-09-28. Phase 2 is closed.*
 
 ## Phase 3 — Social core
 
@@ -68,7 +70,7 @@ Legend: 📖 = PRD files to read (in `docs/prd/`), ✅ = done-when checks.
 
 ## ★ Slice checkpoint
 
-- [ ] Signup → GitHub → venture → post → survey → chat works end to end on staging
+- [ ] Signup → GitHub → venture → post → survey → chat works end to end on staging — *staging deferred until a production build exists (decisions.md 2026-09-28): run this check on production with test accounts*
 - [ ] 10 internal testers use it for a week; no Sev 1/Sev 2 open
 
 ## Phase 4 — Trust and ranking
