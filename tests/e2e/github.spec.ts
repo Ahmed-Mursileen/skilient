@@ -16,6 +16,8 @@ test.describe("GitHub connection", () => {
   });
 
   async function axe(page: Page, label: string) {
+    // Next streams page metadata: wait for the <title> before checking the document.
+    await expect(page).toHaveTitle(/\S/);
     const results = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).analyze();
     expect(results.violations.map((v) => `${label} ${v.id}: ${v.nodes.map((n) => n.target.join(" ")).join(", ")}`)).toEqual([]);
   }

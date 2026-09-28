@@ -250,3 +250,61 @@ export async function muteUser(username: string, mute: boolean): Promise<ActionR
   // No revalidation: refreshing the feed would drop the card before its Undo notice shows.
   return call(ctx, session.supabase, session.userId, "mute_user", { p_username: parsed.data, p_mute: mute === true });
 }
+
+// ---------------------------------------------------------------------------
+// Micro-survey and qualified views (slice 5)
+// ---------------------------------------------------------------------------
+
+/** Qualified views (>= 60% on screen for >= 1.5 s), batched by the client every 10 s. */
+export async function recordViews(postIds: string[]): Promise<ActionResult<number>> {
+  const ctx = await actionContext("posts.views");
+  const parsed = z.array(uuid).min(1).max(100).safeParse(postIds);
+  if (!parsed.success) {
+    ctx.done("refused", { error_code: "invalid_input" });
+    return fail("invalid_input", "Nothing to record.");
+  }
+  const session = await signedIn(ctx);
+  if (!session) return NO_SESSION;
+  return call<number>(ctx, session.supabase, session.userId, "record_views", { p_ids: [...new Set(parsed.data)] });
+}
+
+export async function answerSurvey(postId: string, answer: boolean, latencyMs: number): Promise<ActionResult> {
+  const ctx = await actionContext("survey.answer");
+  const parsed = z
+    .object({ id: uuid, answer: z.boolean(), latency: z.number().int().min(0).max(86_400_000) })
+    .safeParse({ id: postId, answer, latency: Math.round(latencyMs) });
+  if (!parsed.success) {
+    ctx.done("refused", { error_code: "invalid_input" });
+    return fail("invalid_input", "Answer yes or no.");
+  }
+  const session = await signedIn(ctx);
+  if (!session) return NO_SESSION;
+  return call(ctx, session.supabase, session.userId, "answer_survey", {
+    p_post: parsed.data.id,
+    p_answer: parsed.data.answer,
+    p_latency_ms: parsed.data.latency,
+  });
+}
+
+export interface InsightRow {
+  dimension: string;
+  label: string;
+  ticks: number;
+  crosses: number;
+  weightedRate: number | null;
+}
+
+/** Paid (PRD 5.28): the author's full breakdown. Refused in SQL without the entitlement. */
+export async function getPostInsights(postId: string): Promise<ActionResult<InsightRow[]>> {
+  const ctx = await actionContext("survey.insights");
+  if (!uuid.safeParse(postId).success) {
+    ctx.done("refused", { error_code: "invalid_input" });
+    return fail("invalid_input", "That post doesn't exist.");
+  }
+  const session = await signedIn(ctx);
+  if (!session) return NO_SESSION;
+  const result = await call<{ dimension: string; label: string; ticks: number; crosses: number; weighted_rate: number | null }[]>(
+    ctx, session.supabase, session.userId, "post_insights", { p_post: postId });
+  if (!result.ok) return result.code === "forbidden" ? fail("upgrade", "Post insights come with Student Pro.") : result;
+  return ok(result.data.map((r) => ({ dimension: r.dimension, label: r.label, ticks: r.ticks, crosses: r.crosses, weightedRate: r.weighted_rate })));
+}

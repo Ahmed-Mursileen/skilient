@@ -25,6 +25,8 @@ test.describe("auth", () => {
   test.skip(!hasBackend, "needs the local Supabase stack (E2E_SUPABASE_URL / E2E_SUPABASE_SECRET_KEY)");
 
   async function axe(page: import("@playwright/test").Page, label: string) {
+    // Next streams page metadata: wait for the <title> before checking the document.
+    await expect(page).toHaveTitle(/\S/);
     const results = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).analyze();
     expect(results.violations.map((v) => `${label} ${v.id}: ${v.nodes.map((n) => n.target.join(" ")).join(", ")}`)).toEqual([]);
   }
@@ -319,7 +321,9 @@ for (const colorScheme of ["light", "dark"] as const) {
       for (const path of ["/signin", "/signin/code", "/signup", "/forgot-password", "/signup/verify", "/reset-password", "/auth/confirmed"]) {
         await page.goto(path);
         await page.locator("h1").first().waitFor();
-        const results = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).analyze();
+        // Next streams page metadata: wait for the <title> before checking the document.
+    await expect(page).toHaveTitle(/\S/);
+    const results = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).analyze();
         expect(results.violations.map((v) => `${path} ${v.id}: ${v.nodes.map((n) => n.target.join(" ")).join(", ")}`)).toEqual([]);
       }
       expect(problems).toEqual([]);
