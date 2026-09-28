@@ -50,6 +50,19 @@ const rawSupabaseRestSelectors = [
   },
 ];
 
+// Decisions 2026-09-28: auth cookies stay browser-readable (@supabase/ssr), so XSS defences
+// are mandatory. Never render raw HTML: no dangerouslySetInnerHTML, innerHTML or outerHTML.
+const rawHtmlSelectors = [
+  {
+    selector: "AssignmentExpression > MemberExpression.left[property.name=/^(innerHTML|outerHTML)$/]",
+    message: "Never render raw HTML (XSS). Build elements, or escape text.",
+  },
+  {
+    selector: "CallExpression[callee.property.name='insertAdjacentHTML']",
+    message: "Never render raw HTML (XSS). Build elements, or escape text.",
+  },
+];
+
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
@@ -70,7 +83,8 @@ const eslintConfig = defineConfig([
     files: ["**/*.{ts,tsx,js,mjs}"],
     rules: {
       "no-restricted-imports": ["error", { patterns: [serviceRoleImport] }],
-      "no-restricted-syntax": ["error", ...serviceRoleEnvSelectors, ...getSessionSelectors, ...rawSupabaseRestSelectors],
+      "no-restricted-syntax": ["error", ...serviceRoleEnvSelectors, ...getSessionSelectors, ...rawSupabaseRestSelectors, ...rawHtmlSelectors],
+      "react/no-danger": "error",
     },
   },
   {
@@ -78,12 +92,12 @@ const eslintConfig = defineConfig([
     rules: {
       "no-restricted-imports": "off",
       // They import the client; only service.ts itself reads the key.
-      "no-restricted-syntax": ["error", ...serviceRoleEnvSelectors, ...getSessionSelectors, ...rawSupabaseRestSelectors],
+      "no-restricted-syntax": ["error", ...serviceRoleEnvSelectors, ...getSessionSelectors, ...rawSupabaseRestSelectors, ...rawHtmlSelectors],
     },
   },
   {
     files: ["lib/supabase/service.ts"],
-    rules: { "no-restricted-syntax": ["error", ...getSessionSelectors, ...rawSupabaseRestSelectors] },
+    rules: { "no-restricted-syntax": ["error", ...getSessionSelectors, ...rawSupabaseRestSelectors, ...rawHtmlSelectors] },
   },
 ]);
 

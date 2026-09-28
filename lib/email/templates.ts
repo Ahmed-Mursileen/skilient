@@ -68,17 +68,37 @@ export function newDeviceEmail(to: string, d: NewDeviceDetails): Email {
 }
 
 /** Account locked after 10 failed sign-ins in 15 minutes (PRD 10). */
-export function accountLockedEmail(to: string, resetUrl: string): Email {
-  const title = "Your Skilient account is locked for 15 minutes";
-  const body = "Someone tried to sign in to your account with the wrong password 10 times, so we've paused sign-ins for 15 minutes.";
+/** Decisions 2026-09-28: no lockout; the owner hears about repeated wrong passwords. */
+export function signInAttemptsEmail(to: string, urls: { codeUrl: string; resetUrl: string }): Email {
+  const title = "Someone is trying to sign in to your Skilient account";
+  const body =
+    "Someone has entered the wrong password for your account 10 times in the last 15 minutes. We've slowed down password sign-in for your account; your account is not locked.";
+  const code = "You can still sign in any time with a code we email you, or with your university Google account.";
   return {
     to,
     subject: title,
     html: layout(
       title,
-      p(body) + p("If this wasn't you, reset your password now:") + button(resetUrl, "Reset my password"),
-      "You'll be able to sign in again after 15 minutes.",
+      p(body) + p(code) + button(urls.codeUrl, "Sign in with an emailed code") + p("If this wasn't you, change your password:") +
+        button(urls.resetUrl, "Reset my password"),
+      "If it was you, there's nothing to do. We send this at most once an hour.",
     ),
-    text: `${body}\n\nIf this wasn't you, reset your password: ${resetUrl}\n`,
+    text: `${body}\n\n${code}\nSign in with a code: ${urls.codeUrl}\n\nIf this wasn't you, reset your password: ${urls.resetUrl}\n`,
+  };
+}
+
+/** A two-factor backup code was used; two-factor is now off until set up again. */
+export function backupCodeUsedEmail(to: string, securityUrl: string, at: Date = new Date()): Email {
+  const title = "A two-factor backup code was used";
+  const body = `Someone signed in to your Skilient account with one of your backup codes on ${timeFormat.format(at)} (Pakistan time). Two-factor authentication is now off and your other backup codes no longer work.`;
+  return {
+    to,
+    subject: title,
+    html: layout(
+      title,
+      p(body) + p("Set up two-factor again from Settings, Security:") + button(securityUrl, "Open security settings"),
+      "If this wasn't you, reset your password and set up two-factor again now.",
+    ),
+    text: `${body}\n\nSet up two-factor again: ${securityUrl}\n\nIf this wasn't you, reset your password now.\n`,
   };
 }

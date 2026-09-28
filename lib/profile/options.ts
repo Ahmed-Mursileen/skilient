@@ -49,12 +49,13 @@ export function graduationYears(now = new Date()): number[] {
   return years;
 }
 
+/** What a student is open to (5.27 multi-select). Stored as an enum array for matching later. */
 export const LOOKING_FOR = [
-  { value: "internships", label: "Internships" },
-  { value: "jobs", label: "Jobs" },
-  { value: "teammates", label: "Teammates for projects" },
-  { value: "competitions", label: "Competitions and hackathons" },
-  { value: "learning", label: "Learning from others" },
+  { value: "teammates", label: "Teammates" },
+  { value: "project", label: "A project to join" },
+  { value: "internship", label: "An internship" },
+  { value: "job", label: "A job" },
+  { value: "mentorship", label: "Faculty mentorship" },
 ] as const;
 export type LookingFor = (typeof LOOKING_FOR)[number]["value"];
 

@@ -3,7 +3,7 @@
 import { GoogleLogo } from "@phosphor-icons/react/dist/ssr";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState, useTransition, type FormEvent } from "react";
+import { useEffect, useState, useTransition, type FormEvent } from "react";
 import { FormAlert } from "@/components/auth/form-alert";
 import { PasswordField } from "@/components/auth/password-field";
 import { Turnstile } from "@/components/auth/turnstile";
@@ -26,12 +26,22 @@ export function SigninForm({
   const [error, setError] = useState<ActionError | null>(
     initialError ? { ok: false, code: "initial", message: initialError } : null,
   );
-  // PRD 10: Turnstile appears after 5 failed attempts for this account or network.
+  // Turnstile appears after 3 wrong passwords for this account (5 for a network); from the
+  // 10th, a wait of a few seconds. Never a lockout: the emailed code always works.
   const [captcha, setCaptcha] = useState(false);
+  const [wait, setWait] = useState(0);
   const [token, setToken] = useState<string | null>(null);
   const [resetKey, setResetKey] = useState(0);
   const [pending, startTransition] = useTransition();
   const [googlePending, startGoogle] = useTransition();
+
+  useEffect(() => {
+    if (wait <= 0) return;
+    const t = window.setTimeout(() => setWait((w) => w - 1), 1000);
+    return () => window.clearTimeout(t);
+  }, [wait]);
+
+  const codeHref = (next ? `/signin/code?next=${encodeURIComponent(next)}` : "/signin/code") as "/signin/code";
 
   function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -47,6 +57,7 @@ export function SigninForm({
         return;
       }
       if (result.hints?.captcha) setCaptcha(true);
+      if (typeof result.hints?.retryAfter === "number") setWait(result.hints.retryAfter);
       setResetKey((k) => k + 1);
       setPassword("");
       setError(result);
@@ -81,9 +92,9 @@ export function SigninForm({
         {error && !Object.keys(fields).length ? (
           <FormAlert requestId={error.requestId}>
             {error.message}{" "}
-            {error.code === "locked" ? (
-              <Link href="/forgot-password" className="font-semibold underline underline-offset-4">
-                Reset password
+            {error.code === "slow_down" || error.code === "rate_limited" ? (
+              <Link href={codeHref} className="font-semibold underline underline-offset-4">
+                Email me a code
               </Link>
             ) : null}
           </FormAlert>
@@ -113,9 +124,12 @@ export function SigninForm({
 
         {captcha && siteKey ? <Turnstile siteKey={siteKey} onToken={setToken} resetKey={resetKey} action="signin" /> : null}
 
-        <Button type="submit" size="lg" loading={pending} disabled={googlePending || (captcha && !!siteKey && !token)}>
-          Sign in
+        <Button type="submit" size="lg" loading={pending} disabled={googlePending || wait > 0 || (captcha && !!siteKey && !token)}>
+          {wait > 0 ? `Try again in ${wait}s` : "Sign in"}
         </Button>
+        <Link href={codeHref} className="self-center text-body-sm font-semibold text-text-primary underline underline-offset-4">
+          Email me a sign-in code instead
+        </Link>
       </form>
     </div>
   );

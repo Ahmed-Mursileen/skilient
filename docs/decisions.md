@@ -217,7 +217,7 @@ Append-only. One dated entry per product decision, with the reason. Carried over
 - 2026-09-27 (phase 1): `looking_for` follows 5.27 (multi-select: internships, jobs,
   teammates, competitions, learning) rather than 5.4's free text ≤ 120 chars.
   `recruiter_visible` defaults to off until the student chooses in onboarding step 5.
-  Batch is stored as `graduation_year`. **Needs Ahmed's OK.**
+  Batch is stored as `graduation_year`. *Settled 2026-09-28 (below): new options.*
 - 2026-09-27 (phase 1): Failed sign-in throttling (Turnstile after 5 failures for the
   account or the IP; after 10 the account, never the IP, is locked for 15 minutes and
   the owner emailed) lives in `signin_status()`/`signin_failed()` and guards the
@@ -232,7 +232,7 @@ Append-only. One dated entry per product decision, with the reason. Carried over
   `@supabase/ssr` default), not HttpOnly as PRD 10 lists: the browser client needs the
   session for `onAuthStateChange` (PRD 5.2's check-inbox screen and CurrentUserProvider)
   and for Realtime later. The app's own cookies (device id, pending verification,
-  agreement intent) are HttpOnly, Secure and SameSite=Lax. **Needs Ahmed's OK.**
+  agreement intent) are HttpOnly, Secure and SameSite=Lax. *Approved 2026-09-28 (below).*
 - 2026-09-27 (phase 1): Email links (confirm, reset, email change) use `token_hash` and
   land on `/auth/confirm`, so they work on any device, not only in the browser that
   started the flow (PKCE). `/auth/callback` handles Google only, honours a validated
@@ -368,3 +368,54 @@ Append-only. One dated entry per product decision, with the reason. Carried over
   shared in proportion across languages. The engine is
   `supabase/functions/_shared/github/detectors.ts`, not `lib/github/detectors/` as the
   PRD's build note says (same Edge Function bundling reason as the worker).
+- 2026-09-28 (Ahmed): Sign-in rate limits. Supabase's per-IP auth limits only see our
+  Vercel servers, so they are raised in the dashboard to stop blocking real users. The
+  app enforces: per account, Turnstile after 3 wrong passwords in 15 minutes and a
+  growing delay from the 10th (below); per network, a generous 100 sign-in, code,
+  signup and reset requests per 10 minutes on the real client IP
+  (`x-vercel-forwarded-for`, `rateLimit("auth_ip", …)`), and Turnstile after 5 failures
+  from one network. There is no strict per-IP cap, because a campus shares one Wi-Fi
+  address. *Changed from the phase 1 build:* Turnstile moves from 5 account failures to
+  3; the per-IP limit is new; local runs (loopback) skip it.
+- 2026-09-28 (Ahmed): No hard account lockout. From the 10th wrong password in 15
+  minutes, each try waits 2, 4, 8, 16, 32, then at most 60 seconds (`signin_status()`
+  returns `retry_after_seconds`), with Turnstile. The student gets a "someone is trying
+  to sign in" email, at most once an hour (`sign_in_alert` security event). The emailed
+  sign-in code (`/signin/code`, `signInWithOtp` with `shouldCreateUser: false`, same
+  answer for unknown addresses, Turnstile, 5 codes an hour per address) and university
+  Google are never throttled by password failures, so an attacker can't lock a real
+  student out. *Changed from the phase 1 build:* the 15-minute lock
+  (`private.auth_lockouts`) and its "locked" email are removed; old `account_locked`
+  events stay readable. This also settles the phase 1 "known limitation" on
+  `signin_failed()`: a script calling it can now only slow password sign-in by up to a
+  minute and trigger one email an hour. The Supabase sign-in email template
+  (`supabase/templates/magic_link.html`, subject "Your Skilient sign-in code: {{ .Token
+  }}") must be pasted into the hosted project's Magic Link template.
+- 2026-09-28 (Ahmed): "Looking for" is a multi-select (5.27 wins over 5.4) with five
+  options: teammates, a project to join, an internship, a job, faculty mentorship. It is
+  stored structured, as the `looking_for_option[]` enum array with a GIN index, ready for
+  matching. *Changed from the phase 1 build:* enum values renamed (`internships` →
+  `internship`, `jobs` → `job`, `competitions` → `project`, `learning` → `mentorship`);
+  profiles that had picked the old "competitions" or "learning" lose those picks, since
+  the new options mean something different. This replaces the 2026-09-27 entry awaiting
+  Ahmed's OK.
+- 2026-09-28 (Ahmed): Auth cookies stay browser-readable (not HttpOnly), as
+  `@supabase/ssr` needs for the browser session and Realtime; this answers the
+  2026-09-27 entry awaiting Ahmed's OK. The XSS defences are mandatory: the strict nonce
+  CSP on every page (already in `proxy.ts`); never rendering raw user HTML (now a lint
+  error: `react/no-danger`, and no `innerHTML`/`outerHTML`/`insertAdjacentHTML`);
+  short-lived access tokens (1 hour) with refresh-token rotation and reuse detection
+  (already in `config.toml`; check the hosted project's Auth settings match).
+- 2026-09-28 (Ahmed): Two-factor recovery. Backup codes are our own: 10 single-use codes
+  (xxxxx-xxxxx from an unambiguous alphabet) made in the database, stored as SHA-256
+  hashes (`private.mfa_backup_codes`), shown once when two-factor is first turned on,
+  and regenerable from Settings → Security (needs an aal2 session; the old codes stop
+  working). Students may also add more authenticators (up to 5); any of them works at
+  sign-in. Supabase can only reach aal2 through a real factor, so a used backup code
+  signs the student in with two-factor switched off (authenticators and the other codes
+  are removed) and sends them to set it up again. Each use is logged
+  (`mfa_backup_code_used`) and emailed. Removing the last authenticator deletes the
+  codes. This answers the phase 1 open question.
+- 2026-09-28 (Ahmed): A staff "reset 2FA" action in `/ops` is the last resort. It needs
+  an identity-check note, is recorded in `ops_audit_log`, and emails the student. It is
+  built in phase 11 with the rest of `/ops` (added to the build plan).

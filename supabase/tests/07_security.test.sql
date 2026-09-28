@@ -1,7 +1,7 @@
 -- Sign-in throttling, security events, new-device alerts and "This wasn't me",
 -- rate limits and staff checks (PRD 8, 10 "Accounts and sign-in").
 begin;
-select plan(31);
+select plan(35);
 
 insert into auth.users (id, email) values
   ('40000000-0000-0000-0000-00000000000a', 'a@nutech.edu.pk'),
@@ -27,40 +27,50 @@ end;
 $$;
 grant execute on function pg_temp.fail(text, text, int) to anon;
 
--- Failed sign-ins: Turnstile after 5, lock after 10, owner emailed once (PRD 10).
+-- Failed sign-ins (decisions 2026-09-28): Turnstile after 3 for the account or 5 for the
+-- network; from the 10th a growing delay of seconds and one email an hour; never a lockout.
 set local role anon;
 select is((public.signin_status('a@nutech.edu.pk', null) ->> 'failures')::int, 0, 'no failures yet');
-select is((pg_temp.fail('A@nutech.edu.pk', repeat('1', 64), 4) ->> 'captcha_required')::boolean, false,
-  'four failures do not need Turnstile');
+select is((pg_temp.fail('A@nutech.edu.pk', repeat('1', 64), 2) ->> 'captcha_required')::boolean, false,
+  'two failures do not need Turnstile');
 select is((public.signin_failed('a@nutech.edu.pk', repeat('1', 64)) ->> 'captcha_required')::boolean, true,
-  'the fifth failure needs Turnstile');
+  'the third failure needs Turnstile');
 select is((public.signin_status('a@nutech.edu.pk', null) ->> 'captcha_required')::boolean, true,
-  'the account needs Turnstile from any IP');
+  'the account needs Turnstile from any network');
+select is((public.signin_status('someone@nutech.edu.pk', repeat('1', 64)) ->> 'captcha_required')::boolean, false,
+  'three failures on a shared network do not challenge its other students');
+select is((pg_temp.fail('a@nutech.edu.pk', repeat('1', 64), 2) ->> 'failures')::int, 5, 'two more failures');
 select is((public.signin_status('someone@nutech.edu.pk', repeat('1', 64)) ->> 'captcha_required')::boolean, true,
-  'the IP needs Turnstile for any account');
-select is((pg_temp.fail('a@nutech.edu.pk', repeat('1', 64), 4) ->> 'failures')::int, 9, 'four more failures');
+  'five failures on a network need Turnstile for any account there');
 select results_eq(
-  $$ select (r ->> 'locked')::boolean, (r ->> 'notify')::boolean from (select public.signin_failed('a@nutech.edu.pk', repeat('1', 64)) r) s $$,
-  $$ values (true, true) $$,
-  'the tenth failure locks the account and asks the app to email the owner');
+  $$ select (r ->> 'retry_after_seconds')::int, (r ->> 'notify')::boolean from (select pg_temp.fail('a@nutech.edu.pk', repeat('1', 64), 4) r) s $$,
+  $$ values (0, false) $$,
+  'nine failures: no delay, no email');
 select results_eq(
-  $$ select (r ->> 'locked')::boolean, (r ->> 'notify')::boolean from (select public.signin_failed('a@nutech.edu.pk', repeat('1', 64)) r) s $$,
-  $$ values (true, false) $$,
-  'further failures while locked do not email again');
-select isnt((public.signin_status('a@nutech.edu.pk', null) ->> 'locked_until'), null, 'the account reports a lock');
-select is((public.signin_status('someone@nutech.edu.pk', repeat('1', 64)) ->> 'locked_until'), null,
-  'the IP behind those failures is challenged, never locked');
+  $$ select (r ->> 'retry_after_seconds')::int, (r ->> 'notify')::boolean from (select public.signin_failed('a@nutech.edu.pk', repeat('1', 64)) r) s $$,
+  $$ values (2, true) $$,
+  'the tenth failure adds a 2 second delay and asks the app to email the owner');
 select results_eq(
-  $$ select (r ->> 'locked')::boolean, (r ->> 'notify')::boolean from (select pg_temp.fail('nobody@nutech.edu.pk', null, 10) r) s $$,
-  $$ values (true, false) $$,
-  'a lock on an unknown account never emails');
+  $$ select (r ->> 'retry_after_seconds')::int, (r ->> 'notify')::boolean from (select public.signin_failed('a@nutech.edu.pk', repeat('1', 64)) r) s $$,
+  $$ values (4, false) $$,
+  'the delay doubles and the owner is not emailed again within the hour');
+select is((public.signin_status('a@nutech.edu.pk', null) ->> 'retry_after_seconds')::int, 4,
+  'the account reports how long to wait');
+select ok(not (public.signin_status('a@nutech.edu.pk', null) ? 'locked_until'), 'there is no lockout');
+select is((public.signin_status('someone@nutech.edu.pk', repeat('1', 64)) ->> 'retry_after_seconds')::int, 0,
+  'other students on that network never wait');
+select results_eq(
+  $$ select (r ->> 'retry_after_seconds')::int, (r ->> 'notify')::boolean from (select pg_temp.fail('nobody@nutech.edu.pk', null, 10) r) s $$,
+  $$ values (2, false) $$,
+  'an unknown account is slowed the same way but never emails');
 select throws_ok($$ select * from public.security_events $$, '42501', null, 'anon cannot read security events');
 select throws_ok($$ select * from private.auth_failures $$, '42501', null, 'anon cannot read failed attempts');
 reset role;
 
+select is(private.signin_delay_seconds(40), 60, 'the delay never passes a minute');
 select is(
   (select array_agg(distinct kind order by kind) from public.security_events where user_id = '40000000-0000-0000-0000-00000000000a'),
-  array['account_locked', 'sign_in_failed', 'signup'], 'failures and the lock are logged for the owner');
+  array['sign_in_alert', 'sign_in_failed', 'signup'], 'failures and the alert are logged for the owner');
 
 -- Successful sign-ins: first device no alert, a second device alerts with a one-time token.
 set local role authenticated;

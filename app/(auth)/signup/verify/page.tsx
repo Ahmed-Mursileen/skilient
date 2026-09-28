@@ -3,17 +3,10 @@ import Link from "next/link";
 import { AuthFrame } from "@/components/auth/auth-frame";
 import { Button } from "@/components/ui";
 import { pendingVerification } from "@/lib/auth/cookies";
+import { maskEmail } from "@/lib/auth/mask-email";
 import { VerifyForm } from "./verify-form";
 
 export const metadata: Metadata = { title: "Confirm your email", robots: { index: false } };
-
-/** Mask the local part: "a***a@nutech.edu.pk". */
-function maskEmail(email: string): string {
-  const [local, domain] = email.split("@");
-  if (!local || !domain) return email;
-  const shown = local.length <= 2 ? local[0] : `${local[0]}${"*".repeat(Math.min(local.length - 2, 6))}${local.at(-1)}`;
-  return `${shown}@${domain}`;
-}
 
 export default async function VerifyEmailPage() {
   const email = await pendingVerification();

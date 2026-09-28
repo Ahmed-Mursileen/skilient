@@ -3,13 +3,24 @@
  * and Vercel's approximate location headers. Pure functions over Headers so they test easily.
  */
 
+/**
+ * The real client IP. On Vercel `x-vercel-forwarded-for` (and `x-forwarded-for`, which
+ * Vercel overwrites) is the visitor's address, never our own servers'; per-IP limits use it.
+ */
 export function clientIp(headers: Headers): string | null {
+  const vercel = headers.get("x-vercel-forwarded-for")?.split(",")[0]?.trim();
+  if (vercel) return vercel;
   const forwarded = headers.get("x-forwarded-for");
   if (forwarded) {
     const first = forwarded.split(",")[0]?.trim();
     if (first) return first;
   }
   return headers.get("x-real-ip");
+}
+
+/** Loopback means a local run (dev server, E2E); it's never a real visitor on Vercel. */
+export function isLoopback(ip: string | null): boolean {
+  return !!ip && (/^127\./.test(ip) || ip === "::1" || /^::ffff:127\./.test(ip));
 }
 
 export function userAgent(headers: Headers): string {
