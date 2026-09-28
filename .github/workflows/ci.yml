@@ -57,7 +57,7 @@ jobs:
         run: pnpm exec supabase test db
       - name: GitHub worker against the database (fake GitHub)
         run: pnpm test:worker
-      # The GitHub Edge Functions boot (imports resolve) and refuse strangers. They have no
+      # The Edge Functions boot (imports resolve) and refuse strangers. They have no
       # GitHub App secrets here, so the link function reports it isn't configured. Their
       # database code is covered by test:worker above (the local edge runtime can't resolve
       # the database container's hostname).
@@ -70,9 +70,11 @@ jobs:
             sleep 2
           done
           link=$(curl -s --max-time 30 -X POST http://127.0.0.1:54321/functions/v1/github-link -H 'content-type: application/json' -d '{}' || true)
+          notify=$(curl -s -o /dev/null -w '%{http_code}' --max-time 30 -X POST http://127.0.0.1:54321/functions/v1/notify-worker || true)
           echo "github-worker: $worker $(cat /tmp/worker.txt)"
           echo "github-link: $link"
-          if [ "$worker" != 401 ] || ! echo "$link" | grep -q '"not_configured"'; then
+          echo "notify-worker: $notify"
+          if [ "$worker" != 401 ] || [ "$notify" != 401 ] || ! echo "$link" | grep -q '"not_configured"'; then
             docker logs supabase_edge_runtime_skilient 2>&1 | tail -60
             exit 1
           fi

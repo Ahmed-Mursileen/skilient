@@ -582,3 +582,21 @@ Append-only. One dated entry per product decision, with the reason. Carried over
   (Answers the slice 1 question above.)
 - 2026-09-28 (Ahmed): Claude merges each phase 3 slice PR itself once CI is green, and
   keeps open questions in `docs/phase-3-questions.md` for Ahmed to answer at the end.
+- 2026-09-29 (phase 3, slice 2): Notifications as built. Types live in a lookup table
+  (`notification_types`, grouped into `notification_categories`) so later slices add
+  types with an insert. Email preferences are per category (friend requests,
+  applications, invites, ownership transfers, your teams; later comments, mentions,
+  messages), not per type; in-app notifications are always on. Confirmations that need no
+  action (request accepted, invite answered, application withdrawn) are never emailed.
+  A cancelled friend request or revoked invite deletes its unread notification.
+  Notifications from someone blocked (either way) are hidden and new ones aren't created.
+- 2026-09-29 (phase 3, slice 2): Emails go through the pgmq queue `notification_emails`
+  and the `notify-worker` Edge Function (pg_cron wakes it each minute, like the GitHub
+  worker), sending via Resend's HTTP API with an `Idempotency-Key`. An instant email is
+  skipped if the notification was read first, and dropped (in-app only) if it couldn't be
+  sent within 12 hours. The digest is queued daily at 18:07 PKT for people with unread
+  digest items who weren't active in the last 24 hours ("active" = any signed-in page,
+  recorded at most once an hour in `private.user_activity`); it lists up to 20 items and
+  is never sent empty or twice in a day. Past 80 sends in a UTC day the worker logs
+  `notify.daily_threshold` (warn); on Resend's `daily_quota_exceeded` it parks the whole
+  queue until 00:05 UTC. Read notifications are purged after 90 days, unread after a year.
