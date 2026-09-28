@@ -2,7 +2,7 @@ import AxeBuilder from "@axe-core/playwright";
 import { createClient } from "@supabase/supabase-js";
 import sharp from "sharp";
 import { expect, test, type Page } from "@playwright/test";
-import { createStudent, hasBackend, signInWithPassword, watchConsole, type TestStudent } from "./support";
+import { adminClient, createStudent, hasBackend, signInWithPassword, watchConsole, type TestStudent } from "./support";
 
 /**
  * Phase 3 slice 3 (PRD 5.6, 5.28): posts with images, University vs Global audiences
@@ -35,6 +35,12 @@ test.describe("Posts", () => {
     const url = process.env.E2E_SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL!;
     const api = createClient(url, process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!, { auth: { persistSession: false } });
     return api.auth.signInWithPassword({ email: student.email, password: student.password }).then(() => api);
+  }
+
+  /** New posts start in Seed (their author's circle only); past the triggers they reach everyone. */
+  async function promote(body: string) {
+    const { error } = await adminClient().from("posts").update({ stage: "full" }).like("body", `${body}%`);
+    expect(error).toBeNull();
   }
 
   async function post(page: Page, body: string) {
@@ -138,6 +144,7 @@ test.describe("Posts", () => {
     await axe(page, "composer (poll)");
     await composer.getByRole("button", { name: "Post", exact: true }).click();
     await expect(page.getByTestId("post").filter({ hasText: `Best study spot ${tag}?` })).toBeVisible();
+    await promote(`Best study spot ${tag}`);
 
     // Someone at another university votes once and sees results.
     const voterPage = await (await browser.newContext()).newPage();
@@ -164,6 +171,7 @@ test.describe("Posts", () => {
     await pc.getByRole("radio", { name: "Global" }).click();
     await pc.getByRole("button", { name: "Post", exact: true }).click();
     await expect(plannerPage.getByTestId("post").filter({ hasText: `Hack night ${tag}` })).toBeVisible();
+    await promote(`Hack night ${tag}`);
 
     await page.goto("/feed?tab=global&filter=events");
     const event = page.getByTestId("post").filter({ hasText: `Hack night ${tag}` });
@@ -188,6 +196,7 @@ test.describe("Posts", () => {
     await oc.getByRole("radio", { name: "Global" }).click();
     await oc.getByRole("button", { name: "Post", exact: true }).click();
     await expect(page.getByTestId("post").filter({ hasText: `We need an electrical engineer ${tag}` })).toBeVisible();
+    await promote(`We need an electrical engineer ${tag}`);
 
     await voterPage.goto("/feed?tab=global&filter=ventures");
     const invite = voterPage.getByTestId("post").filter({ hasText: `Solar cart ${tag}` });

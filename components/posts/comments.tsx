@@ -9,7 +9,6 @@ import { Avatar, Button, FieldError, Label, Textarea } from "@/components/ui";
 import { addComment, deleteComment, pinComment } from "@/lib/actions/posts";
 import type { CommentItem } from "@/lib/data/posts";
 import { linkify } from "@/lib/format/linkify";
-import { shortTime } from "@/lib/format/time";
 import { cn } from "@/lib/cn";
 
 /**
@@ -79,8 +78,8 @@ function CommentRow({ comment: c, postId, isPostAuthor, canReply }: { comment: C
           ) : (
             <span className="font-semibold">{c.author.name}</span>
           )}
-          <time dateTime={c.createdAt} className="text-caption text-text-secondary" suppressHydrationWarning>
-            {shortTime(c.createdAt)}
+          <time dateTime={c.createdAt} className="text-caption text-text-secondary">
+            {c.timeLabel}
           </time>
           {c.pinned ? (
             <span className="inline-flex items-center gap-1 text-caption font-semibold text-text-secondary">

@@ -6,7 +6,6 @@ import { useState, useTransition } from "react";
 import { Button, FieldError } from "@/components/ui";
 import { rsvpEvent } from "@/lib/actions/posts";
 import type { PostEvent } from "@/lib/data/posts";
-import { eventTime } from "@/lib/format/time";
 
 /** Event details and Going / Interested (PRD 5.28). Tapping your choice again clears it. */
 export function EventBlock({ postId, event }: { postId: string; event: PostEvent }) {
@@ -27,7 +26,7 @@ export function EventBlock({ postId, event }: { postId: string; event: PostEvent
     <div className="flex flex-col gap-3 rounded-md border border-border-default bg-bg-subtle p-3" data-testid="event">
       <p className="flex items-center gap-2 text-body-sm font-semibold">
         <CalendarBlank aria-hidden weight="bold" className="size-4 shrink-0" />
-        {eventTime(event.startsAt)}
+        {event.startsLabel}
       </p>
       {event.place ? (
         <p className="flex items-center gap-2 text-body-sm">

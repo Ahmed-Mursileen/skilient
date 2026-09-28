@@ -18,6 +18,7 @@ export function FeedList({
   filter,
   authorId,
   empty,
+  footer,
 }: {
   initial: PostCardData[];
   cursor: string | null;
@@ -25,6 +26,8 @@ export function FeedList({
   filter: string;
   authorId?: string;
   empty: React.ReactNode;
+  /** Shown once the list is exhausted (e.g. followed venture updates). */
+  footer?: React.ReactNode;
 }) {
   const [posts, setPosts] = useState(initial);
   const [cursor, setCursor] = useState(initialCursor);
@@ -67,7 +70,14 @@ export function FeedList({
     return () => io.disconnect();
   }, [cursor, more]);
 
-  if (!posts.length) return <>{empty}</>;
+  if (!posts.length) {
+    return (
+      <>
+        {empty}
+        {footer}
+      </>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-4">
@@ -85,9 +95,12 @@ export function FeedList({
           Load more
         </Button>
       ) : (
-        <p className="py-4 text-center text-body-sm text-text-secondary" data-testid="feed-end">
-          You&apos;re all caught up.
-        </p>
+        <>
+          <p className="py-4 text-center text-body-sm text-text-secondary" data-testid="feed-end">
+            You&apos;re all caught up.
+          </p>
+          {footer}
+        </>
       )}
     </div>
   );

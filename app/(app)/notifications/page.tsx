@@ -9,16 +9,13 @@ import { getNotifications, PAGE_SIZE, type NotificationItem } from "@/lib/data/n
 
 export const metadata: Metadata = { title: "Notifications" };
 
-const dayKey = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Karachi" });
-
 /** /notifications (screen spec 3.3): the latest 50, grouped Today / Earlier; older pages by cursor. */
 export default async function NotificationsPage({ searchParams }: PageProps<"/notifications">) {
   const sp = await searchParams;
   const before = typeof sp.before === "string" && !Number.isNaN(Date.parse(sp.before)) ? sp.before : null;
   const items = await getNotifications(before);
-  const todayKey = dayKey.format(new Date());
-  const today = items.filter((n) => dayKey.format(new Date(n.createdAt)) === todayKey);
-  const earlier = items.filter((n) => dayKey.format(new Date(n.createdAt)) !== todayKey);
+  const today = items.filter((n) => n.today);
+  const earlier = items.filter((n) => !n.today);
   const unread = items.some((n) => !n.read);
   const older = items.length === PAGE_SIZE ? items[items.length - 1].createdAt : null;
 
@@ -49,8 +46,8 @@ export default async function NotificationsPage({ searchParams }: PageProps<"/no
         />
       ) : null}
 
-      <Group title="Today" items={today} today />
-      <Group title="Earlier" items={earlier} today={false} />
+      <Group title="Today" items={today} />
+      <Group title="Earlier" items={earlier} />
 
       {older ? (
         <Button asChild variant="ghost" className="self-center">
@@ -61,7 +58,7 @@ export default async function NotificationsPage({ searchParams }: PageProps<"/no
   );
 }
 
-function Group({ title, items, today }: { title: string; items: NotificationItem[]; today: boolean }) {
+function Group({ title, items }: { title: string; items: NotificationItem[] }) {
   if (!items.length) return null;
   const id = `group-${title.toLowerCase()}`;
   return (
@@ -80,7 +77,7 @@ function Group({ title, items, today }: { title: string; items: NotificationItem
             actorAvatarUrl={n.actorAvatarUrl}
             read={n.read}
             createdAt={n.createdAt}
-            today={today}
+            timeLabel={n.timeLabel}
           />
         ))}
       </ul>

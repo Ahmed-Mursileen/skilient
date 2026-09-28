@@ -7,9 +7,6 @@ import { Avatar } from "@/components/ui";
 import { markNotificationRead } from "@/lib/actions/notifications";
 import { cn } from "@/lib/cn";
 
-const timeFormat = new Intl.DateTimeFormat("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Karachi" });
-const dateFormat = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", timeZone: "Asia/Karachi" });
-
 /** One notification: opening it marks it read, then goes where it points. */
 export function NotificationRow({
   id,
@@ -19,7 +16,7 @@ export function NotificationRow({
   actorAvatarUrl,
   read,
   createdAt,
-  today,
+  timeLabel,
 }: {
   id: string;
   text: string;
@@ -28,11 +25,10 @@ export function NotificationRow({
   actorAvatarUrl: string | null;
   read: boolean;
   createdAt: string;
-  today: boolean;
+  timeLabel: string;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
-  const when = today ? timeFormat.format(new Date(createdAt)) : dateFormat.format(new Date(createdAt));
 
   return (
     <li data-testid="notification" data-read={read ? "true" : "false"}>
@@ -56,7 +52,7 @@ export function NotificationRow({
         <span className="min-w-0 flex-1">
           <span className={cn("block text-body", !read && "font-semibold")}>{text}</span>
           <span className="block text-caption text-text-secondary">
-            <time dateTime={createdAt}>{when}</time>
+            <time dateTime={createdAt}>{timeLabel}</time>
             {!read ? <span className="sr-only">, unread</span> : null}
           </span>
         </span>

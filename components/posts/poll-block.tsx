@@ -5,7 +5,6 @@ import { useState, useTransition } from "react";
 import { FieldError } from "@/components/ui";
 import { votePoll } from "@/lib/actions/posts";
 import type { PostPoll } from "@/lib/data/posts";
-import { futureTime } from "@/lib/format/time";
 import { cn } from "@/lib/cn";
 
 /** Poll: vote once; results show after voting, on close, or to the author (PRD 5.28). */
@@ -59,7 +58,7 @@ export function PollBlock({ postId, poll, isMine }: { postId: string; poll: Post
         </fieldset>
       )}
       <p className="text-caption text-text-secondary">
-        {poll.total} {poll.total === 1 ? "vote" : "votes"} · {poll.closed ? "Closed" : `Closes ${futureTime(poll.closesAt)}`}
+        {poll.total} {poll.total === 1 ? "vote" : "votes"} · {poll.closed ? "Closed" : `Closes ${poll.closesLabel}`}
         {!showResults ? " · results after you vote" : ""}
       </p>
       {error ? <FieldError>{error}</FieldError> : null}

@@ -211,6 +211,19 @@ isOneToOne: false
       referencedColumns: ["post_id"]
     }
                   ]
+                },"feed_sessions": {
+                  Row: {
+                    "audience": Database["public"]['Enums']["post_audience"],"created_at": string,"filter": string,"post_ids": (string)[],"session_id": string,"user_id": string
+                  }
+                  Insert: {
+                    "audience": Database["public"]['Enums']["post_audience"],"created_at"?: string,"filter": string,"post_ids": (string)[],"session_id"?: string,"user_id": string
+                  }
+                  Update: {
+                    "audience"?: Database["public"]['Enums']["post_audience"],"created_at"?: string,"filter"?: string,"post_ids"?: (string)[],"session_id"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
                 },"friend_requests": {
                   Row: {
                     "created_at": string,"id": string,"receiver_id": string,"responded_at": string | null,"sender_id": string,"status": Database["public"]['Enums']["friend_request_status"]
@@ -1325,8 +1338,18 @@ isOneToOne: false
 "edit_post":
 { Args: { "p_body": string,"p_post": string }; Returns: undefined
                            },
+"feed_page":
+{ Args: { "p_audience": Database["public"]['Enums']["post_audience"],"p_cursor"?: string,"p_filter"?: string,"p_limit"?: number }; Returns: {
+              "next_cursor": string,"post_id": string,"rank": number
+            }[]
+                           },
 "follow_venture":
 { Args: { "p_follow": boolean,"p_venture": string }; Returns: boolean
+                           },
+"followed_venture_updates":
+{ Args: { "p_limit"?: number }; Returns: {
+              "author_name": string,"author_username": string,"body": string,"created_at": string,"id": string,"images": Json,"venture_id": string,"venture_title": string
+            }[]
                            },
 "friendship_state":
 { Args: { "p_username": string }; Returns: {
@@ -1431,6 +1454,9 @@ isOneToOne: false
                            },
 "pin_comment":
 { Args: { "p_comment": string,"p_pin": boolean }; Returns: undefined
+                           },
+"pinned_announcement":
+{ Args: Record<PropertyKey, never>; Returns: string
                            },
 "post_cards":
 { Args: { "p_ids": (string)[] }; Returns: {

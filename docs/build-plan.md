@@ -61,7 +61,7 @@ Legend: 📖 = PRD files to read (in `docs/prd/`), ✅ = done-when checks.
 
 - [x] Posts (all types except Shipped wiring), audience, composer, images, link previews (SSRF-safe), comments, polls, events — *slices 3–4; Shipped is wired too (decisions.md 2026-09-29)*
 - [x] Micro-survey: assignment on first view, one answer per reader, tick/cross strip, public line, anti-gaming weights — *slice 5*
-- [ ] Feed algorithm: stages job, `feed_page` scoring, `feed_sessions` paging, exploration slots
+- [x] Feed algorithm: stages job, `feed_page` scoring, `feed_sessions` paging, exploration slots — *slice 6*
 - [ ] Friends, blocking, DMs, venture group chat, typing, read receipts, replies, reactions, pins, search
 - [ ] Notifications (triggers, Realtime bell, email prefs + digest), explore/search
 - [ ] Reports + minimal `/ops` moderation queue with `ops_audit_log`
@@ -77,6 +77,8 @@ Legend: 📖 = PRD files to read (in `docs/prd/`), ✅ = done-when checks.
 *Slice 4 (comments, hides, mutes, link previews): comments with one level of replies, @mentions, pin, delete; Not for me and Mute; link previews through an SSRF-safe Edge Function (private and loopback addresses and redirects into them refused, 3 redirects, 3 s, 7-day cache). pgTAP `20_comments`, unit `links.test.ts` (SSRF guard and parser), worker `link-preview.test.ts`, E2E `comments.spec.ts`.*
 
 *Slice 5 (micro-survey): question bank, fixed assignment, qualified views, one answer per reader (changeable for 10 minutes), anti-gaming weights, public line from 3 ticks, Insights refused without the entitlement, `platform_config`. A reader's question never changes and a second answer is refused (pgTAP `21_micro_survey`, E2E `survey.spec.ts`).*
+
+*Slice 6 (ranked feed): stage job, scoring, sessions, diversity, exploration, pinned announcement, followed venture updates, new posts pill. Hand-calculated scores, stage transitions, and paging with no duplicates under concurrent inserts, a second tab and session expiry (pgTAP `22_feed_ranking`, E2E `feed.spec.ts`); a post older than 7 days never appears.*
 
 ## ★ Slice checkpoint
 

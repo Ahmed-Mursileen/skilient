@@ -15,7 +15,6 @@ import { Avatar, Badge, Button } from "@/components/ui";
 import type { PostCardData } from "@/lib/data/posts";
 import { SURVEYED_TYPES } from "@/lib/posts/constants";
 import { linkify } from "@/lib/format/linkify";
-import { shortTime } from "@/lib/format/time";
 import { cn } from "@/lib/cn";
 
 const TYPE_LABEL: Partial<Record<PostCardData["type"], string>> = {
@@ -66,8 +65,8 @@ export function PostCard({ post, headingLevel = 2, showCommentsLink = true }: { 
           </Heading>
           <p className="flex flex-wrap items-center gap-x-2 text-caption text-text-secondary">
             <Link href={`/post/${post.id}` as Route} className="inline-flex min-h-6 items-center hover:underline">
-              <time dateTime={post.createdAt} suppressHydrationWarning>
-                {shortTime(post.createdAt)}
+              <time dateTime={post.createdAt}>
+                {post.timeLabel}
               </time>
             </Link>
             {post.editedAt ? <span>· edited</span> : null}
