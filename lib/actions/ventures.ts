@@ -7,6 +7,7 @@ import { z } from "zod";
 import { actionContext } from "@/lib/actions/context";
 import { fail, fieldErrors, ok, type ActionResult } from "@/lib/actions/result";
 import { call, NO_SESSION, signedIn } from "@/lib/actions/rpc";
+import { removeContentImages, storeContentImages } from "@/lib/images/content-images";
 
 /**
  * Ventures (PRD 5.7, 5.15, 5.28). Each action validates its input, checks the session,
@@ -315,19 +316,28 @@ export async function linkVentureRepo(ventureId: string, repoId: number | null):
 // Updates and deliverables (members)
 // ---------------------------------------------------------------------------
 
-export async function postVentureUpdate(ventureId: string, body: string): Promise<ActionResult> {
+export async function postVentureUpdate(formData: FormData): Promise<ActionResult> {
   const ctx = await actionContext("ventures.post_update");
+  const ventureId = String(formData.get("ventureId") ?? "");
   const parsed = z.object({ id: uuid, body: z.string().trim().min(1, "Write an update.").max(2000, "Keep it under 2,000 characters.") })
-    .safeParse({ id: ventureId, body });
+    .safeParse({ id: ventureId, body: formData.get("body") });
+  const files = formData.getAll("images").filter((f): f is File => f instanceof File && f.size > 0);
   if (!parsed.success) {
     ctx.done("refused", { error_code: "invalid_input" });
     return fail("invalid_input", "Write an update of up to 2,000 characters.", { fields: { body: "Write an update of up to 2,000 characters." } });
   }
   const session = await signedIn(ctx);
   if (!session) return NO_SESSION;
-  return call(ctx, session.supabase, session.userId, "post_venture_update", { p_venture: ventureId, p_body: parsed.data.body }, [
-    `/ventures/${ventureId}/updates`,
-  ]);
+  // Images are re-encoded (EXIF/GPS stripped) and stored first; a refused update removes them.
+  const stored = await storeContentImages(session.supabase, session.userId, files);
+  if (!stored.ok) {
+    ctx.done(stored.code === "upload_failed" ? "error" : "refused", { error_code: stored.code, user_id: session.userId });
+    return fail(stored.code, stored.message, { requestId: ctx.requestId });
+  }
+  const result = await call(ctx, session.supabase, session.userId, "post_venture_update_media",
+    { p_venture: parsed.data.id, p_body: parsed.data.body, p_media: stored.images }, [`/ventures/${parsed.data.id}/updates`]);
+  if (!result.ok) await removeContentImages(session.supabase, stored.images.map((i) => i.path));
+  return result.ok ? ok(null) : result;
 }
 
 export async function deleteVentureUpdate(ventureId: string, updateId: string): Promise<ActionResult> {
@@ -338,7 +348,14 @@ export async function deleteVentureUpdate(ventureId: string, updateId: string): 
   }
   const session = await signedIn(ctx);
   if (!session) return NO_SESSION;
-  return call(ctx, session.supabase, session.userId, "delete_venture_update", { p_update: updateId }, [`/ventures/${ventureId}/updates`]);
+  const { data: media } = await session.supabase.from("venture_update_media").select("path").eq("update_id", updateId);
+  const result = await call(ctx, session.supabase, session.userId, "delete_venture_update", { p_update: updateId }, [`/ventures/${ventureId}/updates`]);
+  // Storage lets people delete only their own files; an owner removing a teammate's update
+  // leaves that teammate's images (unguessable paths, no longer referenced).
+  if (result.ok && media?.length) {
+    await removeContentImages(session.supabase, media.map((m) => m.path).filter((p) => p.startsWith(`${session.userId}/`)));
+  }
+  return result;
 }
 
 export async function addVentureDeliverable(ventureId: string, label: string, url: string): Promise<ActionResult> {

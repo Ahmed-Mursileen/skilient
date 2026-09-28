@@ -38,6 +38,14 @@ export default async function VentureUpdatesPage({ params }: PageProps<"/venture
                 ) : null}
               </div>
               <p className="mt-2 text-body whitespace-pre-line break-words">{u.body}</p>
+              {u.images.length ? (
+                <div className={u.images.length > 1 ? "mt-3 grid grid-cols-2 gap-1 overflow-hidden rounded-md" : "mt-3 overflow-hidden rounded-md"}>
+                  {u.images.map((img) => (
+                    // eslint-disable-next-line @next/next/no-img-element -- user image from our public bucket, already sized
+                    <img key={img.url} src={img.url} alt="" width={img.width} height={img.height} loading="lazy" className="size-full max-h-[480px] bg-bg-subtle object-cover" />
+                  ))}
+                </div>
+              ) : null}
             </li>
           ))}
         </ol>

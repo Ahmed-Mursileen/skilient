@@ -72,6 +72,8 @@ Legend: 📖 = PRD files to read (in `docs/prd/`), ✅ = done-when checks.
 
 *Slice 2 (notifications): trigger-written notifications for friend requests and every venture event deferred from phase 2 (applications, invites, ownership transfer, members leaving or removed, completion), Realtime bell, `/notifications` (Today / Earlier, mark read, mark all read), `/settings/notifications` (instant email for four categories only, daily digest, off), instant emails and the daily digest through the `notify-worker` Edge Function and Resend. Each trigger fires once per event and no user can insert a notification (pgTAP `18_notifications`, E2E `notifications.spec.ts`); the worker is tested against the local database with a fake Resend (`tests/worker/notify-worker`).*
 
+*Slice 3 (posts): General, Venture invite, Event, Poll, Announcement (staff) and Shipped posts; audiences; composer with drafts and images (browser downscale, server re-encode with EXIF/GPS stripped); edit within 15 minutes; delete; polls and RSVPs; `/post/[id]`; filter chips; venture update images. Every limit is refused in SQL when called directly and cross-university reads return nothing (pgTAP `19_posts`, E2E `posts.spec.ts`). Link previews and comments come with slice 4, the ranked feed with slice 6.*
+
 ## ★ Slice checkpoint
 
 - [ ] Signup → GitHub → venture → post → survey → chat works end to end on staging — *staging deferred until a production build exists (decisions.md 2026-09-28): run this check on production with test accounts*

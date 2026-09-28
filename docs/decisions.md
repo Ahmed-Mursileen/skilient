@@ -600,3 +600,19 @@ Append-only. One dated entry per product decision, with the reason. Carried over
   is never sent empty or twice in a day. Past 80 sends in a UTC day the worker logs
   `notify.daily_threshold` (warn); on Resend's `daily_quota_exceeded` it parks the whole
   queue until 00:05 UTC. Read notifications are purged after 90 days, unread after a year.
+- 2026-09-29 (phase 3, slice 3): Posts as built. General, Venture invite, Event (RSVP
+  Going / Interested), Poll (2 to 4 options, 1 to 7 days, one vote, results after voting,
+  on close, or to the author), Announcement (staff only for now, sent as platform news to
+  every feed, pinnable up to 7 days, one pinned at a time) and Shipped (created when a
+  venture completes, authored by the owner, starting at Full; none for Unlisted ventures).
+  Images (up to 4) go on General, Invite and Event posts. Invites: owner only, recruiting
+  or in-progress ventures, never Unlisted; a University-only venture posts to the
+  University Feed only. The feed is newest-first until slice 6 ranks it. Edits change the
+  body only, within 15 minutes; the author deletes a post with its images, votes and RSVPs.
+- 2026-09-29 (phase 3, slice 3): Post and update images live in a public-read `post-media`
+  bucket with unguessable paths (like avatars), written only as the server's WebP
+  re-encode into the author's folder; the post function checks each path is the caller's
+  own uploaded object. The browser shrinks images to about 2,000 px first and refuses a
+  set over 4 MB; the server fits them within 2,000 px again. Deleting a teammate's venture
+  update as owner leaves that teammate's image files (storage lets people delete only
+  their own), unreferenced.

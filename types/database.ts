@@ -192,6 +192,25 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"event_rsvps": {
+                  Row: {
+                    "created_at": string,"post_id": string,"status": Database["public"]['Enums']["rsvp_status"],"user_id": string
+                  }
+                  Insert: {
+                    "created_at"?: string,"post_id": string,"status": Database["public"]['Enums']["rsvp_status"],"user_id": string
+                  }
+                  Update: {
+                    "created_at"?: string,"post_id"?: string,"status"?: Database["public"]['Enums']["rsvp_status"],"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "event_rsvps_post_id_fkey"
+      columns: ["post_id"]
+isOneToOne: false
+      referencedRelation: "post_events"
+      referencedColumns: ["post_id"]
+    }
+                  ]
                 },"friend_requests": {
                   Row: {
                     "created_at": string,"id": string,"receiver_id": string,"responded_at": string | null,"sender_id": string,"status": Database["public"]['Enums']["friend_request_status"]
@@ -478,6 +497,132 @@ isOneToOne: false
                   }
                   Relationships: [
                     
+                  ]
+                },"poll_options": {
+                  Row: {
+                    "label": string,"position": number,"post_id": string
+                  }
+                  Insert: {
+                    "label": string,"position": number,"post_id": string
+                  }
+                  Update: {
+                    "label"?: string,"position"?: number,"post_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "poll_options_post_id_fkey"
+      columns: ["post_id"]
+isOneToOne: false
+      referencedRelation: "post_polls"
+      referencedColumns: ["post_id"]
+    }
+                  ]
+                },"poll_votes": {
+                  Row: {
+                    "created_at": string,"position": number,"post_id": string,"user_id": string
+                  }
+                  Insert: {
+                    "created_at"?: string,"position": number,"post_id": string,"user_id": string
+                  }
+                  Update: {
+                    "created_at"?: string,"position"?: number,"post_id"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "poll_votes_post_id_fkey"
+      columns: ["post_id"]
+isOneToOne: false
+      referencedRelation: "post_polls"
+      referencedColumns: ["post_id"]
+    },{
+      foreignKeyName: "poll_votes_post_id_position_fkey"
+      columns: ["post_id","position"]
+isOneToOne: false
+      referencedRelation: "poll_options"
+      referencedColumns: ["post_id","position"]
+    }
+                  ]
+                },"post_events": {
+                  Row: {
+                    "place": string | null,"post_id": string,"starts_at": string,"url": string | null
+                  }
+                  Insert: {
+                    "place"?: string | null,"post_id": string,"starts_at": string,"url"?: string | null
+                  }
+                  Update: {
+                    "place"?: string | null,"post_id"?: string,"starts_at"?: string,"url"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "post_events_post_id_fkey"
+      columns: ["post_id"]
+isOneToOne: true
+      referencedRelation: "posts"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"post_media": {
+                  Row: {
+                    "height": number,"path": string,"position": number,"post_id": string,"width": number
+                  }
+                  Insert: {
+                    "height": number,"path": string,"position": number,"post_id": string,"width": number
+                  }
+                  Update: {
+                    "height"?: number,"path"?: string,"position"?: number,"post_id"?: string,"width"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "post_media_post_id_fkey"
+      columns: ["post_id"]
+isOneToOne: false
+      referencedRelation: "posts"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"post_polls": {
+                  Row: {
+                    "closes_at": string,"post_id": string
+                  }
+                  Insert: {
+                    "closes_at": string,"post_id": string
+                  }
+                  Update: {
+                    "closes_at"?: string,"post_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "post_polls_post_id_fkey"
+      columns: ["post_id"]
+isOneToOne: true
+      referencedRelation: "posts"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"posts": {
+                  Row: {
+                    "audience": Database["public"]['Enums']["post_audience"],"author_id": string,"body": string,"created_at": string,"edited_at": string | null,"id": string,"pinned_until": string | null,"stage": Database["public"]['Enums']["post_stage"],"stage_changed_at": string,"type": Database["public"]['Enums']["post_type"],"university_id": string | null,"venture_id": string | null
+                  }
+                  Insert: {
+                    "audience": Database["public"]['Enums']["post_audience"],"author_id": string,"body": string,"created_at"?: string,"edited_at"?: string | null,"id"?: string,"pinned_until"?: string | null,"stage"?: Database["public"]['Enums']["post_stage"],"stage_changed_at"?: string,"type": Database["public"]['Enums']["post_type"],"university_id"?: string | null,"venture_id"?: string | null
+                  }
+                  Update: {
+                    "audience"?: Database["public"]['Enums']["post_audience"],"author_id"?: string,"body"?: string,"created_at"?: string,"edited_at"?: string | null,"id"?: string,"pinned_until"?: string | null,"stage"?: Database["public"]['Enums']["post_stage"],"stage_changed_at"?: string,"type"?: Database["public"]['Enums']["post_type"],"university_id"?: string | null,"venture_id"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "posts_university_id_fkey"
+      columns: ["university_id"]
+isOneToOne: false
+      referencedRelation: "universities"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "posts_venture_id_fkey"
+      columns: ["venture_id"]
+isOneToOne: false
+      referencedRelation: "ventures"
+      referencedColumns: ["id"]
+    }
                   ]
                 },"profiles": {
                   Row: {
@@ -791,6 +936,25 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"venture_update_media": {
+                  Row: {
+                    "height": number,"path": string,"position": number,"update_id": string,"width": number
+                  }
+                  Insert: {
+                    "height": number,"path": string,"position": number,"update_id": string,"width": number
+                  }
+                  Update: {
+                    "height"?: number,"path"?: string,"position"?: number,"update_id"?: string,"width"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "venture_update_media_update_id_fkey"
+      columns: ["update_id"]
+isOneToOne: false
+      referencedRelation: "venture_updates"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"venture_updates": {
                   Row: {
                     "author_id": string,"body": string,"created_at": string,"id": string,"venture_id": string
@@ -885,6 +1049,9 @@ isOneToOne: false
 "create_mfa_backup_codes":
 { Args: Record<PropertyKey, never>; Returns: (string)[]
                            },
+"create_post":
+{ Args: { "p": Json }; Returns: string
+                           },
 "create_venture":
 { Args: { "p": Json }; Returns: string
                            },
@@ -894,6 +1061,9 @@ isOneToOne: false
 "delete_mfa_backup_codes":
 { Args: Record<PropertyKey, never>; Returns: undefined
                            },
+"delete_post":
+{ Args: { "p_post": string }; Returns: (string)[]
+                           },
 "delete_venture_role":
 { Args: { "p_role": string,"p_venture": string }; Returns: undefined
                            },
@@ -902,6 +1072,9 @@ isOneToOne: false
                            },
 "disconnect_github":
 { Args: Record<PropertyKey, never>; Returns: boolean
+                           },
+"edit_post":
+{ Args: { "p_body": string,"p_post": string }; Returns: undefined
                            },
 "follow_venture":
 { Args: { "p_follow": boolean,"p_venture": string }; Returns: boolean
@@ -939,6 +1112,11 @@ isOneToOne: false
                            },
 "link_venture_repo":
 { Args: { "p_repo"?: number,"p_venture": string }; Returns: undefined
+                           },
+"list_posts":
+{ Args: { "p_author"?: string,"p_before"?: string,"p_before_id"?: string,"p_filter"?: string,"p_limit"?: number,"p_scope": string }; Returns: {
+              "created_at": string,"id": string
+            }[]
                            },
 "log_contribution":
 { Args: { "p_description": string,"p_evidence_url"?: string,"p_hours"?: number,"p_kind": Database["public"]['Enums']["contribution_kind"],"p_venture": string }; Returns: string
@@ -991,8 +1169,16 @@ isOneToOne: false
 "pending_friend_request_count":
 { Args: Record<PropertyKey, never>; Returns: number
                            },
+"post_cards":
+{ Args: { "p_ids": (string)[] }; Returns: {
+              "audience": Database["public"]['Enums']["post_audience"],"author_avatar_path": string,"author_id": string,"author_name": string,"author_username": string,"body": string,"can_edit": boolean,"created_at": string,"edited_at": string,"event": Json,"id": string,"is_mine": boolean,"media": Json,"pinned_until": string,"poll": Json,"stage": Database["public"]['Enums']["post_stage"],"type": Database["public"]['Enums']["post_type"],"venture": Json
+            }[]
+                           },
 "post_venture_update":
 { Args: { "p_body": string,"p_venture": string }; Returns: string
+                           },
+"post_venture_update_media":
+{ Args: { "p_body": string,"p_media": Json,"p_venture": string }; Returns: string
                            },
 "profile_ventures":
 { Args: { "p_user": string }; Returns: {
@@ -1033,6 +1219,9 @@ isOneToOne: false
                            },
 "revoke_invite":
 { Args: { "p_invite": string }; Returns: boolean
+                           },
+"rsvp_event":
+{ Args: { "p_post": string,"p_status": Database["public"]['Enums']["rsvp_status"] }; Returns: undefined
                            },
 "save_venture_role":
 { Args: { "p_role"?: string,"p_skill_ids": (string)[],"p_slots": number,"p_title": string,"p_venture": string }; Returns: string
@@ -1111,12 +1300,15 @@ isOneToOne: false
 "venture_verified_contributors":
 { Args: { "p_venture": string }; Returns: number
                            },
+"vote_poll":
+{ Args: { "p_position": number,"p_post": string }; Returns: undefined
+                           },
 "withdraw_application":
 { Args: { "p_thread": string }; Returns: boolean
                            }
           }
           Enums: {
-            "account_role": "student"|"faculty"|"recruiter"|"university_admin","application_status": "pending"|"accepted"|"declined"|"withdrawn"|"closed","contribution_kind": "code"|"design"|"research"|"docs"|"management"|"other","contribution_source": "manual"|"github","domain_kind": "student"|"faculty"|"both","email_channel": "instant_email"|"digest"|"off","friend_request_status": "pending"|"accepted"|"declined","github_commit_status": "pending"|"counted"|"held"|"excluded","github_repo_kind": "owned"|"collaborator"|"fork"|"template","job_run_status": "running"|"succeeded"|"failed","looking_for_option": "internship"|"job"|"teammates"|"project"|"mentorship","profile_visibility": "friends"|"university"|"global","review_flag_kind": "burst"|"backdating"|"cross_account_duplicate","review_flag_status": "open"|"cleared"|"upheld","skill_category": "language"|"framework"|"library"|"tool"|"platform"|"practice","staff_role": "moderator"|"trust_reviewer"|"accounts"|"super_admin","sync_status": "queued"|"running"|"done"|"failed"|"cancelled","venture_invite_status": "pending"|"accepted"|"declined"|"revoked","venture_stage": "idea"|"prototype"|"launched"|"revenue","venture_status": "recruiting"|"in_progress"|"completed"|"abandoned","venture_team_role": "lead"|"developer"|"designer"|"researcher"|"other","venture_type": "project"|"startup","venture_visibility": "public"|"university"|"unlisted"
+            "account_role": "student"|"faculty"|"recruiter"|"university_admin","application_status": "pending"|"accepted"|"declined"|"withdrawn"|"closed","contribution_kind": "code"|"design"|"research"|"docs"|"management"|"other","contribution_source": "manual"|"github","domain_kind": "student"|"faculty"|"both","email_channel": "instant_email"|"digest"|"off","friend_request_status": "pending"|"accepted"|"declined","github_commit_status": "pending"|"counted"|"held"|"excluded","github_repo_kind": "owned"|"collaborator"|"fork"|"template","job_run_status": "running"|"succeeded"|"failed","looking_for_option": "internship"|"job"|"teammates"|"project"|"mentorship","post_audience": "university"|"global","post_stage": "seed"|"limited"|"full"|"global_boost"|"demoted"|"held","post_type": "general"|"invite"|"announcement"|"event"|"poll"|"shipped","profile_visibility": "friends"|"university"|"global","review_flag_kind": "burst"|"backdating"|"cross_account_duplicate","review_flag_status": "open"|"cleared"|"upheld","rsvp_status": "going"|"interested","skill_category": "language"|"framework"|"library"|"tool"|"platform"|"practice","staff_role": "moderator"|"trust_reviewer"|"accounts"|"super_admin","sync_status": "queued"|"running"|"done"|"failed"|"cancelled","venture_invite_status": "pending"|"accepted"|"declined"|"revoked","venture_stage": "idea"|"prototype"|"launched"|"revenue","venture_status": "recruiting"|"in_progress"|"completed"|"abandoned","venture_team_role": "lead"|"developer"|"designer"|"researcher"|"other","venture_type": "project"|"startup","venture_visibility": "public"|"university"|"unlisted"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -1236,7 +1428,7 @@ export const Constants = {
           }
         },"public": {
           Enums: {
-            "account_role": ["student", "faculty", "recruiter", "university_admin"],"application_status": ["pending", "accepted", "declined", "withdrawn", "closed"],"contribution_kind": ["code", "design", "research", "docs", "management", "other"],"contribution_source": ["manual", "github"],"domain_kind": ["student", "faculty", "both"],"email_channel": ["instant_email", "digest", "off"],"friend_request_status": ["pending", "accepted", "declined"],"github_commit_status": ["pending", "counted", "held", "excluded"],"github_repo_kind": ["owned", "collaborator", "fork", "template"],"job_run_status": ["running", "succeeded", "failed"],"looking_for_option": ["internship", "job", "teammates", "project", "mentorship"],"profile_visibility": ["friends", "university", "global"],"review_flag_kind": ["burst", "backdating", "cross_account_duplicate"],"review_flag_status": ["open", "cleared", "upheld"],"skill_category": ["language", "framework", "library", "tool", "platform", "practice"],"staff_role": ["moderator", "trust_reviewer", "accounts", "super_admin"],"sync_status": ["queued", "running", "done", "failed", "cancelled"],"venture_invite_status": ["pending", "accepted", "declined", "revoked"],"venture_stage": ["idea", "prototype", "launched", "revenue"],"venture_status": ["recruiting", "in_progress", "completed", "abandoned"],"venture_team_role": ["lead", "developer", "designer", "researcher", "other"],"venture_type": ["project", "startup"],"venture_visibility": ["public", "university", "unlisted"]
+            "account_role": ["student", "faculty", "recruiter", "university_admin"],"application_status": ["pending", "accepted", "declined", "withdrawn", "closed"],"contribution_kind": ["code", "design", "research", "docs", "management", "other"],"contribution_source": ["manual", "github"],"domain_kind": ["student", "faculty", "both"],"email_channel": ["instant_email", "digest", "off"],"friend_request_status": ["pending", "accepted", "declined"],"github_commit_status": ["pending", "counted", "held", "excluded"],"github_repo_kind": ["owned", "collaborator", "fork", "template"],"job_run_status": ["running", "succeeded", "failed"],"looking_for_option": ["internship", "job", "teammates", "project", "mentorship"],"post_audience": ["university", "global"],"post_stage": ["seed", "limited", "full", "global_boost", "demoted", "held"],"post_type": ["general", "invite", "announcement", "event", "poll", "shipped"],"profile_visibility": ["friends", "university", "global"],"review_flag_kind": ["burst", "backdating", "cross_account_duplicate"],"review_flag_status": ["open", "cleared", "upheld"],"rsvp_status": ["going", "interested"],"skill_category": ["language", "framework", "library", "tool", "platform", "practice"],"staff_role": ["moderator", "trust_reviewer", "accounts", "super_admin"],"sync_status": ["queued", "running", "done", "failed", "cancelled"],"venture_invite_status": ["pending", "accepted", "declined", "revoked"],"venture_stage": ["idea", "prototype", "launched", "revenue"],"venture_status": ["recruiting", "in_progress", "completed", "abandoned"],"venture_team_role": ["lead", "developer", "designer", "researcher", "other"],"venture_type": ["project", "startup"],"venture_visibility": ["public", "university", "unlisted"]
           }
         }
 } as const

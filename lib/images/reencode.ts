@@ -49,3 +49,39 @@ export async function reencodeImage(input: Buffer, kind: ImageKind): Promise<Buf
     throw new ImageRejected("not_an_image");
   }
 }
+
+/** Post, venture-update and chat images: longest side up to 2,000 px, aspect kept. */
+export const CONTENT_IMAGE = { maxSide: 2000, maxBytes: 5 * 1024 * 1024 } as const;
+
+/**
+ * Same checks as reencodeImage (type from the bytes, 6,000 px cap, EXIF/GPS dropped), but
+ * keeps the aspect ratio and only shrinks to fit within `maxSide`.
+ */
+export async function reencodeToFit(
+  input: Buffer,
+  maxSide: number = CONTENT_IMAGE.maxSide,
+): Promise<{ data: Buffer; width: number; height: number }> {
+  let format: string | undefined;
+  let width = 0;
+  let height = 0;
+  try {
+    const meta = await sharp(input, { limitInputPixels: MAX_SIDE * MAX_SIDE, failOn: "error" }).metadata();
+    format = meta.format;
+    width = meta.width ?? 0;
+    height = meta.height ?? 0;
+  } catch {
+    throw new ImageRejected("not_an_image");
+  }
+  if (!format || !ACCEPTED.has(format)) throw new ImageRejected("unsupported");
+  if (!width || !height || width > MAX_SIDE || height > MAX_SIDE) throw new ImageRejected("too_large");
+  try {
+    const { data, info } = await sharp(input, { limitInputPixels: MAX_SIDE * MAX_SIDE, failOn: "error" })
+      .rotate()
+      .resize(maxSide, maxSide, { fit: "inside", withoutEnlargement: true })
+      .webp({ quality: 80 })
+      .toBuffer({ resolveWithObject: true });
+    return { data, width: info.width, height: info.height };
+  } catch {
+    throw new ImageRejected("not_an_image");
+  }
+}

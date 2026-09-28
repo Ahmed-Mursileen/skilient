@@ -228,18 +228,27 @@ export interface VentureUpdate {
   body: string;
   createdAt: string;
   authorId: string;
+  images: { url: string; width: number; height: number }[];
 }
 
 export async function getVentureUpdates(id: string): Promise<VentureUpdate[]> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("venture_updates")
-    .select("id, body, created_at, author_id")
+    .select("id, body, created_at, author_id, venture_update_media(position, path, width, height)")
     .eq("venture_id", id)
     .order("created_at", { ascending: false })
     .limit(50);
   if (error) throw new Error(`venture updates: ${error.code}`);
-  return (data ?? []).map((u) => ({ id: u.id, body: u.body, createdAt: u.created_at, authorId: u.author_id }));
+  return (data ?? []).map((u) => ({
+    id: u.id,
+    body: u.body,
+    createdAt: u.created_at,
+    authorId: u.author_id,
+    images: [...(u.venture_update_media ?? [])]
+      .sort((a, b) => a.position - b.position)
+      .map((m) => ({ url: publicImageUrl("post-media", m.path) ?? "", width: m.width, height: m.height })),
+  }));
 }
 
 export interface Deliverable {
