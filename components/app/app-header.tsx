@@ -33,6 +33,12 @@ export function AppHeader() {
                 {user.fullName}
               </span>
             </Link>
+            <Link href="/ventures" className="rounded-md px-2 py-1 text-body-sm text-text-secondary hover:bg-bg-subtle hover:text-text-primary">
+              Ventures
+            </Link>
+            <Link href="/requests" className="rounded-md px-2 py-1 text-body-sm text-text-secondary hover:bg-bg-subtle hover:text-text-primary">
+              Requests
+            </Link>
             <Link href="/settings" className="rounded-md px-2 py-1 text-body-sm text-text-secondary hover:bg-bg-subtle hover:text-text-primary">
               Settings
             </Link>

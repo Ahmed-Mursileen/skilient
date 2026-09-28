@@ -484,3 +484,13 @@ Append-only. One dated entry per product decision, with the reason. Carried over
 - 2026-09-28 (phase 2): `ventures.owner_id` restricts account deletion: the account
   deletion flow (later phase) must transfer or abandon a student's ventures first.
   Deleting a member's account still removes them, even from a completed venture.
+- 2026-09-28 (phase 2): Venture screens (slice 5b). A venture's team cards (name,
+  username, avatar, venture role) are visible wherever the venture is: they're
+  part of what a student judges before applying (`venture_team()`). Requests show
+  only the other side of your own applications and invites (`application_people()`),
+  never a general profile lookup. The venture page has About, Team, Updates,
+  Deliverables and (owner) Manage tabs. Contributions arrives with the contribution log
+  (slice 6), Reviews with teachers (phase 7), group chat with chat (phase 3). Outsiders
+  see how many deliverables a team has, not the links. Old `/projects*` and
+  `/startups*` URLs permanently redirect to `/ventures` (startups to the Startups tab).
+  Ventures and Requests sit in the minimal header until the phase 6 shell.
