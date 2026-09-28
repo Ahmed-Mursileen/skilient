@@ -12,10 +12,13 @@ import {
 import {
   analyseCommit,
   compileTaxonomy,
+  duplicateCandidates,
   generatedGlobs,
   globToRegExp,
+  isBulkImport,
   isExcludedPath,
   LINE_CAP,
+  linguistGlobPatterns,
   linguistSkills,
   type ChangedFile,
   type TaxonomySkill,
@@ -178,5 +181,32 @@ describe("detectors: what counts", () => {
     expect(globToRegExp("*.y*ml").test("k8s/api.yaml")).toBe(true);
     expect(globToRegExp("Dockerfile").test("services/api/Dockerfile")).toBe(true);
     expect(globToRegExp("Dockerfile").test("Dockerfile.dev")).toBe(false);
+  });
+
+  it("keeps linguist-generated and linguist-vendored globs from .gitattributes", () => {
+    expect(linguistGlobPatterns("# x\n/api/gen/** linguist-generated=true\nvendor/ linguist-vendored\nsrc/*.ts text\n")).toEqual([
+      "api/gen/**",
+      "vendor/**",
+    ]);
+  });
+
+  it("flags a first commit dumping more than 2,000 lines or 50 files as a bulk import", () => {
+    const big = [{ path: "a.py", status: "added", additions: 2001 }];
+    expect(isBulkImport(0, big)).toBe(true);
+    expect(isBulkImport(1, big)).toBe(false); // not the repository's first commit
+    expect(isBulkImport(0, Array.from({ length: 51 }, (_, i) => ({ path: `f${i}.py`, status: "added", additions: 1 })))).toBe(true);
+    expect(isBulkImport(0, [{ path: "a.py", status: "added", additions: 2000 }])).toBe(false);
+  });
+
+  it("compares only substantial added files across students", () => {
+    const blob = (c: string) => c.repeat(40);
+    const lines = (n: number) => `@@ -0,0 +1,${n} @@\n` + Array.from({ length: n }, (_, i) => `+x${i} = ${i}`).join("\n");
+    const files: ChangedFile[] = [
+      { path: "src/solver.py", status: "added", patch: lines(20), sha: blob("a") },
+      { path: "LICENSE", status: "added", patch: lines(5), sha: blob("b") }, // too small to mean anything
+      { path: "src/edit.py", status: "modified", patch: lines(30), sha: blob("c") }, // not a new file
+      { path: "node_modules/x/index.js", status: "added", patch: lines(30), sha: blob("d") }, // vendored
+    ];
+    expect(duplicateCandidates(files)).toEqual([blob("a")]);
   });
 });

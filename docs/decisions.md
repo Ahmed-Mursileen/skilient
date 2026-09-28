@@ -419,3 +419,32 @@ Append-only. One dated entry per product decision, with the reason. Carried over
 - 2026-09-28 (Ahmed): A staff "reset 2FA" action in `/ops` is the last resort. It needs
   an identity-check note, is recorded in `ops_audit_log`, and emails the student. It is
   built in phase 11 with the rest of `/ops` (added to the build plan).
+- 2026-09-28 (phase 2): Commit import. Harvest lists each shared repository's
+  default-branch commits for the student's login (newest 500) and keeps only those whose
+  `author.id` is their GitHub id; the extract stage fetches each commit and checks it
+  again, so a spoofed `user.email` never counts. Commits pushed after connecting arrive
+  from the `push` webhook (default branch only) with the push time. Only SHAs, paths,
+  line counts and blob hashes are stored.
+- 2026-09-28 (phase 2): Recency (PRD 5.5 "never the author date"). Commits seen through a
+  push webhook use the push time. Commits from before connecting have no trustworthy push
+  time, so they use the commit (committer) time, never later than when we first saw them.
+  The backdating flag therefore applies only to pushed commits.
+- 2026-09-28 (phase 2): Levels are computed from all current evidence. "Never downgrades"
+  holds against time (old evidence keeps counting), but removing evidence lowers a level:
+  disconnecting, excluding or unsharing a repository, a history rewrite, or an upheld flag.
+  L3/L4 (phase 4 sources) are never lowered by this computation. Days are counted in
+  Pakistan time. L2 hits: frameworks and libraries need 3 import or manifest hits; tools,
+  platforms and practices count any file, path, manifest or import hit.
+- 2026-09-28 (phase 2): Anti-gaming as built: bulk import (a first commit over 2,000
+  lines or 50 files) is excluded but still shows the skill as present (L1); a fork's or
+  template's original files (matching blob hashes from the upstream tree) are dropped
+  before detection; burst (over 50 commits or 5,000 lines in one day), backdating and
+  cross-account duplicates are held as review flags; a complete listing without a
+  previously counted commit marks it rewritten and drops its evidence. The duplicate check
+  compares only files a commit adds with 20+ non-blank lines, in different repositories,
+  so licences, empty files and a team's shared repository don't trip it. Trust reviewers
+  resolve flags with `resolve_review_flag` (aal2, note required); the /ops queue comes in
+  phase 11. The student sees only that something is under review.
+- 2026-09-28 (phase 2): The `prs` stage (merged pull requests and reviews) moves to phase 4
+  with L3, its only consumer; `pull_request` webhooks are recorded until then. A nightly
+  sync (02:17 PKT) re-reads every linked student as the reconcile.
