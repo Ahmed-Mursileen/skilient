@@ -575,5 +575,10 @@ Append-only. One dated entry per product decision, with the reason. Carried over
   has somewhere to record staff actions from today.
 - 2026-09-28 (phase 3, slice 1): Profile visibility follows PRD 8's table literally: a
   friend at another university reads a `friends` profile but only the card of a
-  `university` profile. **Question for Ahmed:** should friends also see university-only
-  profiles?
+  `university` profile. *Changed 2026-09-28 (below): friends see university profiles too.*
+- 2026-09-28 (Ahmed): Profile visibility is one ladder: friends ⊂ university ⊂ global. A
+  friend sees whatever a classmate could, so friends read `friends` and `university`
+  profiles wherever they study. There is one full profile, never a separate friends view.
+  (Answers the slice 1 question above.)
+- 2026-09-28 (Ahmed): Claude merges each phase 3 slice PR itself once CI is green, and
+  keeps open questions in `docs/phase-3-questions.md` for Ahmed to answer at the end.

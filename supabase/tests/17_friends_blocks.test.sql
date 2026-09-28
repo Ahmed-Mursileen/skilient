@@ -3,7 +3,7 @@
 -- viewers on profiles (deferred from phase 1), blocks in both directions on venture team
 -- cards and application_people, and the append-only ops_audit_log.
 begin;
-select plan(69);
+select plan(71);
 
 insert into auth.users (id, email) values
   ('17000000-0000-0000-0000-00000000000a', 'a@nutech.edu.pk'),
@@ -153,6 +153,16 @@ select throws_ok($$ select public.cancel_friend_request((select id from public.f
 select lives_ok($$ select public.cancel_friend_request((select id from public.my_friend_requests() limit 1)) $$,
   'D cancels her own request');
 select is_empty($$ select 1 from public.friend_requests $$, 'D''s request is gone');
+select is_empty($$ select 1 from public.profiles where username = 'fr_c' $$,
+  'D at another university gets only the card of C''s university-only profile');
+reset role;
+insert into public.friendships (user_id_a, user_id_b) values (pg_temp.uid('c'), pg_temp.uid('d'));
+set local role authenticated;
+select isnt_empty($$ select 1 from public.profiles where username = 'fr_c' $$,
+  'once friends, D reads C''s university-only profile in full (one ladder: friends see what classmates see)');
+reset role;
+delete from public.friendships where user_id_a = pg_temp.uid('c') and user_id_b = pg_temp.uid('d');
+set local role authenticated;
 
 -- ---------------------------------------------------------------------------
 -- Unfriend touches only the pair (PRD 8 lesson 4)

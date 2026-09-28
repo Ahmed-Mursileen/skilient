@@ -60,7 +60,7 @@ export const LOOKING_FOR = [
 export type LookingFor = (typeof LOOKING_FOR)[number]["value"];
 
 export const VISIBILITY = [
-  { value: "university", label: "My university", description: "Signed-in students and staff at your university see your full profile." },
+  { value: "university", label: "My university", description: "Signed-in students and staff at your university, and your friends anywhere, see your full profile." },
   { value: "global", label: "Everyone on Skilient", description: "Every signed-in Skilient user sees your full profile. Never public on the web." },
   { value: "friends", label: "Friends only", description: "Only your friends see your full profile." },
 ] as const;

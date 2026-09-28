@@ -583,3 +583,47 @@ grant execute on function public.send_friend_request(text), public.respond_frien
   public.my_friends(), public.my_friend_requests(), public.my_blocks(), public.friendship_state(text),
   public.pending_friend_request_count()
   to authenticated;
+
+-- ---------------------------------------------------------------------------
+-- Profile visibility is one ladder (Ahmed, 2026-09-28): friends ⊂ university ⊂ global.
+-- A friend sees whatever a classmate could, so friends read `friends` and `university`
+-- profiles wherever they study; there is one full profile, never a separate friends view.
+-- ---------------------------------------------------------------------------
+drop policy profiles_select_visible on public.profiles;
+create policy profiles_select_visible on public.profiles
+  for select to authenticated
+  using (
+    user_id = (select auth.uid())
+    or (
+      not private.is_blocked_with(user_id)
+      and (
+        visibility = 'global'
+        or (visibility = 'university' and university_id = (select private.current_university_id()))
+        or private.is_friend_of(user_id)
+      )
+    )
+  );
+
+create or replace function private.can_view_profile(p_user uuid)
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select exists (
+    select 1 from public.profiles p
+     where p.user_id = p_user
+       and (
+         p.user_id = (select auth.uid())
+         or (
+           not private.is_blocked_with(p.user_id)
+           and (
+             p.visibility = 'global'
+             or (p.visibility = 'university' and p.university_id = (select private.current_university_id()))
+             or private.is_friend_of(p.user_id)
+           )
+         )
+       )
+  );
+$$;
