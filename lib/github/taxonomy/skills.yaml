@@ -1,0 +1,1219 @@
+# Skilient skill taxonomy (PRD 5.5 "Skill taxonomy and detectors").
+#
+# Owned by Skilient Trust staff; reviewed quarterly. Edit here, bump `version`, then run
+# `pnpm skills:sync` to write a migration that loads it into `skills` (ids never change;
+# a removed skill is retired, never deleted, so evidence keeps its reference).
+#
+# Each skill: id (stable slug), name, category (language | framework | library | tool |
+# platform | practice), optional parent, and detectors. Detectors only ever look at lines
+# the student's own commits ADD, and at files those commits add or change:
+#
+#   files:      file-name globs. For languages, lines in these files are the evidence;
+#               for everything else, touching such a file is one hit.
+#   paths:      path globs touched (config paths: workflows, migrations, ...).
+#   linguist:   GitHub language names, for "found in your repos" (L1) from repo stats.
+#   npm, pypi, maven + jvm, nuget, composer + php_ns, go, cargo, gem, pub:
+#               ecosystem shorthands, expanded by scripts/skills.mjs into a manifest
+#               detector (the package added to package.json, requirements.txt, pom.xml,
+#               ...) plus an import detector (the package imported in added code).
+#               An npm name ending in "/" is a scope prefix; a pypi package ending in
+#               "*" is a name prefix.
+#   imports / manifests: custom regexes ({ ext | file, match, flags? }) when a shorthand
+#               doesn't fit.
+#   examples:   fixtures (one changed file each) that must detect this skill. The unit
+#               tests run every one; they're never loaded into the database.
+#
+# Globs: `*` stays inside one path segment, `**` crosses segments, and a glob without a
+# slash matches the file name in any folder.
+
+version: 1
+
+skills:
+  # ------------------------------------------------------------------ languages
+  - id: python
+    name: Python
+    category: language
+    linguist: [Python]
+    files: ['*.py', '*.pyw', '*.pyi']
+    examples:
+      - { path: app/main.py, added: ['def main():', '    return 1'] }
+  - id: java
+    name: Java
+    category: language
+    linguist: [Java]
+    files: ['*.java']
+    examples:
+      - { path: src/main/java/App.java, added: ['public class App {}'] }
+  - id: c
+    name: C
+    category: language
+    linguist: [C]
+    files: ['*.c', '*.h']
+    examples:
+      - { path: src/list.c, added: ['int main(void) { return 0; }'] }
+  - id: cpp
+    name: C++
+    category: language
+    linguist: [C++]
+    files: ['*.cpp', '*.cc', '*.cxx', '*.hpp', '*.hh', '*.hxx']
+    examples:
+      - { path: src/graph.cpp, added: ['#include <vector>', 'int main() { std::vector<int> v; }'] }
+  - id: csharp
+    name: C#
+    category: language
+    linguist: [C#]
+    files: ['*.cs', '*.csx']
+    examples:
+      - { path: Program.cs, added: ['Console.WriteLine("hi");'] }
+  - id: javascript
+    name: JavaScript
+    category: language
+    linguist: [JavaScript]
+    files: ['*.js', '*.jsx', '*.mjs', '*.cjs']
+    examples:
+      - { path: src/index.js, added: ['const x = 1;'] }
+  - id: typescript
+    name: TypeScript
+    category: language
+    linguist: [TypeScript]
+    files: ['*.ts', '*.tsx', '*.mts', '*.cts']
+    examples:
+      - { path: src/app.ts, added: ['export const x: number = 1;'] }
+  - id: php
+    name: PHP
+    category: language
+    linguist: [PHP]
+    files: ['*.php']
+    examples:
+      - { path: public/index.php, added: ['<?php echo "hi";'] }
+  - id: kotlin
+    name: Kotlin
+    category: language
+    linguist: [Kotlin]
+    files: ['*.kt', '*.kts']
+    examples:
+      - { path: app/src/main/java/Main.kt, added: ['fun main() = println("hi")'] }
+  - id: swift
+    name: Swift
+    category: language
+    linguist: [Swift]
+    files: ['*.swift']
+    examples:
+      - { path: Sources/App/main.swift, added: ['print("hi")'] }
+  - id: dart
+    name: Dart
+    category: language
+    linguist: [Dart]
+    files: ['*.dart']
+    examples:
+      - { path: lib/main.dart, added: ['void main() {}'] }
+  - id: go
+    name: Go
+    category: language
+    linguist: [Go]
+    files: ['*.go']
+    examples:
+      - { path: cmd/server/main.go, added: ['package main'] }
+  - id: rust
+    name: Rust
+    category: language
+    linguist: [Rust]
+    files: ['*.rs']
+    examples:
+      - { path: src/main.rs, added: ['fn main() {}'] }
+  - id: ruby
+    name: Ruby
+    category: language
+    linguist: [Ruby]
+    files: ['*.rb', '*.rake']
+    examples:
+      - { path: app/models/user.rb, added: ['class User; end'] }
+  - id: r
+    name: R
+    category: language
+    linguist: [R]
+    files: ['*.r', '*.R', '*.Rmd']
+    examples:
+      - { path: analysis/model.R, added: ['fit <- lm(y ~ x, data = d)'] }
+  - id: matlab
+    name: MATLAB
+    category: language
+    linguist: [MATLAB]
+    files: ['*.m', '*.mlx']
+    examples:
+      - { path: signals/filter.m, added: ['y = filter(b, a, x);'] }
+  - id: sql
+    name: SQL
+    category: language
+    linguist: [SQL, PLpgSQL, TSQL, PLSQL]
+    files: ['*.sql']
+    examples:
+      - { path: db/schema.sql, added: ['create table users (id int primary key);'] }
+  - id: html
+    name: HTML
+    category: language
+    linguist: [HTML]
+    files: ['*.html', '*.htm']
+    examples:
+      - { path: public/index.html, added: ['<main><h1>Hello</h1></main>'] }
+  - id: css
+    name: CSS
+    category: language
+    linguist: [CSS, SCSS, Sass, Less]
+    files: ['*.css', '*.scss', '*.sass', '*.less']
+    examples:
+      - { path: styles/site.css, added: ['body { margin: 0; }'] }
+  - id: scala
+    name: Scala
+    category: language
+    linguist: [Scala]
+    files: ['*.scala', '*.sc']
+    examples:
+      - { path: src/main/scala/Main.scala, added: ['object Main extends App'] }
+  - id: shell
+    name: Shell scripting
+    category: language
+    linguist: [Shell]
+    files: ['*.sh', '*.bash', '*.zsh']
+    examples:
+      - { path: scripts/deploy.sh, added: ['set -euo pipefail'] }
+  - id: powershell
+    name: PowerShell
+    category: language
+    linguist: [PowerShell]
+    files: ['*.ps1', '*.psm1']
+    examples:
+      - { path: scripts/setup.ps1, added: ['Write-Host "hi"'] }
+  - id: assembly
+    name: Assembly
+    category: language
+    linguist: [Assembly]
+    files: ['*.asm', '*.s', '*.S']
+    examples:
+      - { path: lab/add.asm, added: ['mov eax, 1'] }
+  - id: solidity
+    name: Solidity
+    category: language
+    linguist: [Solidity]
+    files: ['*.sol']
+    examples:
+      - { path: contracts/Token.sol, added: ['pragma solidity ^0.8.20;'] }
+  - id: lua
+    name: Lua
+    category: language
+    linguist: [Lua]
+    files: ['*.lua']
+    examples:
+      - { path: game/main.lua, added: ['local x = 1'] }
+  - id: objective-c
+    name: Objective-C
+    category: language
+    linguist: [Objective-C]
+    files: ['*.mm']
+    imports:
+      - { ext: [m, h], match: '^\s*(?:#import\s+[<"]|@interface\s+\w+|@implementation\s+\w+)' }
+    examples:
+      - { path: App/ViewController.mm, added: ['@implementation ViewController'] }
+  - id: haskell
+    name: Haskell
+    category: language
+    linguist: [Haskell]
+    files: ['*.hs', '*.lhs']
+    examples:
+      - { path: src/Main.hs, added: ['main = putStrLn "hi"'] }
+  - id: julia
+    name: Julia
+    category: language
+    linguist: [Julia]
+    files: ['*.jl']
+    examples:
+      - { path: src/solve.jl, added: ['f(x) = x^2'] }
+  - id: verilog
+    name: Verilog
+    category: language
+    linguist: [Verilog, SystemVerilog]
+    files: ['*.v', '*.sv', '*.vh', '*.svh']
+    examples:
+      - { path: rtl/alu.v, added: ['module alu(input a, output y);'] }
+  - id: vhdl
+    name: VHDL
+    category: language
+    linguist: [VHDL]
+    files: ['*.vhd', '*.vhdl']
+    examples:
+      - { path: rtl/counter.vhd, added: ['entity counter is'] }
+
+  # ------------------------------------------------------------------ frameworks
+  - id: react
+    name: React
+    category: framework
+    parent: javascript
+    npm: [react, react-dom]
+    examples:
+      - { path: src/App.tsx, added: ["import { useState } from 'react';"] }
+      - { path: package.json, added: ['    "react": "^19.0.0",'] }
+  - id: nextjs
+    name: Next.js
+    category: framework
+    parent: react
+    npm: [next]
+    files: ['next.config.js', 'next.config.mjs', 'next.config.ts']
+    examples:
+      - { path: app/page.tsx, added: ["import Link from 'next/link';"] }
+  - id: vue
+    name: Vue
+    category: framework
+    parent: javascript
+    npm: [vue]
+    files: ['*.vue']
+    examples:
+      - { path: src/main.ts, added: ["import { createApp } from 'vue';"] }
+  - id: nuxt
+    name: Nuxt
+    category: framework
+    parent: vue
+    npm: [nuxt]
+    files: ['nuxt.config.ts', 'nuxt.config.js']
+    examples:
+      - { path: nuxt.config.ts, added: ['export default defineNuxtConfig({})'] }
+  - id: angular
+    name: Angular
+    category: framework
+    parent: typescript
+    npm: ['@angular/']
+    files: ['angular.json']
+    examples:
+      - { path: src/app/app.component.ts, added: ["import { Component } from '@angular/core';"] }
+  - id: svelte
+    name: Svelte
+    category: framework
+    parent: javascript
+    npm: [svelte, '@sveltejs/kit']
+    files: ['*.svelte', 'svelte.config.js']
+    examples:
+      - { path: src/routes/+page.svelte, added: ['<h1>Hello</h1>'] }
+  - id: express
+    name: Express
+    category: framework
+    parent: nodejs
+    npm: [express]
+    examples:
+      - { path: server/index.js, added: ["const express = require('express');"] }
+  - id: nestjs
+    name: NestJS
+    category: framework
+    parent: typescript
+    npm: ['@nestjs/']
+    examples:
+      - { path: src/app.module.ts, added: ["import { Module } from '@nestjs/common';"] }
+  - id: fastify
+    name: Fastify
+    category: framework
+    parent: nodejs
+    npm: [fastify]
+    examples:
+      - { path: src/server.ts, added: ["import Fastify from 'fastify';"] }
+  - id: django
+    name: Django
+    category: framework
+    parent: python
+    pypi: [{ package: django, module: django }]
+    files: ['manage.py']
+    examples:
+      - { path: shop/views.py, added: ['from django.shortcuts import render'] }
+      - { path: requirements.txt, added: ['Django==5.1'] }
+  - id: django-rest-framework
+    name: Django REST framework
+    category: framework
+    parent: django
+    pypi: [{ package: djangorestframework, module: rest_framework }]
+    examples:
+      - { path: api/serializers.py, added: ['from rest_framework import serializers'] }
+  - id: flask
+    name: Flask
+    category: framework
+    parent: python
+    pypi: [flask]
+    examples:
+      - { path: app.py, added: ['from flask import Flask'] }
+  - id: fastapi
+    name: FastAPI
+    category: framework
+    parent: python
+    pypi: [fastapi]
+    examples:
+      - { path: api/main.py, added: ['from fastapi import FastAPI'] }
+  - id: spring-boot
+    name: Spring Boot
+    category: framework
+    parent: java
+    maven: [org.springframework.boot, spring-boot-starter]
+    jvm: [org.springframework]
+    examples:
+      - { path: src/main/java/App.java, added: ['import org.springframework.boot.SpringApplication;'] }
+      - { path: pom.xml, added: ['    <artifactId>spring-boot-starter-web</artifactId>'] }
+  - id: laravel
+    name: Laravel
+    category: framework
+    parent: php
+    composer: [laravel/framework]
+    php_ns: [Illuminate]
+    files: ['artisan']
+    examples:
+      - { path: app/Http/Controllers/HomeController.php, added: ['use Illuminate\Http\Request;'] }
+  - id: codeigniter
+    name: CodeIgniter
+    category: framework
+    parent: php
+    composer: [codeigniter4/framework, codeigniter/framework]
+    php_ns: [CodeIgniter]
+    imports:
+      - { ext: [php], match: 'extends\s+CI_(?:Controller|Model)\b' }
+    examples:
+      - { path: application/controllers/Home.php, added: ['class Home extends CI_Controller {'] }
+  - id: symfony
+    name: Symfony
+    category: framework
+    parent: php
+    composer: [symfony/]
+    php_ns: [Symfony]
+    examples:
+      - { path: src/Controller/HomeController.php, added: ['use Symfony\Component\HttpFoundation\Response;'] }
+  - id: aspnet-core
+    name: ASP.NET Core
+    category: framework
+    parent: csharp
+    nuget: [Microsoft.AspNetCore]
+    imports:
+      - { ext: [cs], match: 'WebApplication\.CreateBuilder\(' }
+    manifests:
+      - { file: '*.csproj', match: 'Sdk="Microsoft\.NET\.Sdk\.Web"' }
+    examples:
+      - { path: Program.cs, added: ['var builder = WebApplication.CreateBuilder(args);'] }
+  - id: blazor
+    name: Blazor
+    category: framework
+    parent: aspnet-core
+    files: ['*.razor']
+    nuget: [Microsoft.AspNetCore.Components]
+    examples:
+      - { path: Pages/Index.razor, added: ['@page "/"'] }
+  - id: flutter
+    name: Flutter
+    category: framework
+    parent: dart
+    pub: [flutter]
+    manifests:
+      - { file: pubspec.yaml, match: '^\s*sdk:\s*flutter\b' }
+    examples:
+      - { path: lib/main.dart, added: ["import 'package:flutter/material.dart';"] }
+  - id: react-native
+    name: React Native
+    category: framework
+    parent: react
+    npm: [react-native]
+    examples:
+      - { path: App.tsx, added: ["import { View, Text } from 'react-native';"] }
+  - id: expo
+    name: Expo
+    category: framework
+    parent: react-native
+    npm: [expo, expo-router]
+    files: ['app.json', 'eas.json']
+    examples:
+      - { path: app/_layout.tsx, added: ["import { Stack } from 'expo-router';"] }
+  - id: ionic
+    name: Ionic
+    category: framework
+    parent: javascript
+    npm: ['@ionic/', '@capacitor/']
+    examples:
+      - { path: src/App.tsx, added: ["import { IonApp } from '@ionic/react';"] }
+  - id: electron
+    name: Electron
+    category: framework
+    parent: javascript
+    npm: [electron]
+    examples:
+      - { path: main.js, added: ["const { app, BrowserWindow } = require('electron');"] }
+  - id: rails
+    name: Ruby on Rails
+    category: framework
+    parent: ruby
+    gem: [rails]
+    imports:
+      - { ext: [rb], match: '<\s*(?:ApplicationController|ActiveRecord::Base|ApplicationRecord)\b' }
+    examples:
+      - { path: app/controllers/posts_controller.rb, added: ['class PostsController < ApplicationController'] }
+  - id: gin
+    name: Gin
+    category: framework
+    parent: go
+    go: [github.com/gin-gonic/gin]
+    examples:
+      - { path: main.go, added: ['	"github.com/gin-gonic/gin"'] }
+  - id: streamlit
+    name: Streamlit
+    category: framework
+    parent: python
+    pypi: [streamlit]
+    examples:
+      - { path: dashboard.py, added: ['import streamlit as st'] }
+  - id: jquery
+    name: jQuery
+    category: framework
+    parent: javascript
+    npm: [jquery]
+    imports:
+      - { ext: [js, html, php], match: '\$\(\s*(?:document|window|["''][#.]?[\w-]+["''])\s*\)\.\w+\(' }
+    examples:
+      - { path: js/site.js, added: ["$(document).ready(function () {});"] }
+  - id: bootstrap
+    name: Bootstrap
+    category: framework
+    parent: css
+    npm: [bootstrap, react-bootstrap]
+    imports:
+      - { ext: [html, php, jsx, tsx, vue], match: 'class(?:Name)?="[^"]*\b(?:container-fluid|col-(?:sm|md|lg|xl)-\d+|btn-primary|navbar-expand)' }
+    examples:
+      - { path: index.html, added: ['<div class="container-fluid"><button class="btn btn-primary">Go</button></div>'] }
+  - id: tailwindcss
+    name: Tailwind CSS
+    category: framework
+    parent: css
+    npm: [tailwindcss, '@tailwindcss/']
+    files: ['tailwind.config.js', 'tailwind.config.ts', 'tailwind.config.cjs']
+    imports:
+      - { ext: [css], match: '^\s*@(?:tailwind\s+(?:base|components|utilities)|import\s+["'']tailwindcss["''])' }
+    examples:
+      - { path: app/globals.css, added: ['@import "tailwindcss";'] }
+  - id: astro
+    name: Astro
+    category: framework
+    parent: javascript
+    npm: [astro]
+    files: ['*.astro', 'astro.config.mjs']
+    examples:
+      - { path: src/pages/index.astro, added: ['<h1>Hello</h1>'] }
+  - id: qt
+    name: Qt
+    category: framework
+    parent: cpp
+    files: ['*.pro', '*.ui', '*.qml']
+    pypi: [{ package: pyqt5, module: PyQt5 }, { package: pyqt6, module: PyQt6 }, { package: pyside6, module: PySide6 }]
+    imports:
+      - { ext: [cpp, h, hpp], match: '#include\s*[<"]Q[A-Z]\w+[>"]' }
+    examples:
+      - { path: src/mainwindow.cpp, added: ['#include <QMainWindow>'] }
+  - id: jetpack-compose
+    name: Jetpack Compose
+    category: framework
+    parent: kotlin
+    jvm: [androidx.compose]
+    manifests:
+      - { file: 'build.gradle*', match: 'androidx\.compose' }
+    examples:
+      - { path: app/src/main/java/ui/Home.kt, added: ['import androidx.compose.material3.Text'] }
+  - id: swiftui
+    name: SwiftUI
+    category: framework
+    parent: swift
+    imports:
+      - { ext: [swift], match: '^\s*import\s+SwiftUI\b' }
+    examples:
+      - { path: App/ContentView.swift, added: ['import SwiftUI'] }
+
+  # ------------------------------------------------------------------ libraries
+  - id: numpy
+    name: NumPy
+    category: library
+    parent: python
+    pypi: [numpy]
+    examples:
+      - { path: lab/stats.py, added: ['import numpy as np'] }
+  - id: pandas
+    name: pandas
+    category: library
+    parent: python
+    pypi: [pandas]
+    examples:
+      - { path: notebooks/eda.ipynb, added: ['    "import pandas as pd\n",'] }
+  - id: scipy
+    name: SciPy
+    category: library
+    parent: python
+    pypi: [scipy]
+    examples:
+      - { path: lab/fit.py, added: ['from scipy import optimize'] }
+  - id: scikit-learn
+    name: scikit-learn
+    category: library
+    parent: python
+    pypi: [{ package: scikit-learn, module: sklearn }]
+    examples:
+      - { path: ml/train.py, added: ['from sklearn.linear_model import LogisticRegression'] }
+  - id: tensorflow
+    name: TensorFlow
+    category: library
+    parent: python
+    pypi: [tensorflow, { package: tensorflow-cpu, module: tensorflow }]
+    npm: ['@tensorflow/']
+    examples:
+      - { path: ml/model.py, added: ['import tensorflow as tf'] }
+  - id: pytorch
+    name: PyTorch
+    category: library
+    parent: python
+    pypi: [{ package: torch, module: torch }, torchvision]
+    examples:
+      - { path: ml/net.py, added: ['import torch.nn as nn'] }
+  - id: keras
+    name: Keras
+    category: library
+    parent: python
+    pypi: [keras]
+    imports:
+      - { ext: [py, ipynb], match: '^\s*"?from\s+tensorflow\s+import\s+keras\b|tensorflow\.keras\b' }
+    examples:
+      - { path: ml/cnn.py, added: ['from tensorflow.keras import layers'] }
+  - id: opencv
+    name: OpenCV
+    category: library
+    parent: python
+    pypi: [{ package: opencv-python, module: cv2 }, { package: opencv-python-headless, module: cv2 }, { package: opencv-contrib-python, module: cv2 }]
+    imports:
+      - { ext: [cpp, hpp, h], match: '#include\s*[<"]opencv2/' }
+    examples:
+      - { path: vision/detect.py, added: ['import cv2'] }
+  - id: matplotlib
+    name: Matplotlib
+    category: library
+    parent: python
+    pypi: [matplotlib]
+    examples:
+      - { path: plots/draw.py, added: ['import matplotlib.pyplot as plt'] }
+  - id: seaborn
+    name: seaborn
+    category: library
+    parent: python
+    pypi: [seaborn]
+    examples:
+      - { path: plots/heat.py, added: ['import seaborn as sns'] }
+  - id: plotly
+    name: Plotly
+    category: library
+    parent: python
+    pypi: [plotly]
+    npm: [plotly.js, react-plotly.js]
+    examples:
+      - { path: plots/interactive.py, added: ['import plotly.express as px'] }
+  - id: hugging-face-transformers
+    name: Hugging Face Transformers
+    category: library
+    parent: python
+    pypi: [transformers, datasets]
+    examples:
+      - { path: nlp/classify.py, added: ['from transformers import AutoTokenizer'] }
+  - id: langchain
+    name: LangChain
+    category: library
+    parent: python
+    pypi: [langchain, { package: langchain-*, module: langchain_community }]
+    npm: [langchain, '@langchain/']
+    examples:
+      - { path: rag/chain.py, added: ['from langchain.prompts import PromptTemplate'] }
+  - id: nltk
+    name: NLTK
+    category: library
+    parent: python
+    pypi: [nltk]
+    examples:
+      - { path: nlp/tokens.py, added: ['import nltk'] }
+  - id: spacy
+    name: spaCy
+    category: library
+    parent: python
+    pypi: [spacy]
+    examples:
+      - { path: nlp/ner.py, added: ['import spacy'] }
+  - id: beautifulsoup
+    name: Beautiful Soup
+    category: library
+    parent: python
+    pypi: [{ package: beautifulsoup4, module: bs4 }]
+    examples:
+      - { path: scraper/parse.py, added: ['from bs4 import BeautifulSoup'] }
+  - id: selenium
+    name: Selenium
+    category: library
+    pypi: [selenium]
+    npm: [selenium-webdriver]
+    jvm: [org.openqa.selenium]
+    examples:
+      - { path: tests/ui_test.py, added: ['from selenium import webdriver'] }
+  - id: sqlalchemy
+    name: SQLAlchemy
+    category: library
+    parent: python
+    pypi: [sqlalchemy, flask-sqlalchemy]
+    examples:
+      - { path: app/db.py, added: ['from sqlalchemy.orm import Session'] }
+  - id: pydantic
+    name: Pydantic
+    category: library
+    parent: python
+    pypi: [pydantic]
+    examples:
+      - { path: app/schemas.py, added: ['from pydantic import BaseModel'] }
+  - id: celery
+    name: Celery
+    category: library
+    parent: python
+    pypi: [celery]
+    examples:
+      - { path: app/tasks.py, added: ['from celery import Celery'] }
+  - id: prisma
+    name: Prisma
+    category: library
+    parent: typescript
+    npm: [prisma, '@prisma/client']
+    files: ['schema.prisma']
+    examples:
+      - { path: prisma/schema.prisma, added: ['model User {'] }
+  - id: sequelize
+    name: Sequelize
+    category: library
+    parent: nodejs
+    npm: [sequelize]
+    examples:
+      - { path: models/index.js, added: ["const { Sequelize } = require('sequelize');"] }
+  - id: typeorm
+    name: TypeORM
+    category: library
+    parent: typescript
+    npm: [typeorm]
+    examples:
+      - { path: src/entity/User.ts, added: ["import { Entity, Column } from 'typeorm';"] }
+  - id: mongoose
+    name: Mongoose
+    category: library
+    parent: mongodb
+    npm: [mongoose]
+    examples:
+      - { path: models/user.js, added: ["const mongoose = require('mongoose');"] }
+  - id: drizzle
+    name: Drizzle ORM
+    category: library
+    parent: typescript
+    npm: [drizzle-orm, drizzle-kit]
+    examples:
+      - { path: src/db/schema.ts, added: ["import { pgTable } from 'drizzle-orm/pg-core';"] }
+  - id: hibernate
+    name: Hibernate / JPA
+    category: library
+    parent: java
+    maven: [org.hibernate, spring-boot-starter-data-jpa]
+    jvm: [org.hibernate, jakarta.persistence, javax.persistence]
+    examples:
+      - { path: src/main/java/User.java, added: ['import jakarta.persistence.Entity;'] }
+  - id: entity-framework-core
+    name: Entity Framework Core
+    category: library
+    parent: csharp
+    nuget: [Microsoft.EntityFrameworkCore]
+    examples:
+      - { path: Data/AppDbContext.cs, added: ['using Microsoft.EntityFrameworkCore;'] }
+  - id: redux
+    name: Redux
+    category: library
+    parent: react
+    npm: [redux, '@reduxjs/toolkit', react-redux]
+    examples:
+      - { path: src/store.ts, added: ["import { configureStore } from '@reduxjs/toolkit';"] }
+  - id: tanstack-query
+    name: TanStack Query
+    category: library
+    parent: react
+    npm: ['@tanstack/react-query', react-query]
+    examples:
+      - { path: src/hooks/usePosts.ts, added: ["import { useQuery } from '@tanstack/react-query';"] }
+  - id: graphql
+    name: GraphQL
+    category: library
+    npm: [graphql, graphql-request]
+    pypi: [graphene, strawberry-graphql]
+    files: ['*.graphql', '*.gql']
+    examples:
+      - { path: schema/schema.graphql, added: ['type Query { me: User }'] }
+  - id: apollo
+    name: Apollo GraphQL
+    category: library
+    parent: graphql
+    npm: ['@apollo/client', '@apollo/server', apollo-server-express]
+    examples:
+      - { path: src/client.ts, added: ["import { ApolloClient } from '@apollo/client';"] }
+  - id: socketio
+    name: Socket.IO
+    category: library
+    npm: [socket.io, socket.io-client]
+    pypi: [{ package: python-socketio, module: socketio }]
+    examples:
+      - { path: server/io.js, added: ["const { Server } = require('socket.io');"] }
+  - id: axios
+    name: Axios
+    category: library
+    parent: javascript
+    npm: [axios]
+    examples:
+      - { path: src/api.ts, added: ["import axios from 'axios';"] }
+  - id: zod
+    name: Zod
+    category: library
+    parent: typescript
+    npm: [zod]
+    examples:
+      - { path: src/schema.ts, added: ["import { z } from 'zod';"] }
+  - id: threejs
+    name: Three.js
+    category: library
+    parent: javascript
+    npm: [three, '@react-three/fiber']
+    examples:
+      - { path: src/scene.js, added: ["import * as THREE from 'three';"] }
+  - id: d3
+    name: D3.js
+    category: library
+    parent: javascript
+    npm: [d3]
+    examples:
+      - { path: src/chart.js, added: ["import * as d3 from 'd3';"] }
+  - id: chartjs
+    name: Chart.js
+    category: library
+    parent: javascript
+    npm: [chart.js, react-chartjs-2]
+    examples:
+      - { path: src/stats.js, added: ["import Chart from 'chart.js/auto';"] }
+  - id: material-ui
+    name: Material UI
+    category: library
+    parent: react
+    npm: ['@mui/', '@material-ui/']
+    examples:
+      - { path: src/Button.tsx, added: ["import Button from '@mui/material/Button';"] }
+  - id: jest
+    name: Jest
+    category: library
+    npm: [jest, '@jest/globals', ts-jest]
+    files: ['jest.config.js', 'jest.config.ts']
+    examples:
+      - { path: jest.config.ts, added: ['export default { preset: "ts-jest" };'] }
+  - id: vitest
+    name: Vitest
+    category: library
+    npm: [vitest]
+    files: ['vitest.config.ts', 'vitest.config.mts', 'vitest.config.js']
+    examples:
+      - { path: tests/sum.test.ts, added: ["import { expect, it } from 'vitest';"] }
+  - id: pytest
+    name: pytest
+    category: library
+    parent: python
+    pypi: [pytest]
+    files: ['pytest.ini', 'conftest.py']
+    examples:
+      - { path: tests/test_api.py, added: ['import pytest'] }
+  - id: junit
+    name: JUnit
+    category: library
+    parent: java
+    maven: [junit, org.junit]
+    jvm: [org.junit]
+    examples:
+      - { path: src/test/java/AppTest.java, added: ['import org.junit.jupiter.api.Test;'] }
+  - id: cypress
+    name: Cypress
+    category: library
+    npm: [cypress]
+    files: ['cypress.config.ts', 'cypress.config.js']
+    examples:
+      - { path: cypress.config.ts, added: ['export default defineConfig({ e2e: {} });'] }
+  - id: playwright
+    name: Playwright
+    category: library
+    npm: ['@playwright/test', playwright]
+    pypi: [playwright]
+    files: ['playwright.config.ts', 'playwright.config.js']
+    examples:
+      - { path: e2e/home.spec.ts, added: ["import { test } from '@playwright/test';"] }
+  - id: mocha
+    name: Mocha
+    category: library
+    npm: [mocha, chai]
+    files: ['.mocharc.json', '.mocharc.yml', '.mocharc.js']
+    examples:
+      - { path: test/app.test.js, added: ["const { expect } = require('chai');"] }
+  - id: retrofit
+    name: Retrofit
+    category: library
+    parent: android
+    maven: [com.squareup.retrofit2]
+    jvm: [retrofit2]
+    examples:
+      - { path: app/src/main/java/api/Api.kt, added: ['import retrofit2.http.GET'] }
+  - id: room
+    name: Room
+    category: library
+    parent: android
+    maven: [androidx.room]
+    jvm: [androidx.room]
+    examples:
+      - { path: app/src/main/java/data/UserDao.kt, added: ['import androidx.room.Dao'] }
+
+  # ------------------------------------------------------------------ tools
+  - id: docker
+    name: Docker
+    category: tool
+    files: [Dockerfile, 'Dockerfile.*', '*.dockerfile', .dockerignore]
+    examples:
+      - { path: Dockerfile, added: ['FROM node:22-alpine'] }
+  - id: docker-compose
+    name: Docker Compose
+    category: tool
+    parent: docker
+    files: ['docker-compose*.yml', 'docker-compose*.yaml', compose.yml, compose.yaml]
+    examples:
+      - { path: docker-compose.yml, added: ['services:'] }
+  - id: kubernetes
+    name: Kubernetes
+    category: tool
+    manifests:
+      - { file: '*.y*ml', match: '^\s*kind:\s*(?:Deployment|StatefulSet|DaemonSet|Ingress|CronJob|HorizontalPodAutoscaler)\b' }
+    examples:
+      - { path: k8s/api.yaml, added: ['kind: Deployment'] }
+  - id: helm
+    name: Helm
+    category: tool
+    parent: kubernetes
+    files: [Chart.yaml]
+    examples:
+      - { path: charts/api/Chart.yaml, added: ['apiVersion: v2'] }
+  - id: terraform
+    name: Terraform
+    category: tool
+    linguist: [HCL]
+    files: ['*.tf', '*.tfvars']
+    examples:
+      - { path: infra/main.tf, added: ['resource "aws_s3_bucket" "site" {}'] }
+  - id: ansible
+    name: Ansible
+    category: tool
+    files: [ansible.cfg]
+    paths: ['**/playbooks/*.yml', '**/playbooks/*.yaml', '**/roles/*/tasks/*.yml', '**/roles/*/tasks/*.yaml']
+    examples:
+      - { path: deploy/playbooks/site.yml, added: ['- hosts: web'] }
+  - id: github-actions
+    name: GitHub Actions
+    category: tool
+    paths: ['.github/workflows/*.yml', '.github/workflows/*.yaml', '**/action.yml']
+    examples:
+      - { path: .github/workflows/ci.yml, added: ['on: [push]'] }
+  - id: gitlab-ci
+    name: GitLab CI
+    category: tool
+    files: [.gitlab-ci.yml]
+    examples:
+      - { path: .gitlab-ci.yml, added: ['stages: [test]'] }
+  - id: jenkins
+    name: Jenkins
+    category: tool
+    files: [Jenkinsfile]
+    examples:
+      - { path: Jenkinsfile, added: ['pipeline { agent any }'] }
+  - id: webpack
+    name: webpack
+    category: tool
+    npm: [webpack]
+    files: ['webpack.config.*']
+    examples:
+      - { path: webpack.config.js, added: ['module.exports = { mode: "production" };'] }
+  - id: vite
+    name: Vite
+    category: tool
+    npm: [vite]
+    files: ['vite.config.*']
+    examples:
+      - { path: vite.config.ts, added: ['export default defineConfig({});'] }
+  - id: eslint
+    name: ESLint
+    category: tool
+    npm: [eslint]
+    files: ['.eslintrc*', 'eslint.config.*']
+    examples:
+      - { path: eslint.config.mjs, added: ['export default [];'] }
+  - id: prettier
+    name: Prettier
+    category: tool
+    npm: [prettier]
+    files: ['.prettierrc*', 'prettier.config.*']
+    examples:
+      - { path: .prettierrc.json, added: ['{ "semi": true }'] }
+  - id: cmake
+    name: CMake
+    category: tool
+    linguist: [CMake]
+    files: [CMakeLists.txt, '*.cmake']
+    examples:
+      - { path: CMakeLists.txt, added: ['cmake_minimum_required(VERSION 3.20)'] }
+  - id: make
+    name: Make
+    category: tool
+    linguist: [Makefile]
+    files: [Makefile, makefile, GNUmakefile, '*.mk']
+    examples:
+      - { path: Makefile, added: ['build:', '	gcc -o app main.c'] }
+  - id: gradle
+    name: Gradle
+    category: tool
+    files: [build.gradle, build.gradle.kts, 'settings.gradle*']
+    examples:
+      - { path: app/build.gradle.kts, added: ['plugins { id("com.android.application") }'] }
+  - id: maven
+    name: Maven
+    category: tool
+    files: [pom.xml]
+    examples:
+      - { path: pom.xml, added: ['<modelVersion>4.0.0</modelVersion>'] }
+  - id: nginx
+    name: Nginx
+    category: tool
+    files: [nginx.conf, '*.nginx']
+    paths: ['**/nginx/**/*.conf']
+    examples:
+      - { path: deploy/nginx.conf, added: ['server { listen 80; }'] }
+  - id: storybook
+    name: Storybook
+    category: tool
+    npm: [storybook, '@storybook/']
+    files: ['*.stories.tsx', '*.stories.ts', '*.stories.jsx', '*.stories.js']
+    examples:
+      - { path: src/Button.stories.tsx, added: ['export default { title: "Button" };'] }
+  - id: jupyter
+    name: Jupyter
+    category: tool
+    linguist: [Jupyter Notebook]
+    files: ['*.ipynb']
+    examples:
+      - { path: notebooks/eda.ipynb, added: ['    "print(1)\n",'] }
+
+  # ------------------------------------------------------------------ platforms
+  - id: nodejs
+    name: Node.js
+    category: platform
+    parent: javascript
+    imports:
+      - { ext: [js, mjs, cjs, ts, mts], match: '(?:from\s*|require\(\s*)["''](?:node:)?(?:fs|path|http|https|os|child_process|events|stream|worker_threads|cluster)(?:/promises)?["'']' }
+    manifests:
+      - { file: package.json, match: '^\s*"engines"\s*:' }
+    examples:
+      - { path: scripts/build.mjs, added: ["import { readFile } from 'node:fs/promises';"] }
+  - id: aws
+    name: Amazon Web Services
+    category: platform
+    npm: [aws-sdk, '@aws-sdk/', aws-cdk-lib]
+    pypi: [boto3]
+    files: [serverless.yml, cdk.json, samconfig.toml]
+    examples:
+      - { path: lambda/handler.py, added: ['import boto3'] }
+  - id: google-cloud
+    name: Google Cloud
+    category: platform
+    npm: ['@google-cloud/']
+    pypi: [{ package: google-cloud-*, module: google.cloud }]
+    files: [cloudbuild.yaml, app.yaml]
+    examples:
+      - { path: jobs/upload.py, added: ['from google.cloud import storage'] }
+  - id: azure
+    name: Microsoft Azure
+    category: platform
+    npm: ['@azure/']
+    pypi: [{ package: azure-*, module: azure }]
+    nuget: [Azure.]
+    files: [azure-pipelines.yml]
+    examples:
+      - { path: src/blob.ts, added: ["import { BlobServiceClient } from '@azure/storage-blob';"] }
+  - id: firebase
+    name: Firebase
+    category: platform
+    npm: [firebase, firebase-admin, firebase-functions]
+    pypi: [{ package: firebase-admin, module: firebase_admin }]
+    pub: [firebase_core, cloud_firestore, firebase_auth]
+    files: [firebase.json, .firebaserc, firestore.rules]
+    examples:
+      - { path: src/firebase.ts, added: ["import { initializeApp } from 'firebase/app';"] }
+  - id: supabase
+    name: Supabase
+    category: platform
+    npm: ['@supabase/']
+    pypi: [supabase]
+    pub: [supabase_flutter]
+    paths: ['supabase/config.toml', 'supabase/functions/**']
+    examples:
+      - { path: lib/db.ts, added: ["import { createClient } from '@supabase/supabase-js';"] }
+  - id: vercel
+    name: Vercel
+    category: platform
+    files: [vercel.json]
+    npm: ['@vercel/']
+    examples:
+      - { path: vercel.json, added: ['{ "regions": ["bom1"] }'] }
+  - id: netlify
+    name: Netlify
+    category: platform
+    files: [netlify.toml]
+    paths: ['netlify/functions/**']
+    examples:
+      - { path: netlify.toml, added: ['[build]'] }
+  - id: heroku
+    name: Heroku
+    category: platform
+    files: [Procfile]
+    examples:
+      - { path: Procfile, added: ['web: gunicorn app:app'] }
+  - id: cloudflare-workers
+    name: Cloudflare Workers
+    category: platform
+    files: [wrangler.toml, wrangler.json, wrangler.jsonc]
+    npm: [wrangler, '@cloudflare/workers-types']
+    examples:
+      - { path: wrangler.toml, added: ['name = "api"'] }
+  - id: postgresql
+    name: PostgreSQL
+    category: platform
+    npm: [pg, postgres]
+    pypi: [{ package: psycopg2, module: psycopg2 }, { package: psycopg2-binary, module: psycopg2 }, psycopg, asyncpg]
+    maven: [org.postgresql]
+    nuget: [Npgsql]
+    go: [github.com/lib/pq, github.com/jackc/pgx]
+    paths: ['supabase/migrations/*.sql']
+    examples:
+      - { path: supabase/migrations/20260101000000_init.sql, added: ['create table posts (id bigint primary key);'] }
+  - id: mysql
+    name: MySQL
+    category: platform
+    npm: [mysql, mysql2]
+    pypi: [{ package: mysqlclient, module: MySQLdb }, pymysql, { package: mysql-connector-python, module: mysql.connector }]
+    maven: [mysql, com.mysql]
+    imports:
+      - { ext: [php], match: '\bmysqli_connect\s*\(|new\s+mysqli\s*\(|["'']mysql:host=' }
+    examples:
+      - { path: includes/db.php, added: ['$conn = mysqli_connect($host, $user, $pass, $db);'] }
+  - id: mongodb
+    name: MongoDB
+    category: platform
+    npm: [mongodb]
+    pypi: [pymongo, motor]
+    maven: [org.mongodb]
+    go: [go.mongodb.org/mongo-driver]
+    examples:
+      - { path: db/client.py, added: ['from pymongo import MongoClient'] }
+  - id: sqlite
+    name: SQLite
+    category: platform
+    npm: [sqlite3, better-sqlite3]
+    pypi: [{ package: sqlite3, module: sqlite3 }]
+    pub: [sqflite]
+    examples:
+      - { path: app/store.py, added: ['import sqlite3'] }
+  - id: redis
+    name: Redis
+    category: platform
+    npm: [redis, ioredis]
+    pypi: [redis]
+    go: [github.com/redis/go-redis, github.com/go-redis/redis]
+    examples:
+      - { path: src/cache.ts, added: ["import Redis from 'ioredis';"] }
+  - id: elasticsearch
+    name: Elasticsearch
+    category: platform
+    npm: ['@elastic/elasticsearch']
+    pypi: [elasticsearch]
+    examples:
+      - { path: search/index.py, added: ['from elasticsearch import Elasticsearch'] }
+  - id: arduino
+    name: Arduino
+    category: platform
+    files: ['*.ino']
+    imports:
+      - { ext: [cpp, h, c], match: '#include\s*[<"]Arduino\.h[>"]' }
+    examples:
+      - { path: firmware/blink.ino, added: ['void setup() { pinMode(13, OUTPUT); }'] }
+  - id: raspberry-pi
+    name: Raspberry Pi
+    category: platform
+    pypi: [{ package: RPi.GPIO, module: RPi }, gpiozero, picamera2]
+    examples:
+      - { path: iot/led.py, added: ['from gpiozero import LED'] }
+  - id: android
+    name: Android
+    category: platform
+    files: [AndroidManifest.xml]
+    jvm: [android, androidx]
+    examples:
+      - { path: app/src/main/java/MainActivity.kt, added: ['import android.os.Bundle'] }
+  - id: ios
+    name: iOS
+    category: platform
+    paths: ['**/*.xcodeproj/project.pbxproj']
+    imports:
+      - { ext: [swift, m, mm], match: '^\s*(?:import\s+UIKit\b|@import\s+UIKit\b|#import\s+<UIKit/)' }
+    examples:
+      - { path: App/AppDelegate.swift, added: ['import UIKit'] }
+  - id: unity
+    name: Unity
+    category: platform
+    parent: csharp
+    paths: ['ProjectSettings/ProjectVersion.txt']
+    imports:
+      - { ext: [cs], match: '^\s*using\s+UnityEngine\b' }
+    examples:
+      - { path: Assets/Scripts/Player.cs, added: ['using UnityEngine;'] }
+  - id: godot
+    name: Godot
+    category: platform
+    files: [project.godot, '*.gd', '*.tscn']
+    examples:
+      - { path: scripts/player.gd, added: ['extends CharacterBody2D'] }
+
+  # ------------------------------------------------------------------ practices
+  - id: automated-testing
+    name: Automated testing
+    category: practice
+    paths: ['**/*.test.*', '**/*.spec.*', '**/test_*.py', '**/*_test.py', '**/*_test.go', '**/__tests__/**', '**/src/test/**', '**/*Test.java', '**/*Tests.cs']
+    examples:
+      - { path: src/utils/sum.test.ts, added: ['it("adds", () => {});'] }
+  - id: continuous-integration
+    name: Continuous integration
+    category: practice
+    paths: ['.github/workflows/*.yml', '.github/workflows/*.yaml', .gitlab-ci.yml, Jenkinsfile, .circleci/config.yml, azure-pipelines.yml, .travis.yml]
+    examples:
+      - { path: .circleci/config.yml, added: ['version: 2.1'] }
+  - id: database-migrations
+    name: Database migrations
+    category: practice
+    paths: ['**/migrations/**', 'db/migrate/**', 'alembic/versions/**', '**/Migrations/*.cs']
+    examples:
+      - { path: db/migrate/20260101_create_users.rb, added: ['create_table :users do |t|'] }
+  - id: api-documentation
+    name: API documentation
+    category: practice
+    files: ['openapi.yaml', 'openapi.yml', 'openapi.json', 'swagger.yaml', 'swagger.yml', 'swagger.json', '*.openapi.yaml']
+    npm: [swagger-ui-express, '@nestjs/swagger']
+    examples:
+      - { path: docs/openapi.yaml, added: ['openapi: 3.1.0'] }
+  - id: linting
+    name: Linting and code style
+    category: practice
+    files: ['.eslintrc*', 'eslint.config.*', ruff.toml, .flake8, .pylintrc, '.golangci.y*ml', .rubocop.yml, checkstyle.xml, '.stylelintrc*']
+    examples:
+      - { path: ruff.toml, added: ['line-length = 100'] }
