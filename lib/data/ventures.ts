@@ -413,3 +413,81 @@ export async function getProfileVentures(userId: string): Promise<ProfileVenture
   if (error) throw new Error(`profile ventures: ${error.code}`);
   return (data ?? []).map((v) => ({ id: v.id, type: v.type, title: v.title, status: v.status, teamRole: v.team_role, isOwner: v.is_owner }));
 }
+
+// ---------------------------------------------------------------------------
+// Contribution log (PRD 5.14)
+// ---------------------------------------------------------------------------
+
+export type ContributionKind = Enums["contribution_kind"];
+
+export interface Contribution {
+  /** The original entry's id: what confirmations and corrections refer to. */
+  id: string;
+  userId: string;
+  kind: ContributionKind;
+  description: string;
+  evidenceUrl: string | null;
+  hours: number | null;
+  source: Enums["contribution_source"];
+  createdAt: string;
+  correctedAt: string | null;
+  confirmations: number;
+  peerVerified: boolean;
+  confirmedByMe: boolean;
+  /** False once the author left or was removed: the entry stays but no longer counts. */
+  byMember: boolean;
+}
+
+/** The venture's timeline, newest first (RLS: whoever can see the venture). */
+export async function getContributions(ventureId: string): Promise<Contribution[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("contributions_with_status")
+    .select("id, user_id, kind, description, evidence_url, hours, source, created_at, corrected_at, confirmations, peer_verified, confirmed_by_me, by_member")
+    .eq("venture_id", ventureId)
+    .order("created_at", { ascending: false })
+    .limit(300);
+  if (error) throw new Error(`contributions: ${error.code}`);
+  return (data ?? []).map((c) => ({
+    id: c.id!,
+    userId: c.user_id!,
+    kind: c.kind!,
+    description: c.description!,
+    evidenceUrl: c.evidence_url,
+    hours: c.hours === null ? null : Number(c.hours),
+    source: c.source!,
+    createdAt: c.created_at!,
+    correctedAt: c.corrected_at,
+    confirmations: c.confirmations ?? 0,
+    peerVerified: Boolean(c.peer_verified),
+    confirmedByMe: Boolean(c.confirmed_by_me),
+    byMember: Boolean(c.by_member),
+  }));
+}
+
+/** How many current members have a peer-verified contribution (completion needs 2). */
+export async function getVerifiedContributors(ventureId: string): Promise<number> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("venture_verified_contributors", { p_venture: ventureId });
+  if (error) throw new Error(`verified contributors: ${error.code}`);
+  return data ?? 0;
+}
+
+/** Per-venture contribution counts for a profile (only ventures the viewer may see). */
+export async function getContributionSummary(userId: string): Promise<Map<string, { entries: number; verified: number }>> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("contributions_with_status")
+    .select("venture_id, peer_verified")
+    .eq("user_id", userId)
+    .limit(2000);
+  if (error) throw new Error(`contribution summary: ${error.code}`);
+  const summary = new Map<string, { entries: number; verified: number }>();
+  for (const row of data ?? []) {
+    const s = summary.get(row.venture_id!) ?? { entries: 0, verified: 0 };
+    s.entries += 1;
+    if (row.peer_verified) s.verified += 1;
+    summary.set(row.venture_id!, s);
+  }
+  return summary;
+}

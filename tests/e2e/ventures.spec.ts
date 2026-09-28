@@ -3,9 +3,10 @@ import { expect, test, type Page } from "@playwright/test";
 import { createStudent, hasBackend, signInWithPassword, watchConsole } from "./support";
 
 /**
- * Phase 2 slice 5 (PRD 5.7, 5.28): start a venture, another student applies to a role, the
- * owner accepts on /requests and the team shows them. Deliverables stay with the team, and
- * completing needs one.
+ * Phase 2 slices 5-6 (PRD 5.7, 5.14, 5.15, 5.28): start a venture, another student applies
+ * to a role, the owner accepts on /requests and the team shows them. Deliverables stay with
+ * the team; members log, correct and confirm contributions; completing needs a deliverable
+ * and peer-verified work from 2 members, then locks the log.
  */
 test.describe("Ventures", () => {
   test.skip(!hasBackend, "needs the local Supabase stack");
@@ -19,7 +20,7 @@ test.describe("Ventures", () => {
   }
 
   test("create, apply, accept, and the team shows the new member", async ({ page, browser }) => {
-    test.setTimeout(120_000);
+    test.setTimeout(180_000);
     const problems = watchConsole(page);
     const owner = await createStudent({ domain: "nutech.edu.pk", fullName: "Owais Owner" });
     const applicant = await createStudent({ domain: "nu.edu.pk", fullName: "Amna Applicant" });
@@ -52,7 +53,7 @@ test.describe("Ventures", () => {
     await page.getByRole("button", { name: "Start building" }).click();
     await page.getByRole("dialog").getByRole("button", { name: "Start building" }).click();
     await expect(page.getByRole("button", { name: "Mark complete" })).toBeVisible();
-    await expect(page.getByText("To complete it you need at least 2 members")).toBeVisible();
+    await expect(page.getByText("at least 2 members (you have 1)")).toBeVisible();
     await page.getByRole("button", { name: "Mark complete" }).click();
     await page.getByRole("dialog").getByRole("button", { name: "Mark complete" }).click();
     await expect(page.getByRole("dialog").getByRole("alert")).toContainText("at least 2 members");
@@ -112,14 +113,67 @@ test.describe("Ventures", () => {
     await expect(outsiderPage.getByRole("button", { name: "Follow" })).toBeVisible();
     await axe(outsiderPage, "venture deliverables (outsider)");
 
+    // Contributions (PRD 5.14): both log work; completing waits for peer verification.
+    await applicantPage.goto(`${ventureUrl}/contributions`);
+    await applicantPage.getByRole("button", { name: "Log contribution" }).click();
+    let sheet2 = applicantPage.getByRole("dialog");
+    await sheet2.getByRole("radio", { name: "Code" }).check();
+    await sheet2.getByLabel("What you did").fill("Built the live map screen");
+    await sheet2.getByLabel("Evidence link (optional)").fill("https://example.com/pr/1");
+    await sheet2.getByLabel("Hours (optional)").fill("5");
+    await axe(applicantPage, "log contribution sheet");
+    await sheet2.getByRole("button", { name: "Log contribution" }).click();
+    const entry = applicantPage.getByRole("listitem", { name: `${applicant.fullName}: Code` });
+    await expect(entry).toContainText("Built the live map screen");
+    await expect(entry).toContainText("Self-reported");
+    // The author corrects it within 24 hours; the original stays on the record.
+    await entry.getByRole("button", { name: "Correct" }).click();
+    sheet2 = applicantPage.getByRole("dialog");
+    await sheet2.getByLabel("What you did").fill("Built the live map screen and its tests");
+    await sheet2.getByRole("button", { name: "Save correction" }).click();
+    await expect(entry).toContainText("Built the live map screen and its tests");
+    await expect(entry).toContainText("Corrected");
+    await expect(entry.getByRole("button", { name: /Confirm/ })).toHaveCount(0);
+    await axe(applicantPage, "venture contributions (member)");
+
+    await page.goto(`${ventureUrl}/contributions`);
+    await page.getByRole("button", { name: "Log contribution" }).click();
+    await page.getByRole("dialog").getByRole("radio", { name: "Management" }).check();
+    await page.getByRole("dialog").getByLabel("What you did").fill("Ran the weekly planning");
+    await page.getByRole("dialog").getByRole("button", { name: "Log contribution" }).click();
+    await expect(page.getByRole("listitem", { name: `${owner.fullName}: Management` })).toBeVisible();
+
+    await page.goto(`${ventureUrl}/manage`);
+    await expect(page.getByText("from at least 2 members (you have 0)")).toBeVisible();
+    await page.getByRole("button", { name: "Mark complete" }).click();
+    await page.getByRole("dialog").getByRole("button", { name: "Mark complete" }).click();
+    await expect(page.getByRole("dialog").getByRole("alert")).toContainText("peer-verified contribution");
+    await page.keyboard.press("Escape");
+
+    // Each confirms the other's entry.
+    await page.goto(`${ventureUrl}/contributions`);
+    await page.getByRole("button", { name: `Confirm ${applicant.fullName}'s entry` }).click();
+    await expect(page.getByRole("listitem", { name: `${applicant.fullName}: Code` })).toContainText("Peer-verified");
+    await applicantPage.goto(`${ventureUrl}/contributions`);
+    await applicantPage.getByRole("button", { name: `Confirm ${owner.fullName}'s entry` }).click();
+    await expect(applicantPage.getByRole("listitem", { name: `${owner.fullName}: Management` })).toContainText("Peer-verified");
+    // An outsider reads the log but can't confirm or log.
+    await outsiderPage.goto(`${ventureUrl}/contributions`);
+    await expect(outsiderPage.getByRole("main")).toContainText("Built the live map screen and its tests");
+    await expect(outsiderPage.getByRole("button", { name: /Confirm|Log contribution/ })).toHaveCount(0);
+
     // Now it can complete, and the applicant's profile lists it.
     await page.goto(`${ventureUrl}/manage`);
     await page.getByRole("button", { name: "Mark complete" }).click();
     await page.getByRole("dialog").getByRole("button", { name: "Mark complete" }).click();
     await expect(page.getByText("This venture is complete")).toBeVisible();
+    await applicantPage.goto(`${ventureUrl}/contributions`);
+    await expect(applicantPage.getByText("so its log is locked")).toBeVisible();
+    await expect(applicantPage.getByRole("button", { name: "Log contribution" })).toHaveCount(0);
     await applicantPage.goto(`/profile/${applicant.username}/ventures`);
     await expect(applicantPage.getByRole("link", { name: title })).toBeVisible();
     await expect(applicantPage.getByRole("main")).toContainText("Completed");
+    await expect(applicantPage.getByRole("main")).toContainText("1 contribution, 1 peer-verified");
 
     // Old routes still land on Ventures.
     await page.goto("/startups");

@@ -4,16 +4,20 @@ import Link from "next/link";
 import { VentureStatusBadge } from "@/components/ventures/status-badge";
 import { Button, EmptyState } from "@/components/ui";
 import { getProfile } from "@/lib/data/profiles";
-import { getProfileVentures } from "@/lib/data/ventures";
+import { getContributionSummary, getProfileVentures } from "@/lib/data/ventures";
 import { TEAM_ROLE_LABELS, TYPE_LABELS } from "@/lib/ventures/labels";
 
-/** Ventures tab (PRD 5.28): the ventures this student is on, with their role. Only ones the viewer may see. */
+function contributionText({ entries, verified }: { entries: number; verified: number }): string {
+  return `${entries} ${entries === 1 ? "contribution" : "contributions"}, ${verified} peer-verified`;
+}
+
+/** Ventures tab (PRD 5.28): the ventures this student is on, with their role and a contribution summary (PRD 5.14). Only ones the viewer may see. */
 export default async function ProfileVenturesPage({ params }: PageProps<"/profile/[username]/ventures">) {
   const { username } = await params;
   const lookup = await getProfile(username);
   if (lookup.kind !== "full") return null;
   const p = lookup.profile;
-  const ventures = await getProfileVentures(p.userId);
+  const [ventures, summary] = await Promise.all([getProfileVentures(p.userId), getContributionSummary(p.userId)]);
 
   if (!ventures.length) {
     return (
@@ -46,6 +50,7 @@ export default async function ProfileVenturesPage({ params }: PageProps<"/profil
             </Link>
             <p className="text-body-sm text-text-secondary">
               {TYPE_LABELS[v.type].one} · {v.isOwner ? "Owner" : TEAM_ROLE_LABELS[v.teamRole]}
+              {summary.get(v.id) ? ` · ${contributionText(summary.get(v.id)!)}` : ""}
             </p>
           </div>
           <VentureStatusBadge status={v.status} />

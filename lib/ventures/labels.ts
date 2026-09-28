@@ -38,3 +38,15 @@ export const TEAM_ROLE_LABELS: Record<Enums["venture_team_role"], string> = {
 };
 
 export const MAX_MEMBERS = 6;
+
+export const CONTRIBUTION_KINDS: { value: Enums["contribution_kind"]; label: string }[] = [
+  { value: "code", label: "Code" },
+  { value: "design", label: "Design" },
+  { value: "research", label: "Research" },
+  { value: "docs", label: "Docs" },
+  { value: "management", label: "Management" },
+  { value: "other", label: "Other" },
+];
+
+/** Authors can correct an entry for this long (PRD 5.14). */
+export const CORRECTION_WINDOW_MS = 24 * 60 * 60 * 1000;

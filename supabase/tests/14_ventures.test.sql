@@ -1,7 +1,7 @@
 -- Ventures, join flows and lifecycle (PRD 5.7, 5.15, 5.28). A, B, D-H study at NUTECH,
 -- C at FAST. A owns the ventures. The parallel-accept case is in tests/worker (two sessions).
 begin;
-select plan(54);
+select plan(56);
 
 insert into auth.users (id, email) values
   ('90000000-0000-0000-0000-00000000000a', 'a@nutech.edu.pk'),
@@ -173,8 +173,19 @@ select pg_temp.as_user('90000000-0000-0000-0000-00000000000c');
 select throws_ok($$ select public.transition_venture(pg_temp.v('v3'), 'in_progress') $$, '42501', null,
   'a member who is not the owner cannot change the status');
 select pg_temp.as_user('90000000-0000-0000-0000-00000000000a');
+select throws_ok($$ select public.transition_venture(pg_temp.v('v1'), 'completed') $$, '23514',
+  'at least 2 members need a peer-verified contribution before completing',
+  'completing needs peer-verified contributions from 2 members (slice 6)');
+select pg_temp.remember('ca', public.log_contribution(pg_temp.v('v1'), 'code', 'Built the ride matcher'));
+select pg_temp.as_user('90000000-0000-0000-0000-00000000000b');
+select pg_temp.remember('cb', public.log_contribution(pg_temp.v('v1'), 'design', 'Designed the booking screens'));
+select public.confirm_contribution(pg_temp.v('ca'));
+select pg_temp.as_user('90000000-0000-0000-0000-00000000000a');
+select public.confirm_contribution(pg_temp.v('cb'));
 select lives_ok($$ select public.transition_venture(pg_temp.v('v1'), 'completed') $$,
-  'completing with 2 members and a deliverable');
+  'completing with 2 members, a deliverable and peer-verified contributions');
+select throws_ok($$ select public.log_contribution(pg_temp.v('v1'), 'docs', 'Late entry') $$, '55000', null,
+  'a completed venture''s log is locked');
 select throws_ok($$ select public.transition_venture(pg_temp.v('v1'), 'abandoned') $$, '55000', null,
   'a completed venture stays completed');
 select throws_ok($$ select public.remove_venture_member(pg_temp.v('v1'), '90000000-0000-0000-0000-00000000000b') $$,

@@ -494,3 +494,21 @@ Append-only. One dated entry per product decision, with the reason. Carried over
   see how many deliverables a team has, not the links. Old `/projects*` and
   `/startups*` URLs permanently redirect to `/ventures` (startups to the Startups tab).
   Ventures and Requests sit in the minimal header until the phase 6 shell.
+- 2026-09-28 (phase 2): Contribution log (slice 6, PRD 5.14). Insert-only: the tables grant
+  reads only and every row comes from a SQL function. A correction is a new row pointing
+  at the original, made only by its author within 24 h of the original and only against
+  the original (not another correction); the timeline shows the newest one. A
+  confirmation belongs to the version it confirmed, so a corrected entry needs a fresh
+  confirmation to be peer-verified. GitHub entries are never confirmed (they are verified
+  already) and never corrected. The log is readable wherever the venture is; confirmations
+  and logging lock when the venture completes or is abandoned.
+- 2026-09-28 (phase 2): GitHub-sourced contributions: one entry per *counted* commit (not
+  pending, held or excluded) by a current member in the linked repository, made on or after
+  the day the venture was created, so older history can't pad a new venture. They're added
+  when the repo is linked, when a member joins, and when a commit becomes counted.
+  Commit messages aren't stored (PRD 5.5), so the entry reads "Commit abc1234 to
+  owner/repo (N meaningful lines)" and links to the commit.
+- 2026-09-28 (phase 2): Completion needs peer-verified contributions from at least 2
+  *current* members (PRD 5.15). Entries by people who left or were removed stay on the log,
+  marked, but don't count. `last_activity_at` for reputation decay doesn't exist yet; decay
+  (phase 5) will read the newest contribution instead of a separate column.
