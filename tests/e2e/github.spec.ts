@@ -179,6 +179,7 @@ test.describe("GitHub connection", () => {
     await axe(page, "profile/skills (owner)");
     await page.getByRole("button", { name: /^FastAPI, level 1/ }).click();
     const drawer = page.getByRole("dialog", { name: "FastAPI" });
+    await expect(drawer.getByText("Active days", { exact: true })).toBeVisible();
     await expect(drawer.getByText("To reach L2, commit it on 2 more days (1 of 3) and import or add it in 2 more commits (1 of 3).")).toBeVisible();
     await expect(drawer.getByText(`${login}/secret-robot`)).toBeVisible();
     await expect(drawer.getByRole("link", { name: /^aaaaaaa/ })).toHaveAttribute("href", new RegExp(`/${login}/secret-robot/commit/`));
@@ -199,7 +200,9 @@ test.describe("GitHub connection", () => {
     await other.getByRole("button", { name: /^Python, level 2: Written by them/ }).click();
     const theirs = other.getByRole("dialog", { name: "Python" });
     await expect(theirs.getByText("The commits behind this level are private to Sana.")).toBeVisible();
-    await expect(theirs.getByText("Lines of code")).toHaveCount(0);
+    // The owner-only counts (exact labels: the L2 rule itself mentions "lines of code").
+    await expect(theirs.getByText("Lines of code", { exact: true })).toHaveCount(0);
+    await expect(theirs.getByText("Active days", { exact: true })).toHaveCount(0);
     expect(await other.content()).not.toContain("secret-robot");
     await expect(other.getByText("being reviewed")).toHaveCount(0);
     await axe(other, "skill drawer (classmate)");
