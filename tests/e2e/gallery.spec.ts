@@ -35,7 +35,9 @@ for (const colorScheme of ["light", "dark"] as const) {
       await page.getByRole("heading", { level: 1, name: "UI gallery" }).waitFor();
       // Let the Verified Stamp finish so contrast is measured on the end state.
       await page.waitForTimeout(800);
-      const results = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).analyze();
+      // Next streams page metadata: wait for the <title> before checking the document.
+    await expect(page).toHaveTitle(/\S/);
+    const results = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).analyze();
       expect(results.violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(" ")).join(", ")}`)).toEqual([]);
     });
   });
