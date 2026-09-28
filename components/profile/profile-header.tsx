@@ -1,4 +1,4 @@
-import { PencilSimple } from "@phosphor-icons/react/dist/ssr";
+import { GithubLogo, PencilSimple } from "@phosphor-icons/react/dist/ssr";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { Avatar, Button } from "@/components/ui";
@@ -13,6 +13,7 @@ export function ProfileHeader({
   avatarUrl,
   coverUrl,
   isOwner,
+  githubLogin,
   note,
 }: {
   fullName: string;
@@ -23,6 +24,8 @@ export function ProfileHeader({
   avatarUrl?: string | null;
   coverUrl?: string | null;
   isOwner?: boolean;
+  /** The linked GitHub account (readable wherever the full profile is). */
+  githubLogin?: string | null;
   note?: ReactNode;
 }) {
   const meta = [department, graduationYear ? `Class of ${graduationYear}` : null].filter(Boolean).join(" · ");
@@ -50,6 +53,18 @@ export function ProfileHeader({
         <p className="text-body text-text-secondary">@{username}</p>
         {universityName ? <p className="mt-2 text-body font-semibold">{universityName}</p> : null}
         {meta ? <p className="text-body text-text-secondary">{meta}</p> : null}
+        {githubLogin ? (
+          <a
+            href={`https://github.com/${githubLogin}`}
+            target="_blank"
+            rel="noreferrer noopener"
+            className="mt-2 inline-flex items-center gap-1.5 text-body-sm text-text-secondary underline underline-offset-4 hover:text-text-primary"
+          >
+            <GithubLogo aria-hidden weight="bold" className="size-4" />
+            <span className="font-mono">{githubLogin}</span>
+            <span className="sr-only">{" on GitHub (opens GitHub)"}</span>
+          </a>
+        ) : null}
         {note ? <div className="mt-4">{note}</div> : null}
       </div>
     </header>

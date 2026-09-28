@@ -454,6 +454,11 @@ isOneToOne: false
 "my_gate_state":
 { Args: Record<PropertyKey, never>; Returns: Json
                            },
+"my_skills":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "active_days": number,"hits": number,"last_used_at": string,"level": number,"lines": number,"repos": number,"skill_id": string
+            }[]
+                           },
 "rate_limit":
 { Args: { "p_key": string,"p_limit": number,"p_window_seconds": number }; Returns: boolean
                            },

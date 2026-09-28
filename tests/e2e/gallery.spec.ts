@@ -75,3 +75,27 @@ test("theme toggle switches the document theme", async ({ page }) => {
   await page.getByRole("radio", { name: "Light theme" }).click();
   await expect(page.locator("html")).toHaveClass(/light/);
 });
+
+for (const colorScheme of ["light", "dark"] as const) {
+  test.describe(`skill drawer (${colorScheme} device theme)`, () => {
+    test.use({ colorScheme });
+
+    test("is keyboard-operable and has no axe violations when open", async ({ page }) => {
+      await page.goto("/ui");
+      // Docker is L1, so three levels are "not yet": their text must keep full contrast.
+      const trigger = page.locator('[data-theme-panel="light"]').getByRole("button", { name: /^Docker, level 1/ });
+      await trigger.focus();
+      await page.keyboard.press("Enter");
+      const drawer = page.getByRole("dialog", { name: "Docker" });
+      await expect(drawer).toBeVisible();
+
+      const results = await new AxeBuilder({ page }).include('[role="dialog"]').analyze();
+      expect(results.violations.map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(" ")).join(", ")}`)).toEqual([]);
+      await expect(drawer.getByText("Not yet")).toHaveCount(3);
+
+      await page.keyboard.press("Escape");
+      await expect(drawer).toBeHidden();
+      await expect(trigger).toBeFocused();
+    });
+  });
+}

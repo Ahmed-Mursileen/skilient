@@ -5,6 +5,7 @@ import { ProfileHeader } from "@/components/profile/profile-header";
 import { ProfileTabs } from "@/components/profile/profile-tabs";
 import { EmptyState } from "@/components/ui";
 import { getProfile } from "@/lib/data/profiles";
+import { getGithubLogin } from "@/lib/data/skills";
 
 export async function generateMetadata({ params }: LayoutProps<"/profile/[username]">): Promise<Metadata> {
   const { username } = await params;
@@ -53,6 +54,7 @@ export default async function ProfileLayout({ params, children }: LayoutProps<"/
   }
 
   const { profile } = lookup;
+  const githubLogin = await getGithubLogin(profile.userId);
   return (
     <main className="mx-auto flex max-w-[680px] flex-col gap-6 px-[var(--page-gutter)] py-8">
       <ProfileHeader
@@ -64,6 +66,7 @@ export default async function ProfileLayout({ params, children }: LayoutProps<"/
         avatarUrl={profile.avatarUrl}
         coverUrl={profile.coverUrl}
         isOwner={profile.isOwner}
+        githubLogin={githubLogin}
       />
       <ProfileTabs username={profile.username} />
       <div>{children}</div>

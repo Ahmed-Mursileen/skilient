@@ -127,7 +127,7 @@ select is_empty($$ select * from public.skill_evidence where user_id = '60000000
 select is_empty($$ select id from public.review_flags where user_id = '60000000-0000-0000-0000-00000000000a' $$,
   'a classmate never sees the flags');
 select pg_temp.as_user('60000000-0000-0000-0000-00000000000c');
-select is_empty($$ select * from public.user_skills where user_id = '60000000-0000-0000-0000-00000000000a' $$,
+select is_empty($$ select skill_id, level from public.user_skills where user_id = '60000000-0000-0000-0000-00000000000a' $$,
   'a student at another university does not see a university-only profile''s skills');
 select pg_temp.as_user('60000000-0000-0000-0000-00000000000a');
 select isnt_empty($$ select * from public.skill_evidence where user_id = '60000000-0000-0000-0000-00000000000a' $$,

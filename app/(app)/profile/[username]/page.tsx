@@ -1,20 +1,28 @@
+import type { Route } from "next";
+import Link from "next/link";
+import { SkillList } from "@/components/skills/skill-list";
 import { EmptyState } from "@/components/ui";
 import { getProfile } from "@/lib/data/profiles";
+import { getProfileSkills } from "@/lib/data/skills";
 import { LOOKING_FOR, VISIBILITY } from "@/lib/profile/options";
 
-/** Overview tab: about, studies and what they're open to. */
+/** Top skills on the overview; the Skills tab lists them all. */
+const TOP_SKILLS = 8;
+
+/** Overview tab: about, top skills, studies and what they're open to. */
 export default async function ProfileOverviewPage({ params }: PageProps<"/profile/[username]">) {
   const { username } = await params;
   const lookup = await getProfile(username);
   if (lookup.kind !== "full") return null;
   const p = lookup.profile;
+  const skills = await getProfileSkills(p.userId, p.isOwner);
   const openTo = LOOKING_FOR.filter((o) => p.lookingFor.includes(o.value)).map((o) => o.label);
   const details = [
     { label: "Programme", value: p.programme },
     { label: "Campus", value: p.campus },
   ].filter((d) => d.value);
 
-  if (!p.bio && !details.length && !openTo.length) {
+  if (!p.bio && !details.length && !openTo.length && !skills.length) {
     return (
       <EmptyState
         title={p.isOwner ? "Tell people about yourself" : "Nothing here yet"}
@@ -31,6 +39,29 @@ export default async function ProfileOverviewPage({ params }: PageProps<"/profil
             About
           </h2>
           <p className="mt-2 text-body whitespace-pre-line text-text-primary">{p.bio}</p>
+        </section>
+      ) : null}
+      {skills.length ? (
+        <section aria-labelledby="top-skills">
+          <div className="mb-3 flex items-baseline justify-between gap-3">
+            <h2 id="top-skills" className="text-h4">
+              Top skills
+            </h2>
+            {skills.length > TOP_SKILLS ? (
+              <Link
+                href={`/profile/${p.username}/skills` as Route}
+                className="text-body-sm font-semibold text-text-primary underline underline-offset-4"
+              >
+                All {skills.length} skills
+              </Link>
+            ) : null}
+          </div>
+          <SkillList
+            skills={skills.slice(0, TOP_SKILLS)}
+            isOwner={p.isOwner}
+            ownerName={p.fullName.split(/\s+/)[0] ?? p.fullName}
+            grouped={false}
+          />
         </section>
       ) : null}
       {details.length ? (
