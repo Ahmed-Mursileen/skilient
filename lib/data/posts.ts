@@ -75,7 +75,18 @@ export interface PostCardData {
   commentCount: number;
   link: PostLink | null;
   authorMuted: boolean;
+  /** The reader's micro-survey strip; null on posts that aren't surveyed. */
+  survey: PostSurvey | null;
+  /** "12 people find this informative": only parts with 3+ ticks. */
+  publicLine: { phrase: string; count: number }[];
 }
+
+export interface PostSurvey {
+  question: string;
+  myAnswer: boolean | null;
+  canChange: boolean;
+}
+
 
 export interface PostLink {
   url: string;
@@ -151,6 +162,8 @@ function mapCard(r: CardRow, now: number): PostCardData {
         })()
       : null,
     authorMuted: r.author_muted ?? false,
+    survey: null,
+    publicLine: [],
   };
 }
 
@@ -160,7 +173,22 @@ export async function getPostCards(ids: string[]): Promise<PostCardData[]> {
   const { data, error } = await supabase.rpc("post_cards", { p_ids: ids });
   if (error) throw new Error(`post_cards failed: ${error.code}`);
   const now = Date.now();
-  return (data ?? []).map((r) => mapCard(r, now));
+  const cards = (data ?? []).map((r) => mapCard(r, now));
+  // Assigns each reader's question the first time a post is shown (PRD 5.28), so the
+  // strip renders with the post and never pops in.
+  const { data: surveys, error: surveyError } = await supabase.rpc("survey_for_posts", { p_ids: cards.map((c) => c.id) });
+  if (surveyError) throw new Error(`survey_for_posts failed: ${surveyError.code}`);
+  const byPost = new Map((surveys ?? []).map((s) => [s.post_id, s]));
+  for (const card of cards) {
+    const s = byPost.get(card.id);
+    if (!s) continue;
+    const line = (s.public_line ?? {}) as Record<string, { count: number; phrase: string }>;
+    card.publicLine = ["informative", "interesting"]
+      .filter((d) => line[d])
+      .map((d) => ({ phrase: line[d].phrase, count: Number(line[d].count) }));
+    card.survey = s.question_id != null && s.question ? { question: s.question, myAnswer: s.my_answer, canChange: s.can_change } : null;
+  }
+  return cards;
 }
 
 export interface PostPage {

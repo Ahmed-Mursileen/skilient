@@ -635,3 +635,18 @@ Append-only. One dated entry per product decision, with the reason. Carried over
   third-party image would tell the linked site who is reading. Known limit: the address
   is checked before the fetch, not pinned for it (a DNS-rebinding host could answer
   differently in between); the fetch sends no cookies or credentials and reads HTML only.
+- 2026-09-29 (phase 3, slice 5): Micro-survey as built. `platform_config` (versioned,
+  append-only, staff-readable) holds `survey.*` now and `feed.*` from slice 6; the /ops
+  editor is phase 11. Twelve dimensions and 25 wordings are seeded. A reader's question is
+  assigned the first time `post_cards` includes the post and never changes; the dimension
+  furthest below its target share is measured by readers *assigned* so far (not answers),
+  so the shares balance even before people answer. Answers need a qualified view (the
+  client batches views every 10 s and sends a post's view first when answering) and at
+  least 0.8 s since the strip came on screen; one answer per reader per post, changeable
+  for 10 minutes. Weights multiply (friend or venture teammate of the author 0.5, account
+  under 3 days 0.5, 20+ identical answers 0.3) and are fixed when the answer is given.
+  The public line counts raw people from 3 ticks ("12 people find this informative · 8
+  find this interesting"); the author sees the public line and an Insights button, which
+  is refused (`private.has_entitlement()` returns false until phase 10's registry).
+  Appropriate crosses from non-friends are counted in `post_stats.appropriate_flags` for
+  the /ops soft signal (slice 9).

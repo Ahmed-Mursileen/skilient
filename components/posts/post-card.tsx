@@ -3,13 +3,17 @@
 import { ChatCircle, Globe, Megaphone, PushPin, RocketLaunch, UsersThree } from "@phosphor-icons/react";
 import type { Route } from "next";
 import Link from "next/link";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { EventBlock } from "@/components/posts/event-block";
+import { InsightsButton } from "@/components/posts/insights-button";
 import { PollBlock } from "@/components/posts/poll-block";
 import { PostMenu } from "@/components/posts/post-menu";
+import { SurveyStrip } from "@/components/posts/survey-strip";
+import { useQualifiedView } from "@/components/posts/view-tracker";
 import { FoldedPost, ViewerActions } from "@/components/posts/viewer-actions";
 import { Avatar, Badge, Button } from "@/components/ui";
 import type { PostCardData } from "@/lib/data/posts";
+import { SURVEYED_TYPES } from "@/lib/posts/constants";
 import { linkify } from "@/lib/format/linkify";
 import { shortTime } from "@/lib/format/time";
 import { cn } from "@/lib/cn";
@@ -29,6 +33,8 @@ const TYPE_LABEL: Partial<Record<PostCardData["type"], string>> = {
 export function PostCard({ post, headingLevel = 2, showCommentsLink = true }: { post: PostCardData; headingLevel?: 2 | 3; showCommentsLink?: boolean }) {
   const [gone, setGone] = useState(false);
   const [folded, setFolded] = useState<"hidden" | "muted" | null>(null);
+  const ref = useRef<HTMLElement>(null);
+  const { shownAt, qualified } = useQualifiedView(ref, post.id, !post.isMine);
   if (gone) return null;
   if (folded) {
     return <FoldedPost state={folded} postId={post.id} authorUsername={post.author.username} authorName={post.author.name} onUndo={() => setFolded(null)} />;
@@ -39,6 +45,7 @@ export function PostCard({ post, headingLevel = 2, showCommentsLink = true }: { 
 
   return (
     <article
+      ref={ref}
       className={cn("flex flex-col gap-3 rounded-lg border border-border-default bg-bg-surface p-4 sm:p-5", pinned && "border-primary")}
       aria-labelledby={`post-${post.id}-by`}
       data-testid="post"
@@ -112,6 +119,14 @@ export function PostCard({ post, headingLevel = 2, showCommentsLink = true }: { 
 
       {post.link && !post.images.length ? <LinkPreview link={post.link} /> : null}
 
+      {post.survey ? (
+        <SurveyStrip postId={post.id} survey={post.survey} shownAt={shownAt} qualified={qualified} publicLine={<PublicLine parts={post.publicLine} />} />
+      ) : post.publicLine.length ? (
+        <p className="text-body-sm text-text-secondary">
+          <PublicLine parts={post.publicLine} />
+        </p>
+      ) : null}
+
       <footer className="flex flex-wrap items-center justify-between gap-2 border-t border-border-muted pt-2">
         {showCommentsLink ? (
           <Link
@@ -125,12 +140,25 @@ export function PostCard({ post, headingLevel = 2, showCommentsLink = true }: { 
           <span />
         )}
         {post.isMine ? (
-          post.type !== "shipped" ? <PostMenu postId={post.id} body={post.body} canEdit={post.canEdit} onDeleted={() => setGone(true)} /> : null
+          <div className="flex flex-wrap items-center gap-1">
+            {(SURVEYED_TYPES as readonly string[]).includes(post.type) ? <InsightsButton postId={post.id} /> : null}
+            {post.type !== "shipped" ? <PostMenu postId={post.id} body={post.body} canEdit={post.canEdit} onDeleted={() => setGone(true)} /> : null}
+          </div>
         ) : (
           <ViewerActions postId={post.id} authorUsername={post.author.username} authorName={post.author.name} onChange={setFolded} />
         )}
       </footer>
     </article>
+  );
+}
+
+/** "12 people find this informative · 8 find this interesting" (raw people, 3+ only). */
+function PublicLine({ parts }: { parts: PostCardData["publicLine"] }) {
+  if (!parts.length) return null;
+  return (
+    <span data-testid="public-line">
+      {parts.map((p, i) => `${p.count} ${i === 0 ? (p.count === 1 ? "person " : "people ") : ""}${p.phrase}`).join(" · ")}
+    </span>
   );
 }
 

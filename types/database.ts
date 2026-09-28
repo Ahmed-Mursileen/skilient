@@ -402,6 +402,100 @@ isOneToOne: false
                   Relationships: [
                     
                   ]
+                },"micro_survey_assignments": {
+                  Row: {
+                    "assigned_at": string,"dimension": string,"post_id": string,"question_id": number,"user_id": string
+                  }
+                  Insert: {
+                    "assigned_at"?: string,"dimension": string,"post_id": string,"question_id": number,"user_id": string
+                  }
+                  Update: {
+                    "assigned_at"?: string,"dimension"?: string,"post_id"?: string,"question_id"?: number,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "micro_survey_assignments_dimension_fkey"
+      columns: ["dimension"]
+isOneToOne: false
+      referencedRelation: "micro_survey_dimensions"
+      referencedColumns: ["dimension"]
+    },{
+      foreignKeyName: "micro_survey_assignments_post_id_fkey"
+      columns: ["post_id"]
+isOneToOne: false
+      referencedRelation: "posts"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "micro_survey_assignments_question_id_fkey"
+      columns: ["question_id"]
+isOneToOne: false
+      referencedRelation: "micro_survey_questions"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"micro_survey_dimensions": {
+                  Row: {
+                    "dimension": string,"label": string,"post_types": (Database["public"]['Enums']["post_type"])[],"public": boolean,"public_phrase": string | null,"tie_priority": number
+                  }
+                  Insert: {
+                    "dimension": string,"label": string,"post_types": (Database["public"]['Enums']["post_type"])[],"public"?: boolean,"public_phrase"?: string | null,"tie_priority"?: number
+                  }
+                  Update: {
+                    "dimension"?: string,"label"?: string,"post_types"?: (Database["public"]['Enums']["post_type"])[],"public"?: boolean,"public_phrase"?: string | null,"tie_priority"?: number
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"micro_survey_questions": {
+                  Row: {
+                    "active": boolean,"dimension": string,"id": number,"text": string
+                  }
+                  Insert: {
+                    "active"?: boolean,"dimension": string,"id"?: never,"text": string
+                  }
+                  Update: {
+                    "active"?: boolean,"dimension"?: string,"id"?: never,"text"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "micro_survey_questions_dimension_fkey"
+      columns: ["dimension"]
+isOneToOne: false
+      referencedRelation: "micro_survey_dimensions"
+      referencedColumns: ["dimension"]
+    }
+                  ]
+                },"micro_survey_responses": {
+                  Row: {
+                    "answer": boolean,"created_at": string,"dimension": string,"latency_ms": number,"locked_at": string,"post_id": string,"question_id": number,"updated_at": string | null,"user_id": string,"weight": number
+                  }
+                  Insert: {
+                    "answer": boolean,"created_at"?: string,"dimension": string,"latency_ms": number,"locked_at": string,"post_id": string,"question_id": number,"updated_at"?: string | null,"user_id": string,"weight": number
+                  }
+                  Update: {
+                    "answer"?: boolean,"created_at"?: string,"dimension"?: string,"latency_ms"?: number,"locked_at"?: string,"post_id"?: string,"question_id"?: number,"updated_at"?: string | null,"user_id"?: string,"weight"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "micro_survey_responses_dimension_fkey"
+      columns: ["dimension"]
+isOneToOne: false
+      referencedRelation: "micro_survey_dimensions"
+      referencedColumns: ["dimension"]
+    },{
+      foreignKeyName: "micro_survey_responses_post_id_user_id_fkey"
+      columns: ["post_id","user_id"]
+isOneToOne: true
+      referencedRelation: "micro_survey_assignments"
+      referencedColumns: ["post_id","user_id"]
+    },{
+      foreignKeyName: "micro_survey_responses_question_id_fkey"
+      columns: ["question_id"]
+isOneToOne: false
+      referencedRelation: "micro_survey_questions"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"notification_categories": {
                   Row: {
                     "allow_instant": boolean,"category": string,"default_channel": Database["public"]['Enums']["email_channel"],"description": string,"label": string,"position": number
@@ -507,6 +601,19 @@ isOneToOne: false
                   }
                   Update: {
                     "created_at"?: string,"domain"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"platform_config": {
+                  Row: {
+                    "created_at": string,"effective_at": string,"key": string,"reason": string,"staff_id": string | null,"value": NonNullable<Json>,"version": number
+                  }
+                  Insert: {
+                    "created_at"?: string,"effective_at"?: string,"key": string,"reason": string,"staff_id"?: string | null,"value": NonNullable<Json>,"version": number
+                  }
+                  Update: {
+                    "created_at"?: string,"effective_at"?: string,"key"?: string,"reason"?: string,"staff_id"?: string | null,"value"?: NonNullable<Json>,"version"?: number
                   }
                   Relationships: [
                     
@@ -652,6 +759,69 @@ isOneToOne: false
       foreignKeyName: "post_polls_post_id_fkey"
       columns: ["post_id"]
 isOneToOne: true
+      referencedRelation: "posts"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"post_stats": {
+                  Row: {
+                    "answers": number,"appropriate_flags": number,"commenter_universities": number,"commenters": number,"hides": number,"positives": number,"post_id": string,"reports": number,"updated_at": string,"views": number
+                  }
+                  Insert: {
+                    "answers"?: number,"appropriate_flags"?: number,"commenter_universities"?: number,"commenters"?: number,"hides"?: number,"positives"?: number,"post_id": string,"reports"?: number,"updated_at"?: string,"views"?: number
+                  }
+                  Update: {
+                    "answers"?: number,"appropriate_flags"?: number,"commenter_universities"?: number,"commenters"?: number,"hides"?: number,"positives"?: number,"post_id"?: string,"reports"?: number,"updated_at"?: string,"views"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "post_stats_post_id_fkey"
+      columns: ["post_id"]
+isOneToOne: true
+      referencedRelation: "posts"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"post_survey_counts": {
+                  Row: {
+                    "assigned": number,"crosses": number,"dimension": string,"post_id": string,"ticks": number,"weighted_crosses": number,"weighted_ticks": number
+                  }
+                  Insert: {
+                    "assigned"?: number,"crosses"?: number,"dimension": string,"post_id": string,"ticks"?: number,"weighted_crosses"?: number,"weighted_ticks"?: number
+                  }
+                  Update: {
+                    "assigned"?: number,"crosses"?: number,"dimension"?: string,"post_id"?: string,"ticks"?: number,"weighted_crosses"?: number,"weighted_ticks"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "post_survey_counts_dimension_fkey"
+      columns: ["dimension"]
+isOneToOne: false
+      referencedRelation: "micro_survey_dimensions"
+      referencedColumns: ["dimension"]
+    },{
+      foreignKeyName: "post_survey_counts_post_id_fkey"
+      columns: ["post_id"]
+isOneToOne: false
+      referencedRelation: "posts"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"post_views": {
+                  Row: {
+                    "first_seen_at": string,"post_id": string,"user_id": string
+                  }
+                  Insert: {
+                    "first_seen_at"?: string,"post_id": string,"user_id": string
+                  }
+                  Update: {
+                    "first_seen_at"?: string,"post_id"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "post_views_post_id_fkey"
+      columns: ["post_id"]
+isOneToOne: false
       referencedRelation: "posts"
       referencedColumns: ["id"]
     }
@@ -1091,6 +1261,9 @@ isOneToOne: false
 "add_venture_deliverable":
 { Args: { "p_label": string,"p_url": string,"p_venture": string }; Returns: string
                            },
+"answer_survey":
+{ Args: { "p_answer": boolean,"p_latency_ms": number,"p_post": string }; Returns: undefined
+                           },
 "application_people":
 { Args: { "p_ids": (string)[] }; Returns: {
               "full_name": string,"user_id": string,"username": string
@@ -1269,6 +1442,11 @@ isOneToOne: false
               "author_avatar_path": string,"author_name": string,"author_username": string,"body": string,"can_delete": boolean,"created_at": string,"deleted": boolean,"id": string,"is_mine": boolean,"parent_id": string,"pinned": boolean
             }[]
                            },
+"post_insights":
+{ Args: { "p_post": string }; Returns: {
+              "commenters": number,"crosses": number,"dimension": string,"label": string,"ticks": number,"views": number,"weighted_rate": number
+            }[]
+                           },
 "post_venture_update":
 { Args: { "p_body": string,"p_venture": string }; Returns: string
                            },
@@ -1288,6 +1466,9 @@ isOneToOne: false
                            },
 "record_sign_in":
 { Args: { "p_device_hash": string,"p_ip_hash": string,"p_method": string,"p_user_agent": string }; Returns: Json
+                           },
+"record_views":
+{ Args: { "p_ids": (string)[] }; Returns: number
                            },
 "remove_venture_deliverable":
 { Args: { "p_deliverable": string }; Returns: boolean
@@ -1349,6 +1530,11 @@ isOneToOne: false
                            },
 "start_github_link":
 { Args: { "p_code": string,"p_installation_id"?: number }; Returns: string
+                           },
+"survey_for_posts":
+{ Args: { "p_ids": (string)[] }; Returns: {
+              "answered_at": string,"can_change": boolean,"dimension": string,"my_answer": boolean,"post_id": string,"public_line": Json,"question": string,"question_id": number
+            }[]
                            },
 "touch_activity":
 { Args: Record<PropertyKey, never>; Returns: undefined
