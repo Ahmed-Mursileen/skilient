@@ -180,3 +180,16 @@ describe("GitHub webhooks", () => {
     });
   });
 });
+
+describe("changedFiles (GitHub commit files → detector input)", () => {
+  it("reads GitHub's `filename`, the only name field the API sends", async () => {
+    const { changedFiles } = await import("@/supabase/functions/_shared/github/worker");
+    expect(
+      changedFiles([
+        { filename: "src/app.ts", status: "added", additions: 3, deletions: 0, patch: "@@ -0,0 +1 @@\n+x", sha: "a".repeat(40) },
+        { status: "modified" }, // no name: dropped rather than crashing the batch
+      ]),
+    ).toEqual([{ path: "src/app.ts", status: "added", additions: 3, deletions: 0, patch: "@@ -0,0 +1 @@\n+x", sha: "a".repeat(40) }]);
+    expect(changedFiles(undefined)).toEqual([]);
+  });
+});

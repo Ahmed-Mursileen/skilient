@@ -218,8 +218,27 @@ interface ListedCommit {
   };
 }
 
+/** A changed file as GitHub's commit API sends it: `filename`, never `path`. */
+interface GitHubFile {
+  filename?: string;
+  status?: string;
+  additions?: number;
+  deletions?: number;
+  patch?: string | null;
+  sha?: string | null;
+}
+
 interface CommitDetail extends ListedCommit {
-  files?: ChangedFile[];
+  files?: GitHubFile[];
+}
+
+/** GitHub's file entries in the detectors' shape; entries without a name are dropped. */
+export function changedFiles(files: GitHubFile[] | undefined): ChangedFile[] {
+  return (files ?? []).flatMap((f) =>
+    typeof f.filename === "string" && f.filename
+      ? [{ path: f.filename, status: f.status ?? "modified", additions: f.additions, deletions: f.deletions, patch: f.patch ?? null, sha: f.sha ?? null }]
+      : [],
+  );
 }
 
 interface RepoRow {
@@ -479,11 +498,12 @@ const STAGES: { [S in Message["stage"]]: (ctx: Ctx, msg: Extract<Message, { stag
       // Only commits GitHub attributes to the student's account (never the email alone).
       if (commit.author?.id !== Number(repo.github_id)) continue;
 
-      const files = (commit.files ?? []).filter((f) => !(f.sha && upstream.has(f.sha)));
+      const allFiles = changedFiles(commit.files);
+      const files = allFiles.filter((f) => !(f.sha && upstream.has(f.sha)));
       const parents = commit.parents?.length ?? 1;
       const analysis = analyseCommit(files, taxonomy.compiled, { excludeGlobs });
       const excluded =
-        parents > 1 ? "merge" : isBulkImport(parents, commit.files ?? []) ? "bulk_import" : analysis.excluded;
+        parents > 1 ? "merge" : isBulkImport(parents, allFiles) ? "bulk_import" : analysis.excluded;
       const [{ recorded: isNew }] = await db.query<{ recorded: boolean }>(
         "select private.record_commit($1, $2, $3::text::jsonb) as recorded",
         [
@@ -496,7 +516,7 @@ const STAGES: { [S in Message["stage"]]: (ctx: Ctx, msg: Extract<Message, { stag
             pushed_at: msg.pushed_at ?? null,
             seen_via: msg.pushed_at ? "push" : "harvest",
             signed: commit.commit.verification?.verified === true,
-            files: (commit.files ?? []).length,
+            files: allFiles.length,
             meaningful_lines: excluded ? 0 : analysis.meaningfulLines,
             excluded,
             detections: excluded === "merge" ? [] : analysis.detections.map((d) => ({ skill: d.skillId, kind: d.kind, path: d.path, lines: d.lines })),
