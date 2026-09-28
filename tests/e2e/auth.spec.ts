@@ -184,6 +184,8 @@ test.describe("auth", () => {
     await page.getByLabel("University email").fill(student.email);
     await page.getByRole("button", { name: "Email me a code" }).click();
     await expect(page.getByRole("heading", { name: "Check your inbox" })).toBeVisible();
+    // After the action's redirect, Next applies the page title a moment after the content.
+    await expect(page).toHaveTitle(/Sign in with a code/);
     await axe(page, "signin/code (code)");
     const mail = await latestEmail(student.email, started);
     expect(mail.subject).toMatch(/^Your Skilient sign-in code: \d{6}$/);
