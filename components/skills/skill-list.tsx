@@ -1,7 +1,7 @@
 "use client";
 
-import { ArrowSquareOut, CheckCircle, LockSimple } from "@phosphor-icons/react/dist/ssr";
-import { useEffect, useState, useTransition } from "react";
+import { ArrowSquareOut, CheckCircle, Circle, LockSimple } from "@phosphor-icons/react/dist/ssr";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { FormAlert } from "@/components/auth/form-alert";
 import { Badge, Button, Dialog, LoadingState, SideSheetContent, SkillChip, SkillLevelIcon } from "@/components/ui";
 import { loadSkillEvidence, type SkillEvidence } from "@/lib/actions/skills";
@@ -38,6 +38,8 @@ export function SkillList({
   grouped?: boolean;
 }) {
   const [open, setOpen] = useState<ProfileSkill | null>(null);
+  // The drawer is opened from state, not a Radix trigger, so hand focus back to the chip ourselves.
+  const opener = useRef<HTMLButtonElement | null>(null);
   const groups = grouped
     ? CATEGORY_ORDER.map((c) => ({ category: c, items: skills.filter((s) => s.category === c) })).filter((g) => g.items.length)
     : [{ category: null, items: skills }];
@@ -57,7 +59,10 @@ export function SkillList({
                 <li key={s.id}>
                   <button
                     type="button"
-                    onClick={() => setOpen(s)}
+                    onClick={(e) => {
+                      opener.current = e.currentTarget;
+                      setOpen(s);
+                    }}
                     aria-label={`${s.name}, level ${s.level}: ${isOwner ? LEVELS[s.level].own : LEVELS[s.level].other}. Details`}
                     className="rounded-sm transition-colors duration-[120ms] hover:[&>span]:border-border-strong"
                   >
@@ -70,13 +75,33 @@ export function SkillList({
         ))}
       </div>
       <Dialog open={open !== null} onOpenChange={(o) => !o && setOpen(null)}>
-        {open ? <SkillDrawer skill={open} isOwner={isOwner} ownerName={ownerName} /> : null}
+        {open ? (
+          <SkillDrawer
+            skill={open}
+            isOwner={isOwner}
+            ownerName={ownerName}
+            onCloseAutoFocus={(e) => {
+              e.preventDefault();
+              opener.current?.focus();
+            }}
+          />
+        ) : null}
       </Dialog>
     </>
   );
 }
 
-function SkillDrawer({ skill, isOwner, ownerName }: { skill: ProfileSkill; isOwner: boolean; ownerName: string }) {
+function SkillDrawer({
+  skill,
+  isOwner,
+  ownerName,
+  onCloseAutoFocus,
+}: {
+  skill: ProfileSkill;
+  isOwner: boolean;
+  ownerName: string;
+  onCloseAutoFocus: (event: Event) => void;
+}) {
   const meta = LEVELS[skill.level];
   const category = CATEGORY_NAMES[skill.category];
   const lastUsed = when(skill.lastUsedAt);
@@ -84,6 +109,7 @@ function SkillDrawer({ skill, isOwner, ownerName }: { skill: ProfileSkill; isOwn
 
   return (
     <SideSheetContent
+      onCloseAutoFocus={onCloseAutoFocus}
       title={skill.name}
       description={`${category} · L${skill.level} ${meta.name}${lastUsed ? ` · last used ${lastUsed}` : ""}`}
     >
@@ -130,7 +156,8 @@ function LevelLadder({ level, isOwner }: { level: ShownLevel; isOwner: boolean }
             className={cn(
               "flex gap-3 rounded-md border px-3 py-2.5",
               current ? "border-border-strong bg-bg-surface" : "border-border-muted",
-              !reached && "opacity-70",
+              // Unreached levels read as "not yet" by shape and label, never by fading the text (contrast).
+              !reached && "border-dashed",
             )}
           >
             <SkillLevelIcon level={l} className="mt-0.5" />
@@ -143,7 +170,12 @@ function LevelLadder({ level, isOwner }: { level: ShownLevel; isOwner: boolean }
                     <CheckCircle aria-hidden weight="bold" className="size-3.5 text-success" />
                     {current ? "Current" : "Reached"}
                   </span>
-                ) : null}
+                ) : (
+                  <span className="ml-auto inline-flex items-center gap-1 text-caption text-text-secondary">
+                    <Circle aria-hidden weight="bold" className="size-3.5" />
+                    Not yet
+                  </span>
+                )}
               </p>
               <p className="mt-0.5 text-body-sm text-text-secondary">{LEVELS[l].rule}</p>
             </div>
