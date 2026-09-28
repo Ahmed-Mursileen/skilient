@@ -93,7 +93,7 @@ test.describe("onboarding and profiles", () => {
 
     // 5. Looking for
     await expect(page).toHaveURL(/\/onboarding\/looking-for$/);
-    await page.getByRole("checkbox", { name: "Internships" }).check();
+    await page.getByRole("checkbox", { name: "An internship" }).check();
     await page.getByRole("switch", { name: "Let recruiters find me" }).click();
     await axe(page, "step 5");
     await page.getByRole("button", { name: "Continue" }).click();

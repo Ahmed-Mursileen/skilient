@@ -17,11 +17,17 @@ import {
 /**
  * Phase 1 auth flows (PRD 5.2 done-when): sign up with an allowed domain, a disallowed
  * domain and a duplicate; confirm in a second tab; reset password; sign out and sign in
- * as another user with zero residue; plus lockout, two-factor and the route gates.
+ * as another user with zero residue; plus sign-in throttling (no lockout), the emailed
+ * sign-in code, two-factor with backup codes, and the route gates.
  * Flows that create accounts run on the desktop project only.
  */
 test.describe("auth", () => {
   test.skip(!hasBackend, "needs the local Supabase stack (E2E_SUPABASE_URL / E2E_SUPABASE_SECRET_KEY)");
+
+  async function axe(page: import("@playwright/test").Page, label: string) {
+    const results = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).analyze();
+    expect(results.violations.map((v) => `${label} ${v.id}: ${v.nodes.map((n) => n.target.join(" ")).join(", ")}`)).toEqual([]);
+  }
 
   async function fillSignup(page: import("@playwright/test").Page, email: string, name = "Hina Test") {
     await page.goto("/signup");
@@ -146,26 +152,60 @@ test.describe("auth", () => {
     await expectNoResidue(page, a);
   });
 
-  test("ten wrong passwords lock the account for 15 minutes", async ({ page }, info) => {
+  test("wrong passwords slow sign-in down but never lock it, and the emailed code always works", async ({ page }, info) => {
     test.skip(info.project.name !== "desktop", "runs once");
-    const student = await createStudent({ domain: "nutech.edu.pk", fullName: "Lock Test" });
+    const student = await createStudent({ domain: "nutech.edu.pk", fullName: "Slow Down" });
     await page.goto("/signin");
     await page.getByLabel("University email").fill(student.email);
+    const signInButton = page.getByRole("button", { name: /^(Sign in|Try again in \d+s)$/ });
     for (let i = 1; i <= 9; i++) {
       await page.getByLabel("Password", { exact: true }).fill(`wrong-password-${i}`);
-      await page.getByRole("button", { name: "Sign in", exact: true }).click();
+      await signInButton.click();
       await expect(page.getByRole("main").getByRole("alert")).toContainText("That email and password don't match.");
     }
     await page.getByLabel("Password", { exact: true }).fill("wrong-password-10");
-    await page.getByRole("button", { name: "Sign in", exact: true }).click();
-    await expect(page.getByRole("main").getByRole("alert")).toContainText("Too many failed attempts");
-    // Even the right password is refused while locked.
+    await signInButton.click();
+    await expect(page.getByRole("main").getByRole("alert")).toContainText("Wait 2 seconds");
+    await expect(signInButton).toBeDisabled();
+    // Seconds, not a lockout: the right password works once the wait is over.
+    await expect(page.getByRole("button", { name: "Sign in", exact: true })).toBeEnabled({ timeout: 10_000 });
     await page.getByLabel("Password", { exact: true }).fill(student.password);
     await page.getByRole("button", { name: "Sign in", exact: true }).click();
-    await expect(page.getByRole("main").getByRole("alert")).toContainText("Too many failed attempts");
+    await expect(page).toHaveURL(/\/feed$/);
+
+    // The emailed sign-in code.
+    await page.getByRole("button", { name: "Sign out", exact: true }).click();
+    await expect(page).toHaveURL(/\/$/);
+    await page.goto("/signin");
+    await page.getByRole("link", { name: "Email me a sign-in code instead" }).click();
+    await expect(page).toHaveURL(/\/signin\/code$/);
+    await axe(page, "signin/code (email)");
+    const started = Date.now();
+    await page.getByLabel("University email").fill(student.email);
+    await page.getByRole("button", { name: "Email me a code" }).click();
+    await expect(page.getByRole("heading", { name: "Check your inbox" })).toBeVisible();
+    await axe(page, "signin/code (code)");
+    const mail = await latestEmail(student.email, started);
+    expect(mail.subject).toMatch(/^Your Skilient sign-in code: \d{6}$/);
+    await page.getByLabel("6-digit code").fill("000000");
+    await page.getByRole("button", { name: "Sign in", exact: true }).click();
+    await expect(page.getByRole("main").getByRole("alert")).toContainText("That code is wrong");
+    await page.getByLabel("6-digit code").fill(codeFrom(mail.subject));
+    await page.getByRole("button", { name: "Sign in", exact: true }).click();
+    await expect(page).toHaveURL(/\/feed$/);
   });
 
-  test("two-factor: turn it on, then sign-in asks for the code", async ({ page }, info) => {
+  test("asking for a code never reveals whether an account exists", async ({ page }, info) => {
+    test.skip(info.project.name !== "desktop", "runs once");
+    await page.goto("/signin/code");
+    await page.getByLabel("University email").fill(uniqueEmail("nu.edu.pk", "nobody"));
+    await page.getByRole("button", { name: "Email me a code" }).click();
+    await expect(page.getByRole("heading", { name: "Check your inbox" })).toBeVisible();
+    await page.getByRole("button", { name: "Use a different email" }).click();
+    await expect(page.getByRole("heading", { name: "Sign in with a code" })).toBeVisible();
+  });
+
+  test("two-factor: backup codes at set-up, a second authenticator, and signing in with a backup code", async ({ page }, info) => {
     test.skip(info.project.name !== "desktop", "runs once");
     const student = await createStudent({ domain: "nu.edu.pk", fullName: "Totp Tester" });
     await signInWithPassword(page, student.email, student.password);
@@ -176,9 +216,31 @@ test.describe("auth", () => {
     const secret = (await page.locator("code").first().textContent())?.trim() ?? "";
     expect(secret).toMatch(/^[A-Z2-7]+=*$/);
     await page.getByLabel("Code from the app").fill(totp(secret));
-    await page.getByRole("button", { name: "Turn on two-factor" }).click();
-    await expect(page.getByText("On", { exact: true })).toBeVisible();
+    await page.getByRole("button", { name: "Confirm" }).click();
 
+    // Ten backup codes, shown once.
+    const codeList = page.getByRole("list", { name: "Backup codes" });
+    await expect(codeList.getByRole("listitem")).toHaveCount(10);
+    const backupCodes = (await codeList.getByRole("listitem").allTextContents()).map((c) => c.trim());
+    expect(backupCodes.every((c) => /^[a-z2-9]{5}-[a-z2-9]{5}$/.test(c))).toBe(true);
+    await axe(page, "settings/security (backup codes)");
+    await expect(page.getByRole("button", { name: "Done" })).toBeDisabled();
+    await page.getByRole("checkbox", { name: "I've saved these codes" }).check();
+    await page.getByRole("button", { name: "Done" }).click();
+    await expect(page.getByText("On", { exact: true })).toBeVisible();
+    await expect(page.getByText("10 of 10 left.")).toBeVisible();
+
+    // A second authenticator; no new codes.
+    await page.getByRole("button", { name: "Add another authenticator" }).click();
+    const secondSecret = (await page.locator("code").first().textContent())?.trim() ?? "";
+    expect(secondSecret).not.toBe(secret);
+    await page.getByLabel("Code from the app").fill(totp(secondSecret));
+    await page.getByRole("button", { name: "Confirm" }).click();
+    await expect(page.getByText("Authenticator app 2")).toBeVisible();
+    await expect(page.getByRole("list", { name: "Backup codes" })).toHaveCount(0);
+    await axe(page, "settings/security (two authenticators)");
+
+    // Either app's code works at sign-in.
     await page.getByRole("button", { name: "Sign out", exact: true }).click();
     await expect(page).toHaveURL(/\/$/);
     await signInWithPassword(page, student.email, student.password);
@@ -186,9 +248,26 @@ test.describe("auth", () => {
     // Nothing else opens until the code is entered.
     await page.goto("/feed");
     await expect(page).toHaveURL(/\/signin\/mfa\?next=%2Ffeed$/);
-    await page.getByLabel("Authenticator code").fill(totp(secret));
+    await page.getByLabel("Authenticator code").fill(totp(secondSecret));
     await page.getByRole("button", { name: "Continue" }).click();
     await expect(page).toHaveURL(/\/feed$/);
+
+    // Lost phone: a backup code gets in once, and turns two-factor off.
+    await page.getByRole("button", { name: "Sign out", exact: true }).click();
+    await expect(page).toHaveURL(/\/$/);
+    await signInWithPassword(page, student.email, student.password);
+    await expect(page).toHaveURL(/\/signin\/mfa$/);
+    await page.getByRole("button", { name: "Use a backup code instead" }).click();
+    await axe(page, "signin/mfa (backup code)");
+    await page.getByLabel("Backup code").fill("zzzzz-zzzzz");
+    await page.getByRole("button", { name: "Continue" }).click();
+    await expect(page.getByText("That code didn't work.")).toBeVisible();
+    await page.getByLabel("Backup code").fill(backupCodes[3].toUpperCase());
+    await page.getByRole("button", { name: "Continue" }).click();
+    await expect(page).toHaveURL(/\/settings\/security\?backup=used$/);
+    await expect(page.getByRole("main").getByRole("alert")).toContainText("two-factor is now off");
+    await expect(page.getByRole("button", { name: "Set up two-factor" })).toBeVisible();
+    await expect(page.getByText("Signed in with a backup code")).toBeVisible();
   });
 
   test("a new device shows up in recent activity", async ({ browser }, info) => {
@@ -232,7 +311,7 @@ for (const colorScheme of ["light", "dark"] as const) {
     test.use({ colorScheme });
     test("have no axe-core violations or CSP errors", async ({ page }) => {
       const problems = watchConsole(page);
-      for (const path of ["/signin", "/signup", "/forgot-password", "/signup/verify", "/reset-password", "/auth/confirmed"]) {
+      for (const path of ["/signin", "/signin/code", "/signup", "/forgot-password", "/signup/verify", "/reset-password", "/auth/confirmed"]) {
         await page.goto(path);
         await page.locator("h1").first().waitFor();
         const results = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"]).analyze();

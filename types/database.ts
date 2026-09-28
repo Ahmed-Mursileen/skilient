@@ -321,6 +321,12 @@ isOneToOne: false
             "complete_onboarding":
 { Args: Record<PropertyKey, never>; Returns: boolean
                            },
+"create_mfa_backup_codes":
+{ Args: Record<PropertyKey, never>; Returns: (string)[]
+                           },
+"delete_mfa_backup_codes":
+{ Args: Record<PropertyKey, never>; Returns: undefined
+                           },
 "disconnect_github":
 { Args: Record<PropertyKey, never>; Returns: boolean
                            },
@@ -346,6 +352,9 @@ isOneToOne: false
                            },
 "log_security_event":
 { Args: { "p_ip_hash": string,"p_kind": string,"p_user_agent": string }; Returns: undefined
+                           },
+"mfa_backup_codes_remaining":
+{ Args: Record<PropertyKey, never>; Returns: number
                            },
 "my_gate_state":
 { Args: Record<PropertyKey, never>; Returns: Json
@@ -377,12 +386,15 @@ isOneToOne: false
 "start_github_link":
 { Args: { "p_code": string,"p_installation_id"?: number }; Returns: string
                            },
+"use_mfa_backup_code":
+{ Args: { "p_code": string }; Returns: boolean
+                           },
 "username_available":
 { Args: { "p_username": string }; Returns: boolean
                            }
           }
           Enums: {
-            "account_role": "student"|"faculty"|"recruiter"|"university_admin","domain_kind": "student"|"faculty"|"both","github_repo_kind": "owned"|"collaborator"|"fork"|"template","job_run_status": "running"|"succeeded"|"failed","looking_for_option": "internships"|"jobs"|"teammates"|"competitions"|"learning","profile_visibility": "friends"|"university"|"global","staff_role": "moderator"|"trust_reviewer"|"accounts"|"super_admin","sync_status": "queued"|"running"|"done"|"failed"|"cancelled"
+            "account_role": "student"|"faculty"|"recruiter"|"university_admin","domain_kind": "student"|"faculty"|"both","github_repo_kind": "owned"|"collaborator"|"fork"|"template","job_run_status": "running"|"succeeded"|"failed","looking_for_option": "internship"|"job"|"teammates"|"project"|"mentorship","profile_visibility": "friends"|"university"|"global","staff_role": "moderator"|"trust_reviewer"|"accounts"|"super_admin","sync_status": "queued"|"running"|"done"|"failed"|"cancelled"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -502,7 +514,7 @@ export const Constants = {
           }
         },"public": {
           Enums: {
-            "account_role": ["student", "faculty", "recruiter", "university_admin"],"domain_kind": ["student", "faculty", "both"],"github_repo_kind": ["owned", "collaborator", "fork", "template"],"job_run_status": ["running", "succeeded", "failed"],"looking_for_option": ["internships", "jobs", "teammates", "competitions", "learning"],"profile_visibility": ["friends", "university", "global"],"staff_role": ["moderator", "trust_reviewer", "accounts", "super_admin"],"sync_status": ["queued", "running", "done", "failed", "cancelled"]
+            "account_role": ["student", "faculty", "recruiter", "university_admin"],"domain_kind": ["student", "faculty", "both"],"github_repo_kind": ["owned", "collaborator", "fork", "template"],"job_run_status": ["running", "succeeded", "failed"],"looking_for_option": ["internship", "job", "teammates", "project", "mentorship"],"profile_visibility": ["friends", "university", "global"],"staff_role": ["moderator", "trust_reviewer", "accounts", "super_admin"],"sync_status": ["queued", "running", "done", "failed", "cancelled"]
           }
         }
 } as const

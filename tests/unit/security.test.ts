@@ -1,11 +1,11 @@
 import { createHash } from "node:crypto";
 import { describe, expect, it, vi } from "vitest";
-import { accountLockedEmail, escapeHtml, newDeviceEmail } from "@/lib/email/templates";
+import { backupCodeUsedEmail, escapeHtml, newDeviceEmail, signInAttemptsEmail } from "@/lib/email/templates";
 import { passwordStrength } from "@/lib/auth/password";
 import { setLogSink } from "@/lib/log";
 import { buildCsp, newNonce } from "@/lib/security/headers";
 import { isBreachedPassword } from "@/lib/security/hibp";
-import { approximateLocation, clientIp, describeDevice } from "@/lib/security/request-meta";
+import { approximateLocation, clientIp, describeDevice, isLoopback } from "@/lib/security/request-meta";
 
 setLogSink(() => {});
 
@@ -75,7 +75,16 @@ describe("password strength hint", () => {
 describe("request metadata", () => {
   it("takes the first forwarded IP", () => {
     expect(clientIp(new Headers({ "x-forwarded-for": "203.0.113.9, 10.0.0.1" }))).toBe("203.0.113.9");
+    // Vercel's own header wins: it can't be set by the browser.
+    expect(clientIp(new Headers({ "x-vercel-forwarded-for": "198.51.100.7", "x-forwarded-for": "1.2.3.4" }))).toBe("198.51.100.7");
     expect(clientIp(new Headers())).toBeNull();
+  });
+  it("recognises local runs", () => {
+    expect(isLoopback("127.0.0.1")).toBe(true);
+    expect(isLoopback("::1")).toBe(true);
+    expect(isLoopback("::ffff:127.0.0.1")).toBe(true);
+    expect(isLoopback("203.0.113.9")).toBe(false);
+    expect(isLoopback(null)).toBe(false);
   });
   it("describes the device and approximate place", () => {
     expect(describeDevice("Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 Chrome/128.0 Mobile Safari/537.36")).toBe("Chrome on Android");
@@ -99,9 +108,19 @@ describe("security emails", () => {
     expect(email.text).toContain("https://skilient.pk/auth/not-me?token=abc");
     expect(email.text).toContain("Lahore, PK");
   });
-  it("tell the owner how to recover from a lock", () => {
-    const email = accountLockedEmail("a@nutech.edu.pk", "https://skilient.pk/forgot-password");
-    expect(email.subject).toContain("locked for 15 minutes");
+  it("warn the owner about wrong passwords without claiming a lock, and offer the code sign-in", () => {
+    const email = signInAttemptsEmail("a@nutech.edu.pk", {
+      codeUrl: "https://skilient.pk/signin/code",
+      resetUrl: "https://skilient.pk/forgot-password",
+    });
+    expect(email.subject).toBe("Someone is trying to sign in to your Skilient account");
+    expect(email.text).toContain("not locked");
+    expect(email.html).toContain("https://skilient.pk/signin/code");
     expect(email.html).toContain("https://skilient.pk/forgot-password");
+  });
+  it("tell the owner a backup code was used", () => {
+    const email = backupCodeUsedEmail("a@nutech.edu.pk", "https://skilient.pk/settings/security", new Date("2026-09-28T10:00:00Z"));
+    expect(email.text).toContain("28 Sept 2026, 15:00");
+    expect(email.html).toContain("https://skilient.pk/settings/security");
   });
 });

@@ -4,6 +4,8 @@ import { cookies } from "next/headers";
 
 /** Email awaiting its signup code (httpOnly; keeps the address out of the URL). */
 export const VERIFY_COOKIE = "sk_verify";
+/** Email waiting for its sign-in code on /signin/code (httpOnly, 15 minutes). */
+export const SIGNIN_CODE_COOKIE = "sk_signin_code";
 /** Agreement version ticked on /signup before "Continue with Google". */
 export const AGREE_COOKIE = "sk_agree";
 
@@ -20,6 +22,19 @@ export async function pendingVerification(): Promise<string | null> {
 
 export async function clearPendingVerification() {
   (await cookies()).delete(VERIFY_COOKIE);
+}
+
+export async function setPendingSignInCode(email: string) {
+  (await cookies()).set(SIGNIN_CODE_COOKIE, email, { ...base, maxAge: 15 * 60 });
+}
+
+export async function pendingSignInCode(): Promise<string | null> {
+  const value = (await cookies()).get(SIGNIN_CODE_COOKIE)?.value ?? null;
+  return value && value.includes("@") && value.length <= 254 ? value : null;
+}
+
+export async function clearPendingSignInCode() {
+  (await cookies()).delete(SIGNIN_CODE_COOKIE);
 }
 
 export async function setAgreementIntent(version: number) {

@@ -9,7 +9,7 @@ export default async function SigninMfaPage({ searchParams }: PageProps<"/signin
   const params = await searchParams;
   const next = safeNext(typeof params.next === "string" ? params.next : null);
   return (
-    <AuthFrame title="Enter your code" description="Open your authenticator app and enter the 6-digit code for Skilient.">
+    <AuthFrame title="Enter your code" description="Open your authenticator app and enter the 6-digit code for Skilient, or use one of your backup codes.">
       <MfaForm next={next} />
     </AuthFrame>
   );

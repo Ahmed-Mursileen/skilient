@@ -13,6 +13,9 @@ const EVENT_LABELS: Record<string, string> = {
   sign_in: "Signed in",
   sign_in_failed: "Failed sign-in attempt",
   account_locked: "Sign-in locked for 15 minutes",
+  sign_in_alert: "Many wrong passwords: we emailed you",
+  mfa_backup_codes_created: "New two-factor backup codes made",
+  mfa_backup_code_used: "Signed in with a backup code (two-factor turned off)",
   new_device: "Signed in from a new device",
   not_me: "Signed out everywhere (\"This wasn't me\")",
   password_changed: "Password changed",
@@ -28,11 +31,14 @@ const when = new Intl.DateTimeFormat("en-GB", { dateStyle: "medium", timeStyle: 
 export default async function SecurityPage({ searchParams }: PageProps<"/settings/security">) {
   const params = await searchParams;
   const supabase = await createClient();
-  const [{ data: factors }, { data: events, error: eventsError }] = await Promise.all([
+  const [{ data: factors }, { data: backupCodesLeft }, { data: events, error: eventsError }] = await Promise.all([
     supabase.auth.mfa.listFactors(),
+    supabase.rpc("mfa_backup_codes_remaining"),
     supabase.from("security_events").select("id, kind, user_agent, created_at").order("created_at", { ascending: false }).limit(10),
   ]);
-  const verified = factors?.totp.find((f) => f.status === "verified") ?? null;
+  const authenticators = (factors?.totp ?? [])
+    .filter((f) => f.status === "verified")
+    .map((f) => ({ id: f.id, name: f.friendly_name || "Authenticator app", addedAt: f.created_at }));
 
   return (
     <main className="mx-auto flex max-w-2xl flex-col gap-8 px-[var(--page-gutter)] py-8">
@@ -46,6 +52,12 @@ export default async function SecurityPage({ searchParams }: PageProps<"/setting
       {params.required ? (
         <FormAlert>This area needs two-factor. Turn it on below, then open it again.</FormAlert>
       ) : null}
+      {params.backup === "used" ? (
+        <FormAlert>
+          You signed in with a backup code, so two-factor is now off and your other backup codes no longer work. Set it
+          up again below.
+        </FormAlert>
+      ) : null}
 
       <section aria-labelledby="two-factor" className="rounded-lg border border-border-default bg-bg-surface p-5 sm:p-6">
         <h2 id="two-factor" className="text-h3">
@@ -53,10 +65,11 @@ export default async function SecurityPage({ searchParams }: PageProps<"/setting
         </h2>
         <p className="mt-1 text-body text-text-secondary">
           After your password, Skilient asks for a code from an authenticator app (Google Authenticator, Microsoft
-          Authenticator, 1Password and similar). Optional for students.
+          Authenticator, 1Password and similar). You can add more than one app, and keep backup codes for when you
+          can&apos;t reach any of them. Optional for students.
         </p>
         <div className="mt-5">
-          <TwoFactorPanel factorId={verified?.id ?? null} />
+          <TwoFactorPanel authenticators={authenticators} backupCodesLeft={backupCodesLeft ?? 0} />
         </div>
       </section>
 

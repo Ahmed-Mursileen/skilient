@@ -14,12 +14,13 @@ export const dynamic = "force-dynamic";
 const ROUTES: Partial<Record<EmailOtpType, { ok: string; failed: string }>> = {
   email: { ok: "/auth/confirmed", failed: "/auth/confirmed?error=expired" },
   signup: { ok: "/auth/confirmed", failed: "/auth/confirmed?error=expired" },
+  magiclink: { ok: "/feed", failed: "/signin?error=link_expired" },
   recovery: { ok: "/reset-password", failed: "/forgot-password?error=expired" },
   email_change: { ok: "/feed", failed: "/signin?error=link_expired" },
 };
 
 /**
- * Email links (confirmation, password reset, email change) carry a token_hash, so they
+ * Email links (confirmation, sign-in code, password reset, email change) carry a token_hash, so they
  * work in any browser or device, not just the one that started the flow (PKCE).
  * Scanners that prefetch the link only spend the token; nothing else happens on GET.
  */
@@ -52,7 +53,7 @@ export async function GET(request: NextRequest) {
   const { data, error } = await supabase.auth.verifyOtp({ type, token_hash: tokenHash });
   if (error || !data.user) return finish("refused", route.failed, error?.code ?? "verify_failed");
 
-  if (type === "email" || type === "signup" || type === "recovery") {
+  if (type === "email" || type === "signup" || type === "magiclink" || type === "recovery") {
     await recordSignIn(
       supabase,
       { requestId, ipHash: hashIp(clientIp(request.headers)), userAgent: userAgent(request.headers), origin, headers: request.headers },

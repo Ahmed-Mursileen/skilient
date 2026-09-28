@@ -30,7 +30,7 @@ Legend: 📖 = PRD files to read (in `docs/prd/`), ✅ = done-when checks.
 - [x] HEC universities + `university_domains` seed; cached public domain list — *283 universities from `supabase/seed/hec_universities.csv` via a generated sync migration; `/api/universities/domains`. Only NUTECH's domain is verified so far (see decisions.md)*
 - [x] Signup: email/password and university-only Google; Auth hook `validate_signup`; breached-password check; Turnstile — *Google needs the hook enabled in the dashboard; see decisions.md*
 - [x] Email verification (code + magic link); agreement versions + acceptance + re-accept gate (template headings only)
-- [x] 2FA plumbing (TOTP, `aal2` checks) ready for later required roles; new-device alert email; `security_events` — *recovery codes are an open question (decisions.md)*
+- [x] 2FA plumbing (TOTP, `aal2` checks) ready for later required roles; new-device alert email; `security_events` — *backup codes (10, hashed, single-use) and several authenticators per account since 2026-09-28; staff 2FA reset comes with phase 11 (decisions.md)*
 - [x] Six-step onboarding wizard with resume; `proxy.ts` gates; `CurrentUserProvider` — *GitHub, skills and ventures steps are shells until phase 2/3*
 - [x] Profiles: view/edit, visibility, avatar/cover with server-side image re-encode (EXIF/GPS stripped); signed-in only — *re-encode runs in a server action with sharp, not an Edge Function (decisions.md)*
 - [x] `staff_roles` + `is_staff()` (no ops UI yet) — *a role counts only on an aal2 session*
@@ -135,6 +135,7 @@ Legend: 📖 = PRD files to read (in `docs/prd/`), ✅ = done-when checks.
 📖 `05-26-admin-portal-skilient-ops.md`
 
 - [ ] All queues with claiming, sanctions, appeals, view-as, org verification, university onboarding, platform config (versioned), metrics, audit log view; 2FA required
+- [ ] Staff "reset 2FA" (last resort): requires an identity-check note, writes `ops_audit_log`, emails the student (decisions 2026-09-28)
 
 ✅ Every staff write has an audit row · a moderator can't suspend beyond 7 days or open a chat outside a report · an appeal can't be decided by the original staff member
 

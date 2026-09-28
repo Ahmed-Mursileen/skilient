@@ -38,7 +38,7 @@ export const graduationYearSchema = z.coerce
   .max(2100, "Choose your batch.");
 export const visibilitySchema = z.enum(["friends", "university", "global"], { error: "Choose who can see your profile." });
 export const lookingForSchema = z
-  .array(z.enum(LOOKING_FOR.map((o) => o.value) as ["internships", "jobs", "teammates", "competitions", "learning"]))
+  .array(z.enum(LOOKING_FOR.map((o) => o.value) as ["teammates", "project", "internship", "job", "mentorship"]))
   .max(LOOKING_FOR.length);
 
 /** PRD 5.4: name 2–60, bio ≤ 280, department from the list, visibility enum. */

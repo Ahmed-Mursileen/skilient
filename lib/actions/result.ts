@@ -13,7 +13,7 @@ export interface ActionError {
   /** Logged request id, shown as "Ref" so a report maps to a log line. */
   requestId?: string;
   /** Extra hints for the form, e.g. { captcha: true }. */
-  hints?: Record<string, boolean | string>;
+  hints?: Record<string, boolean | string | number>;
 }
 
 export type ActionResult<T = null> = { ok: true; data: T } | ActionError;

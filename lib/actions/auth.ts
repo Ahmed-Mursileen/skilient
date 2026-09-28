@@ -8,9 +8,12 @@ import { z } from "zod";
 import { actionContext, type ActionContext } from "@/lib/actions/context";
 import { fail, fieldErrors, ok, type ActionResult } from "@/lib/actions/result";
 import {
+  clearPendingSignInCode,
   clearPendingVerification,
+  pendingSignInCode,
   pendingVerification,
   setAgreementIntent,
+  setPendingSignInCode,
   setPendingVerification,
 } from "@/lib/auth/cookies";
 import { emailDomain, normalizeEmail } from "@/lib/auth/email-domain";
@@ -18,9 +21,10 @@ import { homeFor, safeNext, type GateState } from "@/lib/auth/gate";
 import { passwordSchema } from "@/lib/auth/password";
 import { recordSignIn } from "@/lib/auth/sign-in-record";
 import { sendEmail } from "@/lib/email/send";
-import { accountLockedEmail } from "@/lib/email/templates";
+import { signInAttemptsEmail } from "@/lib/email/templates";
 import { isBreachedPassword } from "@/lib/security/hibp";
 import { rateLimit } from "@/lib/security/rate-limit";
+import { isLoopback } from "@/lib/security/request-meta";
 import { verifyTurnstile } from "@/lib/security/turnstile";
 import { createClient } from "@/lib/supabase/server";
 
@@ -79,6 +83,18 @@ async function destinationAfterSignIn(supabase: Supabase, next: string | null): 
   return home;
 }
 
+/**
+ * Generous per-network limit on sign-in, code and signup requests (decisions 2026-09-28):
+ * 100 per 10 minutes per real client IP. A campus shares one Wi-Fi address, so this only
+ * stops floods; per-account throttling does the real work. Local runs (no IP, or
+ * loopback) have no network limit.
+ */
+async function networkAllowed(supabase: Supabase, ctx: ActionContext): Promise<boolean> {
+  if (!ctx.ipHash || isLoopback(ctx.ip)) return true;
+  return rateLimit(supabase, "auth_ip", ctx.ipHash, 100, 600);
+}
+const NETWORK_BUSY = "Too many sign-in attempts from this network. Wait a few minutes and try again.";
+
 async function currentAgreementVersion(supabase: Supabase): Promise<number | null> {
   const { data } = await supabase
     .from("agreement_versions")
@@ -120,6 +136,10 @@ export async function signUp(formData: FormData): Promise<ActionResult> {
   }
 
   const supabase = await createClient();
+  if (!(await networkAllowed(supabase, ctx))) {
+    ctx.done("refused", { error_code: "network_rate_limited" });
+    return fail("rate_limited", NETWORK_BUSY);
+  }
 
   // Authoritative domain check (the form's check is only for fast feedback; the Auth hook repeats it).
   const domain = emailDomain(input.email);
@@ -271,7 +291,7 @@ export async function resendVerificationCode(): Promise<ActionResult> {
 }
 
 // ---------------------------------------------------------------------------
-// Sign in with lockout (PRD 5.2, 10)
+// Password sign-in, throttled without lockout (PRD 5.2, 10; decisions 2026-09-28)
 // ---------------------------------------------------------------------------
 
 const signInSchema = z.object({
@@ -284,17 +304,11 @@ const signInSchema = z.object({
 interface SigninStatus {
   failures: number;
   captcha_required: boolean;
-  locked_until: string | null;
+  retry_after_seconds: number;
 }
 
-const lockedMessage = (until: string | null) => {
-  const time = until
-    ? new Intl.DateTimeFormat("en-GB", { timeStyle: "short", timeZone: "Asia/Karachi" }).format(new Date(until))
-    : null;
-  return time
-    ? `Too many failed attempts. Try again after ${time}, or reset your password.`
-    : "Too many failed attempts. Try again in 15 minutes, or reset your password.";
-};
+const waitMessage = (seconds: number) =>
+  `Too many wrong passwords. Wait ${seconds} second${seconds === 1 ? "" : "s"} and try again, or sign in with an emailed code.`;
 
 export async function signIn(formData: FormData): Promise<ActionResult> {
   const ctx = await actionContext("auth.sign_in");
@@ -305,6 +319,10 @@ export async function signIn(formData: FormData): Promise<ActionResult> {
   }
   const input = parsed.data;
   const supabase = await createClient();
+  if (!(await networkAllowed(supabase, ctx))) {
+    ctx.done("refused", { error_code: "network_rate_limited" });
+    return fail("rate_limited", NETWORK_BUSY);
+  }
 
   const { data: statusData, error: statusError } = await supabase.rpc("signin_status", {
     p_email: input.email,
@@ -315,9 +333,12 @@ export async function signIn(formData: FormData): Promise<ActionResult> {
     return fail("unavailable", UNAVAILABLE, { requestId: ctx.requestId });
   }
   const status = statusData as unknown as SigninStatus;
-  if (status.locked_until) {
-    ctx.done("refused", { error_code: "locked" });
-    return fail("locked", lockedMessage(status.locked_until));
+  // Never a lockout: at most a wait of seconds, and the emailed code always works.
+  if (status.retry_after_seconds > 0) {
+    ctx.done("refused", { error_code: "slow_down" });
+    return fail("slow_down", waitMessage(status.retry_after_seconds), {
+      hints: { captcha: status.captcha_required, retryAfter: status.retry_after_seconds },
+    });
   }
   if (status.captcha_required) {
     const turnstile = await verifyTurnstile(input.turnstileToken, ctx.ip);
@@ -343,19 +364,23 @@ export async function signIn(formData: FormData): Promise<ActionResult> {
     }
     if (code === "invalid_credentials") {
       const { data: failed } = await supabase.rpc("signin_failed", { p_email: input.email, p_ip_hash: ctx.ipHash ?? "" });
-      const f = (failed ?? {}) as { captcha_required?: boolean; locked?: boolean; notify?: boolean };
+      const f = (failed ?? {}) as { captcha_required?: boolean; retry_after_seconds?: number; notify?: boolean };
       if (f.notify) {
-        after(() => sendEmail(accountLockedEmail(input.email, `${ctx.origin}/forgot-password`), ctx.requestId));
+        const urls = { codeUrl: `${ctx.origin}/signin/code`, resetUrl: `${ctx.origin}/forgot-password` };
+        after(() => sendEmail(signInAttemptsEmail(input.email, urls), ctx.requestId));
       }
-      ctx.done("refused", { error_code: f.locked ? "locked" : code });
-      if (f.locked) return fail("locked", lockedMessage(null));
+      const wait = f.retry_after_seconds ?? 0;
+      ctx.done("refused", { error_code: wait > 0 ? "slow_down" : code });
+      if (wait > 0) {
+        return fail("slow_down", waitMessage(wait), { hints: { captcha: !!f.captcha_required, retryAfter: wait } });
+      }
       return fail("invalid_credentials", "That email and password don't match.", {
         hints: { captcha: !!f.captcha_required },
       });
     }
     if (code.startsWith("over_")) {
       ctx.done("refused", { error_code: code });
-      return fail("rate_limited", "Too many attempts. Wait a few minutes and try again.");
+      return fail("rate_limited", "Too many attempts. Wait a few minutes, or sign in with an emailed code.");
     }
     ctx.done("error", { error_code: code });
     return fail("unavailable", UNAVAILABLE, { requestId: ctx.requestId });
@@ -364,6 +389,126 @@ export async function signIn(formData: FormData): Promise<ActionResult> {
   await recordSignIn(supabase, ctx, "password", data.user.email);
   ctx.done("ok", { user_id: data.user.id });
   redirect((await destinationAfterSignIn(supabase, safeNext(input.next))) as Route);
+}
+
+// ---------------------------------------------------------------------------
+// Sign in with an emailed code (decisions 2026-09-28): always available, even while
+// password sign-in is slowed, so nobody can lock a student out.
+// ---------------------------------------------------------------------------
+
+const requestCodeSchema = z.object({
+  email: emailSchema,
+  turnstileToken: z.string().max(4096).optional(),
+  next: z.string().max(512).optional(),
+});
+
+export async function requestSignInCode(formData: FormData): Promise<ActionResult> {
+  const ctx = await actionContext("auth.sign_in_code_request");
+  const parsed = requestCodeSchema.safeParse(formValues(formData, ["email", "turnstileToken", "next"]));
+  if (!parsed.success) {
+    ctx.done("refused", { error_code: "invalid_input" });
+    return fail("invalid_input", "Enter a valid email address.", { fields: fieldErrors(parsed.error.issues) });
+  }
+  const input = parsed.data;
+  // Turnstile keeps bots from using this to flood inboxes.
+  const turnstile = await verifyTurnstile(input.turnstileToken, ctx.ip);
+  if (!turnstile.ok) {
+    ctx.done("refused", { error_code: `turnstile_${turnstile.reason}` });
+    return fail("captcha", "Complete the check that you're human, then try again.", { requestId: ctx.requestId });
+  }
+  const supabase = await createClient();
+  if (!(await networkAllowed(supabase, ctx))) {
+    ctx.done("refused", { error_code: "network_rate_limited" });
+    return fail("rate_limited", NETWORK_BUSY);
+  }
+  if (!(await rateLimit(supabase, "signin_code", input.email, 5, 3600))) {
+    ctx.done("refused", { error_code: "rate_limited" });
+    return fail("rate_limited", "We've sent 5 codes to this address in the last hour. Use the newest one, or try again later.");
+  }
+  const { error } = await supabase.auth.signInWithOtp({
+    email: input.email,
+    options: { shouldCreateUser: false, emailRedirectTo: `${ctx.origin}/auth/confirm` },
+  });
+  // Same answer whether or not the account exists (unknown addresses get no email).
+  const code = error ? authCode(error) : null;
+  if (code && code !== "otp_disabled" && code !== "user_not_found" && !code.startsWith("over_")) {
+    ctx.done("error", { error_code: code });
+    return fail("unavailable", UNAVAILABLE, { requestId: ctx.requestId });
+  }
+  await setPendingSignInCode(input.email);
+  ctx.done("ok", { error_code: code ?? undefined });
+  const next = safeNext(input.next);
+  redirect((next ? `/signin/code?next=${encodeURIComponent(next)}` : "/signin/code") as Route);
+}
+
+const signInCodeSchema = z.object({
+  code: z.string().trim().regex(/^\d{6}$/, "Enter the 6-digit code from the email."),
+  next: z.string().max(512).optional(),
+});
+
+export async function verifyEmailSignInCode(formData: FormData): Promise<ActionResult> {
+  const ctx = await actionContext("auth.sign_in_code_verify");
+  const email = await pendingSignInCode();
+  if (!email) {
+    ctx.done("refused", { error_code: "no_pending_code" });
+    return fail("no_pending_code", "This code request has expired. Ask for a new code.");
+  }
+  const parsed = signInCodeSchema.safeParse(formValues(formData, ["code", "next"]));
+  if (!parsed.success) {
+    ctx.done("refused", { error_code: "invalid_input" });
+    return fail("invalid_input", "Enter the 6-digit code from the email.", { fields: fieldErrors(parsed.error.issues) });
+  }
+  const supabase = await createClient();
+  if (!(await rateLimit(supabase, "signin_code_verify", email, 5, 15 * 60))) {
+    ctx.done("refused", { error_code: "too_many_attempts" });
+    return fail("too_many_attempts", "Too many wrong codes. Ask for a new code.");
+  }
+  const { data, error } = await supabase.auth.verifyOtp({ email, token: parsed.data.code, type: "email" });
+  if (error || !data.user) {
+    ctx.done("refused", { error_code: authCode(error) });
+    return fail("invalid_code", "That code is wrong or has expired. Check the newest email, or ask for a new code.");
+  }
+  await recordSignIn(supabase, ctx, "otp", data.user.email);
+  await clearPendingSignInCode();
+  ctx.done("ok", { user_id: data.user.id });
+  redirect((await destinationAfterSignIn(supabase, safeNext(parsed.data.next))) as Route);
+}
+
+/** Resends to the address that already passed Turnstile (held in the httpOnly cookie). */
+export async function resendSignInCode(): Promise<ActionResult> {
+  const ctx = await actionContext("auth.sign_in_code_resend");
+  const email = await pendingSignInCode();
+  if (!email) {
+    ctx.done("refused", { error_code: "no_pending_code" });
+    return fail("no_pending_code", "This code request has expired. Ask for a new code.");
+  }
+  const supabase = await createClient();
+  if (!(await networkAllowed(supabase, ctx)) || !(await rateLimit(supabase, "signin_code", email, 5, 3600))) {
+    ctx.done("refused", { error_code: "rate_limited" });
+    return fail("rate_limited", "We've sent 5 codes to this address in the last hour. Use the newest one, or try again later.");
+  }
+  const { error } = await supabase.auth.signInWithOtp({
+    email,
+    options: { shouldCreateUser: false, emailRedirectTo: `${ctx.origin}/auth/confirm` },
+  });
+  const code = error ? authCode(error) : null;
+  if (code?.startsWith("over_")) {
+    ctx.done("refused", { error_code: code });
+    return fail("rate_limited", "Wait a minute before asking for another code.");
+  }
+  if (code && code !== "otp_disabled" && code !== "user_not_found") {
+    ctx.done("error", { error_code: code });
+    return fail("unavailable", UNAVAILABLE, { requestId: ctx.requestId });
+  }
+  ctx.done("ok");
+  return ok(null);
+}
+
+export async function forgetSignInCode(): Promise<ActionResult> {
+  const ctx = await actionContext("auth.sign_in_code_forget");
+  await clearPendingSignInCode();
+  ctx.done("ok");
+  redirect("/signin/code");
 }
 
 // ---------------------------------------------------------------------------
@@ -426,7 +571,10 @@ export async function requestPasswordReset(formData: FormData): Promise<ActionRe
     return fail("invalid_input", "Enter a valid email address.", { fields: fieldErrors(parsed.error.issues) });
   }
   const supabase = await createClient();
-  // Per-IP limits for signup, sign-in and reset are Supabase Auth's own (project config).
+  if (!(await networkAllowed(supabase, ctx))) {
+    ctx.done("refused", { error_code: "network_rate_limited" });
+    return fail("rate_limited", NETWORK_BUSY);
+  }
   if (!(await rateLimit(supabase, "reset_email", parsed.data.email, 3, 3600))) {
     ctx.done("refused", { error_code: "rate_limited" });
     return fail("rate_limited", "Too many reset emails. Try again in an hour.");
