@@ -68,6 +68,8 @@ Legend: 📖 = PRD files to read (in `docs/prd/`), ✅ = done-when checks.
 
 ✅ Cross-account E2E flows pass · a reader's survey question never changes and a second answer is refused · paging returns no duplicates · a non-member can't read or join a thread via direct API · unfriend/block affect only the pair
 
+*Status 2026-09-28: nine slices, one PR each (decisions.md). Slice 1 (friends and blocks): requests, accept/decline/cancel, unfriend, block/unblock, /friends with a live badge, profile buttons; the phase 1 stubs are replaced, so friends-only and blocked-viewer profile tests, and blocks on team cards and application_people in both directions, now pass (pgTAP `17_friends_blocks`, E2E `friends.spec.ts`); unfriend and block touch only the pair; duplicates are impossible under parallel sends (`tests/worker/friends-concurrency`).*
+
 ## ★ Slice checkpoint
 
 - [ ] Signup → GitHub → venture → post → survey → chat works end to end on staging — *staging deferred until a production build exists (decisions.md 2026-09-28): run this check on production with test accounts*

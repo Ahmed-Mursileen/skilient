@@ -87,3 +87,9 @@ Next.js 16 differs from older versions (`proxy.ts`, not `middleware.ts`; async `
 
 - GitHub: `supabase/migrations/*_github_connect.sql` (accounts, installations, repos, sync jobs, webhook deliveries, pgmq queue `github_jobs`, cron wake). Edge Functions `supabase/functions/github-link` (ticket → identity binding) and `github-worker` (queue stages); their logic is in `supabase/functions/_shared/github/` (web APIs only, `.ts` imports) and is tested from Node by `pnpm test:worker` against the local DB with a fake GitHub.
 - App side: `/api/github/callback` (state check → ticket → `github-link`), `/api/github/webhook` (signature, trim, record once), `lib/actions/github.ts`, `lib/data/github.ts`, `components/github/*`, Settings → GitHub.
+
+## Code map (phase 3)
+
+- Friends and blocks: `supabase/migrations/*_friends_blocks.sql` (`friend_requests`, `friendships`, `blocks`, `ops_audit_log`; `private.is_friend_of/is_blocked_with` for the caller, `private.are_friends/is_blocked(a, b)` for definer code). Actions `lib/actions/friends.ts`, reads `lib/data/friends.ts`, UI `components/friends/*`, `/friends`.
+- Actions that call one SQL function share `lib/actions/rpc.ts` (`signedIn`, `call`, SQL error code → typed refusal).
+- Emergency bans until phase 11: `docs/emergency-ban.md`.

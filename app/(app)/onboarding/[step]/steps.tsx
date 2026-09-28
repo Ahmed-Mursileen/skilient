@@ -6,6 +6,7 @@ import { FormAlert } from "@/components/auth/form-alert";
 import { ConnectGithubButton } from "@/components/github/connect-button";
 import { SyncStatus } from "@/components/github/sync-status";
 import { StepForm } from "@/components/onboarding/step-form";
+import { AddFriendButton } from "@/components/friends/add-friend-button";
 import { BatchSelect } from "@/components/profile/batch-select";
 import { DepartmentSelect } from "@/components/profile/department-select";
 import { ImageUpload } from "@/components/profile/image-upload";
@@ -242,12 +243,13 @@ export function PeopleStep({ classmates, universityName }: { classmates: Classma
             {classmates.map((c) => (
               <li key={c.username} className="flex items-center gap-3 px-4 py-3">
                 <Avatar name={c.fullName} src={c.avatarUrl} size="md" />
-                <span className="min-w-0">
+                <span className="min-w-0 flex-1">
                   <span className="block truncate text-body font-semibold">{c.fullName}</span>
                   <span className="block text-body-sm text-text-secondary">
                     {[c.department, c.graduationYear ? `Class of ${c.graduationYear}` : null].filter(Boolean).join(" · ")}
                   </span>
                 </span>
+                <AddFriendButton username={c.username} fullName={c.fullName} />
               </li>
             ))}
           </ul>

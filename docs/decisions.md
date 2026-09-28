@@ -535,3 +535,50 @@ Append-only. One dated entry per product decision, with the reason. Carried over
   build plan runs "on staging" (the phase 3 end-to-end slice check) run on production with
   test accounts instead. Phase 0 closed: production `/api/health` is 200 with database,
   storage and realtime ok.
+- 2026-09-28 (Ahmed, phase 3 plan): Phase 3 ships in nine slices, one PR each: friends and
+  blocks; notifications; posts; comments, hides, mutes and link previews; micro-survey;
+  feed algorithm; chat core; chat extras and Explore; reports and a minimal `/ops`.
+- 2026-09-28 (Ahmed): Phase 3 moderation is dismiss, remove content and warn. Suspensions
+  and bans move to phase 11 (CV revocation needs phase 5). Until then staff follow the
+  emergency procedure in `docs/emergency-ban.md`: ban sign-in from the Supabase dashboard,
+  then record it by hand in `ops_audit_log`.
+- 2026-09-28 (Ahmed): In a venture group chat, a teammate you blocked (or who blocked you)
+  still shows, labelled "Blocked member" with no profile link or photo, so the team can
+  keep working. Everywhere else a block hides each person from the other.
+- 2026-09-28 (Ahmed): Venture updates reach followers as unscored feed cards, placed after
+  the ranked posts; they are never surveyed or scored.
+- 2026-09-28 (Ahmed): Until phases 7 and 9 only staff post Announcements (platform news).
+- 2026-09-28 (Ahmed): Notification defaults: instant email for friend requests,
+  applications, invites and ownership transfers (and only those four); the daily digest for
+  comments, mentions and messages; in-app only for the rest. Resend is on the free plan
+  (about 100 emails a day, 3,000 a month), so the digest goes only to people with unread
+  activity who haven't been active in the last 24 hours, never empty, and a warning is
+  logged once daily sends pass 80.
+- 2026-09-28 (Ahmed): "Same program" in feed seeding and relevance means same department
+  and graduation year until programmes are structured.
+- 2026-09-28 (Ahmed): Post, venture-update and chat images go through the phase 1 sharp
+  re-encode in a server action (not a direct browser upload), so EXIF and GPS are always
+  stripped. The browser downscales first (longest side about 2,000 px) to stay under
+  Vercel's ~4.5 MB request limit and refuses a file that is still too big, with a clear
+  message.
+- 2026-09-28 (phase 3, slice 1): Friends and blocks as built. The friend functions take a
+  username (what every screen has) and work from `auth.uid()`. Asking someone who already
+  asked you accepts their request instead of refusing it. A person who blocked you is "not
+  found" everywhere, including when you send them a request, so a block is never revealed;
+  the blocker also loses the blocked profile and undoes it from Friends → Blocked. Blocking
+  ends the pair's friendship and requests only; shared venture membership, applications
+  and invites stay (the venture functions already refuse blocked pairs). The phase 1 stubs
+  `is_friend_of()` / `is_blocked_with()` are now security definer, so every existing
+  policy and card function honours friendships and blocks in both directions.
+- 2026-09-28 (phase 3, slice 1): `ops_audit_log` is created now (append-only by trigger,
+  staff read on aal2) rather than with `/ops` in slice 9, so the emergency-ban procedure
+  has somewhere to record staff actions from today.
+- 2026-09-28 (phase 3, slice 1): Profile visibility follows PRD 8's table literally: a
+  friend at another university reads a `friends` profile but only the card of a
+  `university` profile. *Changed 2026-09-28 (below): friends see university profiles too.*
+- 2026-09-28 (Ahmed): Profile visibility is one ladder: friends ⊂ university ⊂ global. A
+  friend sees whatever a classmate could, so friends read `friends` and `university`
+  profiles wherever they study. There is one full profile, never a separate friends view.
+  (Answers the slice 1 question above.)
+- 2026-09-28 (Ahmed): Claude merges each phase 3 slice PR itself once CI is green, and
+  keeps open questions in `docs/phase-3-questions.md` for Ahmed to answer at the end.
