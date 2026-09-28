@@ -349,6 +349,25 @@ Append-only. One dated entry per product decision, with the reason. Carried over
   them on merge to `main` (`supabase functions deploy --use-api`). The
   `SUPABASE_ACCESS_TOKEN` secret must be allowed to deploy Edge Functions. The Vercel app
   needs a new `GITHUB_APP_SLUG` for install links.
+- 2026-09-27 (phase 2): Skill taxonomy v1 has 158 skills: 30 languages, 34 frameworks,
+  47 libraries, 20 tools, 22 platforms and 5 practices. It's weighted to what Pakistani
+  CS/SE/EE students build, so it includes CodeIgniter, Flutter, Arduino, Verilog/VHDL and
+  MATLAB. It lives in `lib/github/taxonomy/skills.yaml` and loads through generated sync
+  migrations (`pnpm skills:sync`, the same pattern as the HEC list). Ids are stable slugs;
+  a skill dropped from the YAML is retired, not deleted. Ecosystem shorthands (npm, PyPI,
+  Maven/JVM, NuGet, Composer, Go, gems, pub) are expanded at sync time into plain
+  file / path / manifest / import detectors, stored in `skills.detectors`, so the worker
+  runs data rather than code and ops can edit the taxonomy later (phase 11). Every skill
+  carries at least one fixture (100% coverage; the PRD asks for ≥ 95%). The test suite
+  fails if the YAML changes without a new sync migration.
+- 2026-09-27 (phase 2): Detector rules as built: only added lines and added or changed
+  files count. Commits touching more than 100 files, pure renames and pure reformatting
+  (the same text in as out once whitespace is ignored) are skipped. Vendored, built, lock,
+  source-map and `.gitattributes` generated/vendored files are ignored. Meaningful lines
+  are non-blank added lines in files a language skill claims, capped at 400 per commit and
+  shared in proportion across languages. The engine is
+  `supabase/functions/_shared/github/detectors.ts`, not `lib/github/detectors/` as the
+  PRD's build note says (same Edge Function bundling reason as the worker).
 - 2026-09-28 (Ahmed): Sign-in rate limits. Supabase's per-IP auth limits only see our
   Vercel servers, so they are raised in the dashboard to stop blocking real users. The
   app enforces: per account, Turnstile after 3 wrong passwords in 15 minutes and a
