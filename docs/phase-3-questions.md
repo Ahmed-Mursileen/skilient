@@ -23,7 +23,10 @@ either kept or changed in a follow-up PR. Answered items move to `docs/decisions
 5. **Shipped posts** (slice 3). *Assumed:* authored by the venture owner, worded
    "<owner> shipped <title>.", posted to the Global Feed for Public ventures and the
    University Feed for University-only ones, and not at all for Unlisted ventures.
-6. **Human step** (slice 2): set the Edge Function secrets `RESEND_API_KEY`, `EMAIL_FROM`
+6. **Link preview images** (slice 4). *Assumed:* no preview image on cards (title,
+   description and site only), for privacy and the CSP. *Option:* fetch the image through
+   our own server (re-encoded like post images) so it can be shown without exposing readers.
+7. **Human step** (slice 2): set the Edge Function secrets `RESEND_API_KEY`, `EMAIL_FROM`
    and `APP_URL` on the Supabase project (setup checklist, "Phase 3"). Until then,
    notifications are in-app only.
 

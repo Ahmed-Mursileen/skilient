@@ -25,6 +25,16 @@ function str(value: unknown): string | null {
   return typeof value === "string" && value.trim() ? value : null;
 }
 
+function excerpt(data: Record<string, unknown>): string {
+  const text = str(data.excerpt) ?? "";
+  return text.length > 80 ? `${text.slice(0, 79).trimEnd()}…` : text;
+}
+
+function postPath(data: Record<string, unknown>): string {
+  const id = str(data.post_id);
+  return id ? `/post/${id}#comments` : "/feed";
+}
+
 export function describeNotification(n: NotificationInput): NotificationText {
   const who = n.actorName ?? "Someone";
   const venture = str(n.data.venture_title) ?? "a venture";
@@ -70,6 +80,12 @@ export function describeNotification(n: NotificationInput): NotificationText {
       return { text: `You were removed from ${venture}.`, href: venturePath, subject: `You were removed from ${venture}` };
     case "venture_completed":
       return { text: `${venture} is complete. Well done.`, href: venturePath, subject: `${venture} is complete` };
+    case "comment_received":
+      return { text: `${who} commented on your post: "${excerpt(n.data)}"`, href: postPath(n.data), subject: `${who} commented on your post` };
+    case "comment_reply":
+      return { text: `${who} replied to your comment: "${excerpt(n.data)}"`, href: postPath(n.data), subject: `${who} replied to your comment` };
+    case "comment_mention":
+      return { text: `${who} mentioned you in a comment: "${excerpt(n.data)}"`, href: postPath(n.data), subject: `${who} mentioned you on Skilient` };
     case "venture_abandoned":
       return { text: `${venture} was closed without finishing.`, href: venturePath, subject: `${venture} was closed` };
     default:

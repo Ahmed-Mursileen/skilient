@@ -7,8 +7,10 @@ import { FriendRow, personMeta } from "@/components/friends/friend-row";
 import { ConfirmAction } from "@/components/ventures/confirm-action";
 import { EmptyState } from "@/components/ui";
 import { cancelFriendRequest, respondFriendRequest, unblockUser, unfriend } from "@/lib/actions/friends";
+import { muteUser } from "@/lib/actions/posts";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { getBlocks, getFriendRequests, getFriends } from "@/lib/data/friends";
+import { getMutes } from "@/lib/data/posts";
 import { cn } from "@/lib/cn";
 
 export const metadata: Metadata = { title: "Friends" };
@@ -30,7 +32,7 @@ export default async function FriendsPage({ searchParams }: PageProps<"/friends"
   const sp = await searchParams;
   const tab: Tab = TABS.some((t) => t.key === sp.tab) ? (sp.tab as Tab) : "friends";
 
-  const [friends, requests, blocks] = await Promise.all([getFriends(), getFriendRequests(), getBlocks()]);
+  const [friends, requests, blocks, mutes] = await Promise.all([getFriends(), getFriendRequests(), getBlocks(), getMutes()]);
   const received = requests.filter((r) => r.direction === "received");
   const sent = requests.filter((r) => r.direction === "sent");
   const counts: Record<Tab, number> = { friends: friends.length, received: received.length, sent: sent.length, blocked: blocks.length };
@@ -183,6 +185,26 @@ export default async function FriendsPage({ searchParams }: PageProps<"/friends"
         ) : (
           <EmptyState icon={<Prohibit aria-hidden className="size-8" />} title="You haven't blocked anyone" description="Block someone from their profile. They aren't told, and you stop seeing each other." />
         )
+      ) : null}
+
+      {tab === "blocked" && mutes.length ? (
+        <section aria-labelledby="muted-heading" className="flex flex-col gap-2">
+          <h2 id="muted-heading" className="text-h4">
+            Muted
+          </h2>
+          <p className="text-body-sm text-text-secondary">Their posts stay out of your feeds. They aren&apos;t told, and nothing else changes.</p>
+          <ul className={LIST}>
+            {mutes.map((m) => (
+              <li key={m.username} className="flex flex-wrap items-center gap-3 px-4 py-3" data-testid="muted-row">
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-body font-semibold">{m.fullName}</span>
+                  <span className="block truncate text-body-sm text-text-secondary">@{m.username}</span>
+                </span>
+                <ConfirmAction action={muteUser.bind(null, m.username, false)} label="Unmute" ariaLabel={`Unmute ${m.fullName}`} />
+              </li>
+            ))}
+          </ul>
+        </section>
       ) : null}
     </main>
   );

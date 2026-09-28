@@ -72,6 +72,17 @@ export interface PostCardData {
   poll: PostPoll | null;
   /** Null when the linked venture is gone or no longer visible to you. */
   venture: PostVenture | null;
+  commentCount: number;
+  link: PostLink | null;
+  authorMuted: boolean;
+}
+
+export interface PostLink {
+  url: string;
+  title: string | null;
+  description: string | null;
+  imageUrl: string | null;
+  siteName: string | null;
 }
 
 type CardRow = Database["public"]["Functions"]["post_cards"]["Returns"][number];
@@ -132,6 +143,14 @@ function mapCard(r: CardRow, now: number): PostCardData {
           team: (v.team ?? null) as PostVenture["team"],
         }
       : null,
+    commentCount: r.comment_count ?? 0,
+    link: r.link
+      ? (() => {
+          const l = r.link as Record<string, string | null>;
+          return { url: String(l.url), title: l.title, description: l.description, imageUrl: l.image_url, siteName: l.site_name };
+        })()
+      : null,
+    authorMuted: r.author_muted ?? false,
   };
 }
 
@@ -200,4 +219,40 @@ export async function getInvitableVentures(userId: string): Promise<{ id: string
     .neq("visibility", "unlisted")
     .order("created_at", { ascending: false });
   return data ?? [];
+}
+
+export interface CommentItem {
+  id: string;
+  parentId: string | null;
+  body: string;
+  pinned: boolean;
+  deleted: boolean;
+  createdAt: string;
+  author: { username: string | null; name: string | null; avatarUrl: string | null };
+  isMine: boolean;
+  canDelete: boolean;
+}
+
+/** A post's comments in display order (pinned, then oldest; replies under their parent). */
+export async function getComments(postId: string): Promise<CommentItem[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("post_comment_list", { p_post: postId });
+  if (error) throw new Error(`post_comment_list failed: ${error.code}`);
+  return (data ?? []).map((c) => ({
+    id: c.id,
+    parentId: c.parent_id,
+    body: c.body,
+    pinned: c.pinned,
+    deleted: c.deleted,
+    createdAt: c.created_at,
+    author: { username: c.author_username, name: c.author_name, avatarUrl: publicImageUrl("avatars", c.author_avatar_path) },
+    isMine: c.is_mine,
+    canDelete: c.can_delete,
+  }));
+}
+
+export async function getMutes(): Promise<{ username: string; fullName: string }[]> {
+  const supabase = await createClient();
+  const { data } = await supabase.rpc("my_mutes");
+  return (data ?? []).map((m) => ({ username: m.username, fullName: m.full_name }));
 }

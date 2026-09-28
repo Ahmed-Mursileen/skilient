@@ -171,3 +171,82 @@ export async function loadMorePosts(scope: string, filter: string, cursor: strin
     return fail("unavailable", "Couldn't load more posts. Try again.", { requestId: ctx.requestId });
   }
 }
+
+// ---------------------------------------------------------------------------
+// Comments, hides and mutes (slice 4)
+// ---------------------------------------------------------------------------
+
+export async function addComment(postId: string, parentId: string | null, text: string): Promise<ActionResult<{ id: string }>> {
+  const ctx = await actionContext("comments.add");
+  const parsed = z
+    .object({ post: uuid, parent: uuid.nullable(), body: z.string().trim().min(1, "Write a comment.").max(1000, "Keep it under 1,000 characters.") })
+    .safeParse({ post: postId, parent: parentId, body: text });
+  if (!parsed.success) {
+    ctx.done("refused", { error_code: "invalid_input" });
+    return fail("invalid_input", "Comments are 1 to 1,000 characters.", { fields: { body: "Comments are 1 to 1,000 characters." } });
+  }
+  const session = await signedIn(ctx);
+  if (!session) return NO_SESSION;
+  const { data, error } = await session.supabase.rpc("add_comment", {
+    p_post: parsed.data.post,
+    p_parent: parsed.data.parent as string,
+    p_body: parsed.data.body,
+  });
+  if (error || !data) {
+    const code = REFUSALS[error?.code ?? ""];
+    if (code) {
+      ctx.done("refused", { error_code: code, user_id: session.userId });
+      return fail(code, code === "rate_limited" ? "Wait 10 seconds between comments." : sentence(error!.message));
+    }
+    ctx.done("error", { error_code: error?.code ?? "no_row_written", user_id: session.userId });
+    return fail("unavailable", "Couldn't post your comment. Try again.", { requestId: ctx.requestId });
+  }
+  ctx.done("ok", { user_id: session.userId });
+  return ok({ id: data });
+}
+
+export async function deleteComment(commentId: string): Promise<ActionResult> {
+  const ctx = await actionContext("comments.delete");
+  if (!uuid.safeParse(commentId).success) {
+    ctx.done("refused", { error_code: "invalid_input" });
+    return fail("invalid_input", "That comment doesn't exist.");
+  }
+  const session = await signedIn(ctx);
+  if (!session) return NO_SESSION;
+  return call(ctx, session.supabase, session.userId, "delete_comment", { p_comment: commentId });
+}
+
+export async function pinComment(commentId: string, pin: boolean): Promise<ActionResult> {
+  const ctx = await actionContext("comments.pin");
+  if (!uuid.safeParse(commentId).success) {
+    ctx.done("refused", { error_code: "invalid_input" });
+    return fail("invalid_input", "That comment doesn't exist.");
+  }
+  const session = await signedIn(ctx);
+  if (!session) return NO_SESSION;
+  return call(ctx, session.supabase, session.userId, "pin_comment", { p_comment: commentId, p_pin: pin === true });
+}
+
+export async function hidePost(postId: string, hide: boolean): Promise<ActionResult> {
+  const ctx = await actionContext(hide ? "posts.hide" : "posts.unhide");
+  if (!uuid.safeParse(postId).success) {
+    ctx.done("refused", { error_code: "invalid_input" });
+    return fail("invalid_input", "That post doesn't exist.");
+  }
+  const session = await signedIn(ctx);
+  if (!session) return NO_SESSION;
+  return call(ctx, session.supabase, session.userId, "hide_post", { p_post: postId, p_hide: hide === true });
+}
+
+export async function muteUser(username: string, mute: boolean): Promise<ActionResult> {
+  const ctx = await actionContext(mute ? "users.mute" : "users.unmute");
+  const parsed = z.string().trim().toLowerCase().regex(/^[a-z0-9_]{3,30}$/).safeParse(username);
+  if (!parsed.success) {
+    ctx.done("refused", { error_code: "invalid_input" });
+    return fail("invalid_input", "That person doesn't exist.");
+  }
+  const session = await signedIn(ctx);
+  if (!session) return NO_SESSION;
+  // No revalidation: refreshing the feed would drop the card before its Undo notice shows.
+  return call(ctx, session.supabase, session.userId, "mute_user", { p_username: parsed.data, p_mute: mute === true });
+}
