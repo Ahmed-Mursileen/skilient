@@ -459,3 +459,28 @@ Append-only. One dated entry per product decision, with the reason. Carried over
 - 2026-09-28 (phase 2): `/me/skills` (with the private L0 list) is a student-portal screen
   (screen spec, phase 6), so this phase shows skills on the profile's Overview (top 8) and
   Skills tab instead. L0 "skills I'm building" arrives with it.
+- 2026-09-28 (phase 2): Slice 5 (ventures) ships in two PRs: 5a is the database, functions,
+  RLS and tests; 5b is the screens and E2E. Every venture write goes through a
+  security-definer function that checks `auth.uid()` and the caller's role itself (the
+  tables grant reads only), and membership changes lock the venture row. A trigger on
+  `venture_members` re-checks the 6-member cap and the post-completion lock, so a 7th
+  member is refused even under parallel accepts or a direct insert.
+- 2026-09-28 (phase 2): Parts of PRD 5.7/5.15/5.28 that need later phases are wired then:
+  the venture group chat on accept (chat, phase 3), invite posts and the Shipped post
+  (feed, phase 3), notifications to the owner and both sides of a transfer (phase 3),
+  endorsement prompts and the complexity score on completion (phase 4), and "peer-verified
+  contributions from 2+ members" before completion (contribution log, slice 6). Until
+  then completing needs 2+ members and 1+ deliverable. Updates are text only until the
+  phase 3 image pipeline for posts.
+- 2026-09-28 (phase 2): Venture visibility as built: Public to every signed-in student,
+  University-only to its university (others can't see or apply), Unlisted to members and
+  invitees only; anyone with the link opens an Unlisted venture's public face through
+  `venture_by_link()`, but joins only by invite, and an outsider applying is told it
+  doesn't exist. Everything respects blocks (a stub until phase 3). Applications are
+  accepted while a venture is recruiting or in progress; membership locks only on
+  completion (PRD 5.15). The owner must transfer ownership before leaving; pending
+  applications follow the new owner. Ownership is `ventures.owner_id`; member rows carry
+  the team role (lead, developer, designer, researcher, other).
+- 2026-09-28 (phase 2): `ventures.owner_id` restricts account deletion: the account
+  deletion flow (later phase) must transfer or abandon a student's ventures first.
+  Deleting a member's account still removes them, even from a completed venture.

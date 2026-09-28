@@ -55,6 +55,50 @@ isOneToOne: false
                   Relationships: [
                     
                   ]
+                },"application_messages": {
+                  Row: {
+                    "body": string,"created_at": string,"id": number,"sender_id": string,"thread_id": string
+                  }
+                  Insert: {
+                    "body": string,"created_at"?: string,"id"?: never,"sender_id": string,"thread_id": string
+                  }
+                  Update: {
+                    "body"?: string,"created_at"?: string,"id"?: never,"sender_id"?: string,"thread_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "application_messages_thread_id_fkey"
+      columns: ["thread_id"]
+isOneToOne: false
+      referencedRelation: "application_threads"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"application_threads": {
+                  Row: {
+                    "answers": NonNullable<Json>,"candidate_id": string,"created_at": string,"decided_at": string | null,"id": string,"message": string,"owner_id": string,"role_id": string | null,"status": Database["public"]['Enums']["application_status"],"venture_id": string
+                  }
+                  Insert: {
+                    "answers"?: NonNullable<Json>,"candidate_id": string,"created_at"?: string,"decided_at"?: string | null,"id"?: string,"message": string,"owner_id": string,"role_id"?: string | null,"status"?: Database["public"]['Enums']["application_status"],"venture_id": string
+                  }
+                  Update: {
+                    "answers"?: NonNullable<Json>,"candidate_id"?: string,"created_at"?: string,"decided_at"?: string | null,"id"?: string,"message"?: string,"owner_id"?: string,"role_id"?: string | null,"status"?: Database["public"]['Enums']["application_status"],"venture_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "application_threads_role_id_fkey"
+      columns: ["role_id"]
+isOneToOne: false
+      referencedRelation: "venture_roles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "application_threads_venture_id_fkey"
+      columns: ["venture_id"]
+isOneToOne: false
+      referencedRelation: "ventures"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"github_accounts": {
                   Row: {
                     "connected_at": string,"github_id": number,"login": string,"revoked_at": string | null,"updated_at": string,"user_id": string
@@ -407,23 +451,199 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"venture_deliverables": {
+                  Row: {
+                    "added_by": string | null,"created_at": string,"id": string,"label": string,"url": string,"venture_id": string
+                  }
+                  Insert: {
+                    "added_by"?: string | null,"created_at"?: string,"id"?: string,"label": string,"url": string,"venture_id": string
+                  }
+                  Update: {
+                    "added_by"?: string | null,"created_at"?: string,"id"?: string,"label"?: string,"url"?: string,"venture_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "venture_deliverables_venture_id_fkey"
+      columns: ["venture_id"]
+isOneToOne: false
+      referencedRelation: "ventures"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"venture_follows": {
+                  Row: {
+                    "created_at": string,"user_id": string,"venture_id": string
+                  }
+                  Insert: {
+                    "created_at"?: string,"user_id": string,"venture_id": string
+                  }
+                  Update: {
+                    "created_at"?: string,"user_id"?: string,"venture_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "venture_follows_venture_id_fkey"
+      columns: ["venture_id"]
+isOneToOne: false
+      referencedRelation: "ventures"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"venture_invites": {
+                  Row: {
+                    "created_at": string,"id": string,"invitee_id": string,"inviter_id": string,"responded_at": string | null,"status": Database["public"]['Enums']["venture_invite_status"],"venture_id": string
+                  }
+                  Insert: {
+                    "created_at"?: string,"id"?: string,"invitee_id": string,"inviter_id": string,"responded_at"?: string | null,"status"?: Database["public"]['Enums']["venture_invite_status"],"venture_id": string
+                  }
+                  Update: {
+                    "created_at"?: string,"id"?: string,"invitee_id"?: string,"inviter_id"?: string,"responded_at"?: string | null,"status"?: Database["public"]['Enums']["venture_invite_status"],"venture_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "venture_invites_venture_id_fkey"
+      columns: ["venture_id"]
+isOneToOne: false
+      referencedRelation: "ventures"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"venture_members": {
+                  Row: {
+                    "joined_at": string,"team_role": Database["public"]['Enums']["venture_team_role"],"user_id": string,"venture_id": string
+                  }
+                  Insert: {
+                    "joined_at"?: string,"team_role"?: Database["public"]['Enums']["venture_team_role"],"user_id": string,"venture_id": string
+                  }
+                  Update: {
+                    "joined_at"?: string,"team_role"?: Database["public"]['Enums']["venture_team_role"],"user_id"?: string,"venture_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "venture_members_venture_id_fkey"
+      columns: ["venture_id"]
+isOneToOne: false
+      referencedRelation: "ventures"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"venture_questions": {
+                  Row: {
+                    "body": string,"position": number,"venture_id": string
+                  }
+                  Insert: {
+                    "body": string,"position": number,"venture_id": string
+                  }
+                  Update: {
+                    "body"?: string,"position"?: number,"venture_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "venture_questions_venture_id_fkey"
+      columns: ["venture_id"]
+isOneToOne: false
+      referencedRelation: "ventures"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"venture_roles": {
+                  Row: {
+                    "created_at": string,"filled": number,"id": string,"skill_ids": (string)[],"slots": number,"title": string,"venture_id": string
+                  }
+                  Insert: {
+                    "created_at"?: string,"filled"?: number,"id"?: string,"skill_ids"?: (string)[],"slots"?: number,"title": string,"venture_id": string
+                  }
+                  Update: {
+                    "created_at"?: string,"filled"?: number,"id"?: string,"skill_ids"?: (string)[],"slots"?: number,"title"?: string,"venture_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "venture_roles_venture_id_fkey"
+      columns: ["venture_id"]
+isOneToOne: false
+      referencedRelation: "ventures"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"venture_updates": {
+                  Row: {
+                    "author_id": string,"body": string,"created_at": string,"id": string,"venture_id": string
+                  }
+                  Insert: {
+                    "author_id": string,"body": string,"created_at"?: string,"id"?: string,"venture_id": string
+                  }
+                  Update: {
+                    "author_id"?: string,"body"?: string,"created_at"?: string,"id"?: string,"venture_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "venture_updates_venture_id_fkey"
+      columns: ["venture_id"]
+isOneToOne: false
+      referencedRelation: "ventures"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"ventures": {
+                  Row: {
+                    "abandoned_at": string | null,"affiliation": string | null,"completed_at": string | null,"created_at": string,"description": string,"id": string,"owner_id": string,"pitch_url": string | null,"repo_full_name": string | null,"repo_id": number | null,"skill_ids": (string)[],"stage": Database["public"]['Enums']["venture_stage"] | null,"status": Database["public"]['Enums']["venture_status"],"team_size": number,"title": string,"type": Database["public"]['Enums']["venture_type"],"university_id": string,"updated_at": string,"visibility": Database["public"]['Enums']["venture_visibility"]
+                  }
+                  Insert: {
+                    "abandoned_at"?: string | null,"affiliation"?: string | null,"completed_at"?: string | null,"created_at"?: string,"description": string,"id"?: string,"owner_id": string,"pitch_url"?: string | null,"repo_full_name"?: string | null,"repo_id"?: number | null,"skill_ids"?: (string)[],"stage"?: Database["public"]['Enums']["venture_stage"] | null,"status"?: Database["public"]['Enums']["venture_status"],"team_size"?: number,"title": string,"type": Database["public"]['Enums']["venture_type"],"university_id": string,"updated_at"?: string,"visibility"?: Database["public"]['Enums']["venture_visibility"]
+                  }
+                  Update: {
+                    "abandoned_at"?: string | null,"affiliation"?: string | null,"completed_at"?: string | null,"created_at"?: string,"description"?: string,"id"?: string,"owner_id"?: string,"pitch_url"?: string | null,"repo_full_name"?: string | null,"repo_id"?: number | null,"skill_ids"?: (string)[],"stage"?: Database["public"]['Enums']["venture_stage"] | null,"status"?: Database["public"]['Enums']["venture_status"],"team_size"?: number,"title"?: string,"type"?: Database["public"]['Enums']["venture_type"],"university_id"?: string,"updated_at"?: string,"visibility"?: Database["public"]['Enums']["venture_visibility"]
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "ventures_university_id_fkey"
+      columns: ["university_id"]
+isOneToOne: false
+      referencedRelation: "universities"
+      referencedColumns: ["id"]
+    }
+                  ]
                 }
           }
           Views: {
             [_ in never]: never
           }
           Functions: {
-            "complete_onboarding":
+            "add_application_message":
+{ Args: { "p_body": string,"p_thread": string }; Returns: number
+                           },
+"add_venture_deliverable":
+{ Args: { "p_label": string,"p_url": string,"p_venture": string }; Returns: string
+                           },
+"apply_to_venture":
+{ Args: { "p_answers"?: (string)[],"p_message": string,"p_role"?: string,"p_venture": string }; Returns: string
+                           },
+"complete_onboarding":
 { Args: Record<PropertyKey, never>; Returns: boolean
                            },
 "create_mfa_backup_codes":
 { Args: Record<PropertyKey, never>; Returns: (string)[]
                            },
+"create_venture":
+{ Args: { "p": Json }; Returns: string
+                           },
+"decide_application":
+{ Args: { "p_accept": boolean,"p_thread": string }; Returns: Database["public"]['Enums']["application_status"]
+                           },
 "delete_mfa_backup_codes":
 { Args: Record<PropertyKey, never>; Returns: undefined
                            },
+"delete_venture_role":
+{ Args: { "p_role": string,"p_venture": string }; Returns: undefined
+                           },
+"delete_venture_update":
+{ Args: { "p_update": string }; Returns: boolean
+                           },
 "disconnect_github":
 { Args: Record<PropertyKey, never>; Returns: boolean
+                           },
+"follow_venture":
+{ Args: { "p_follow": boolean,"p_venture": string }; Returns: boolean
                            },
 "get_profile_card":
 { Args: { "p_username": string }; Returns: {
@@ -436,6 +656,9 @@ isOneToOne: false
 "hook_before_user_created":
 { Args: { "event": Json }; Returns: Json
                            },
+"invite_to_venture":
+{ Args: { "p_username": string,"p_venture": string }; Returns: string
+                           },
 "is_staff":
 { Args: { "p_role"?: Database["public"]['Enums']["staff_role"] }; Returns: boolean
                            },
@@ -444,6 +667,12 @@ isOneToOne: false
                            },
 "job_run_start":
 { Args: { "p_job": string,"p_meta"?: Json }; Returns: string
+                           },
+"leave_venture":
+{ Args: { "p_venture": string }; Returns: undefined
+                           },
+"link_venture_repo":
+{ Args: { "p_repo"?: number,"p_venture": string }; Returns: undefined
                            },
 "log_security_event":
 { Args: { "p_ip_hash": string,"p_kind": string,"p_user_agent": string }; Returns: undefined
@@ -459,6 +688,9 @@ isOneToOne: false
               "active_days": number,"hits": number,"last_used_at": string,"level": number,"lines": number,"repos": number,"skill_id": string
             }[]
                            },
+"post_venture_update":
+{ Args: { "p_body": string,"p_venture": string }; Returns: string
+                           },
 "rate_limit":
 { Args: { "p_key": string,"p_limit": number,"p_window_seconds": number }; Returns: boolean
                            },
@@ -468,22 +700,43 @@ isOneToOne: false
 "record_sign_in":
 { Args: { "p_device_hash": string,"p_ip_hash": string,"p_method": string,"p_user_agent": string }; Returns: Json
                            },
+"remove_venture_deliverable":
+{ Args: { "p_deliverable": string }; Returns: boolean
+                           },
+"remove_venture_member":
+{ Args: { "p_member": string,"p_venture": string }; Returns: undefined
+                           },
 "request_github_resync":
 { Args: Record<PropertyKey, never>; Returns: boolean
                            },
 "resolve_review_flag":
 { Args: { "p_flag": number,"p_note": string,"p_upheld": boolean }; Returns: boolean
                            },
+"respond_invite":
+{ Args: { "p_accept": boolean,"p_invite": string }; Returns: Database["public"]['Enums']["venture_invite_status"]
+                           },
 "review_flag_details":
 { Args: { "p_flag": number }; Returns: {
               "commits": number,"created_at": string,"id": number,"kind": Database["public"]['Enums']["review_flag_kind"],"refs": Json,"status": Database["public"]['Enums']["review_flag_status"],"user_id": string
             }[]
                            },
+"revoke_invite":
+{ Args: { "p_invite": string }; Returns: boolean
+                           },
+"save_venture_role":
+{ Args: { "p_role"?: string,"p_skill_ids": (string)[],"p_slots": number,"p_title": string,"p_venture": string }; Returns: string
+                           },
 "security_not_me":
 { Args: { "p_token": string }; Returns: Json
                            },
+"set_member_role":
+{ Args: { "p_member": string,"p_role": Database["public"]['Enums']["venture_team_role"],"p_venture": string }; Returns: undefined
+                           },
 "set_my_university":
 { Args: { "p_university_id": string }; Returns: boolean
+                           },
+"set_venture_questions":
+{ Args: { "p_questions": (string)[],"p_venture": string }; Returns: undefined
                            },
 "signin_failed":
 { Args: { "p_email": string,"p_ip_hash": string }; Returns: Json
@@ -494,15 +747,37 @@ isOneToOne: false
 "start_github_link":
 { Args: { "p_code": string,"p_installation_id"?: number }; Returns: string
                            },
+"transfer_venture_ownership":
+{ Args: { "p_member": string,"p_venture": string }; Returns: undefined
+                           },
+"transition_venture":
+{ Args: { "p_to": Database["public"]['Enums']["venture_status"],"p_venture": string }; Returns: undefined
+                           },
+"update_venture":
+{ Args: { "p": Json,"p_venture": string }; Returns: undefined
+                           },
 "use_mfa_backup_code":
 { Args: { "p_code": string }; Returns: boolean
                            },
 "username_available":
 { Args: { "p_username": string }; Returns: boolean
+                           },
+"venture_by_link":
+{ Args: { "p_venture": string }; Returns: {
+              "created_at": string,"description": string,"id": string,"owner_id": string,"status": Database["public"]['Enums']["venture_status"],"title": string,"type": Database["public"]['Enums']["venture_type"],"university_id": string,"visibility": Database["public"]['Enums']["venture_visibility"]
+            }[]
+                           },
+"venture_counts":
+{ Args: { "p_venture": string }; Returns: {
+              "deliverables": number,"followers": number,"members": number,"updates": number
+            }[]
+                           },
+"withdraw_application":
+{ Args: { "p_thread": string }; Returns: boolean
                            }
           }
           Enums: {
-            "account_role": "student"|"faculty"|"recruiter"|"university_admin","domain_kind": "student"|"faculty"|"both","github_commit_status": "pending"|"counted"|"held"|"excluded","github_repo_kind": "owned"|"collaborator"|"fork"|"template","job_run_status": "running"|"succeeded"|"failed","looking_for_option": "internship"|"job"|"teammates"|"project"|"mentorship","profile_visibility": "friends"|"university"|"global","review_flag_kind": "burst"|"backdating"|"cross_account_duplicate","review_flag_status": "open"|"cleared"|"upheld","skill_category": "language"|"framework"|"library"|"tool"|"platform"|"practice","staff_role": "moderator"|"trust_reviewer"|"accounts"|"super_admin","sync_status": "queued"|"running"|"done"|"failed"|"cancelled"
+            "account_role": "student"|"faculty"|"recruiter"|"university_admin","application_status": "pending"|"accepted"|"declined"|"withdrawn"|"closed","domain_kind": "student"|"faculty"|"both","github_commit_status": "pending"|"counted"|"held"|"excluded","github_repo_kind": "owned"|"collaborator"|"fork"|"template","job_run_status": "running"|"succeeded"|"failed","looking_for_option": "internship"|"job"|"teammates"|"project"|"mentorship","profile_visibility": "friends"|"university"|"global","review_flag_kind": "burst"|"backdating"|"cross_account_duplicate","review_flag_status": "open"|"cleared"|"upheld","skill_category": "language"|"framework"|"library"|"tool"|"platform"|"practice","staff_role": "moderator"|"trust_reviewer"|"accounts"|"super_admin","sync_status": "queued"|"running"|"done"|"failed"|"cancelled","venture_invite_status": "pending"|"accepted"|"declined"|"revoked","venture_stage": "idea"|"prototype"|"launched"|"revenue","venture_status": "recruiting"|"in_progress"|"completed"|"abandoned","venture_team_role": "lead"|"developer"|"designer"|"researcher"|"other","venture_type": "project"|"startup","venture_visibility": "public"|"university"|"unlisted"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -622,7 +897,7 @@ export const Constants = {
           }
         },"public": {
           Enums: {
-            "account_role": ["student", "faculty", "recruiter", "university_admin"],"domain_kind": ["student", "faculty", "both"],"github_commit_status": ["pending", "counted", "held", "excluded"],"github_repo_kind": ["owned", "collaborator", "fork", "template"],"job_run_status": ["running", "succeeded", "failed"],"looking_for_option": ["internship", "job", "teammates", "project", "mentorship"],"profile_visibility": ["friends", "university", "global"],"review_flag_kind": ["burst", "backdating", "cross_account_duplicate"],"review_flag_status": ["open", "cleared", "upheld"],"skill_category": ["language", "framework", "library", "tool", "platform", "practice"],"staff_role": ["moderator", "trust_reviewer", "accounts", "super_admin"],"sync_status": ["queued", "running", "done", "failed", "cancelled"]
+            "account_role": ["student", "faculty", "recruiter", "university_admin"],"application_status": ["pending", "accepted", "declined", "withdrawn", "closed"],"domain_kind": ["student", "faculty", "both"],"github_commit_status": ["pending", "counted", "held", "excluded"],"github_repo_kind": ["owned", "collaborator", "fork", "template"],"job_run_status": ["running", "succeeded", "failed"],"looking_for_option": ["internship", "job", "teammates", "project", "mentorship"],"profile_visibility": ["friends", "university", "global"],"review_flag_kind": ["burst", "backdating", "cross_account_duplicate"],"review_flag_status": ["open", "cleared", "upheld"],"skill_category": ["language", "framework", "library", "tool", "platform", "practice"],"staff_role": ["moderator", "trust_reviewer", "accounts", "super_admin"],"sync_status": ["queued", "running", "done", "failed", "cancelled"],"venture_invite_status": ["pending", "accepted", "declined", "revoked"],"venture_stage": ["idea", "prototype", "launched", "revenue"],"venture_status": ["recruiting", "in_progress", "completed", "abandoned"],"venture_team_role": ["lead", "developer", "designer", "researcher", "other"],"venture_type": ["project", "startup"],"venture_visibility": ["public", "university", "unlisted"]
           }
         }
 } as const
