@@ -1,4 +1,15 @@
 import { GitHub, GitHubError, RateLimited, refreshUserToken, revokeGrant } from "./client.ts";
+import {
+  analyseCommit,
+  compileTaxonomy,
+  duplicateCandidates,
+  globToRegExp,
+  isBulkImport,
+  linguistGlobPatterns,
+  type ChangedFile,
+  type CompiledTaxonomy,
+  type TaxonomySkill,
+} from "./detectors.ts";
 import type { Db, Fetch, GithubConfig, Log } from "./types.ts";
 
 /**
@@ -23,9 +34,16 @@ export interface WorkerDeps {
   batchSize?: number;
 }
 
+/** PRD 5.5: the latest 500 of the student's commits per repository. */
+export const MAX_COMMITS = 500;
+/** Commits per extract message: each is one API call, and a message should finish in ~30 s. */
+export const EXTRACT_BATCH = 10;
+
 type Message =
   | { stage: "discover"; user_id: string; job_id: number }
   | { stage: "classify"; user_id: string; job_id: number; repo_id: number }
+  | { stage: "harvest"; user_id: string; job_id?: number; repo_id: number }
+  | { stage: "extract"; user_id: string; job_id?: number; repo_id: number; shas: string[]; pushed_at?: string }
   | { stage: "webhook"; delivery_id: string }
   | { stage: "revoke"; revocation_id: number };
 
@@ -69,6 +87,7 @@ interface Ctx extends WorkerDeps {
   now: () => number;
   github: GitHub;
   fetchImpl: Fetch;
+  taxonomy?: { skills: TaxonomySkill[]; compiled: CompiledTaxonomy };
 }
 
 async function handle(ctx: Ctx, row: QueueRow, result: WorkerResult) {
@@ -188,6 +207,85 @@ interface Installation {
   suspended_at: string | null;
 }
 
+interface ListedCommit {
+  sha: string;
+  author: { id: number } | null;
+  parents: { sha: string }[];
+  commit: {
+    author: { date: string } | null;
+    committer: { date: string } | null;
+    verification?: { verified: boolean };
+  };
+}
+
+interface CommitDetail extends ListedCommit {
+  files?: ChangedFile[];
+}
+
+interface RepoRow {
+  installation_id: string;
+  kind: string | null;
+  excluded: boolean;
+  default_branch: string | null;
+  linguist_excludes: string[];
+  github_id: string;
+  login: string;
+}
+
+const REPO_QUERY = `
+  select ur.installation_id, ur.kind::text, ur.excluded, g.default_branch, g.linguist_excludes, a.github_id, a.login
+    from public.github_user_repos ur
+    join public.github_repos g on g.repo_id = ur.repo_id
+    join public.github_accounts a on a.user_id = ur.user_id and a.revoked_at is null
+   where ur.user_id = $1 and ur.repo_id = $2`;
+
+/** One handled message of a sync: queue what follows, count commits, close the sync when done. */
+async function advance(ctx: Ctx, jobId: number | undefined, next: Message[], commits = 0, stage: string | null = null) {
+  await ctx.db.query("select private.github_job_advance($1, $2::text::jsonb, $3, $4)", [
+    jobId ?? null,
+    JSON.stringify(next),
+    commits,
+    stage,
+  ]);
+}
+
+async function loadTaxonomy(ctx: Ctx) {
+  if (!ctx.taxonomy) {
+    const skills = await ctx.db.query<TaxonomySkill>(
+      "select id, category::text as category, detectors from public.skills where retired_at is null",
+    );
+    ctx.taxonomy = { skills, compiled: compileTaxonomy(skills) };
+  }
+  return ctx.taxonomy;
+}
+
+/** Globs the repository's .gitattributes marks linguist-generated or linguist-vendored. */
+async function linguistExcludes(ctx: Ctx, token: string, repoId: number): Promise<string[]> {
+  try {
+    const { data } = await ctx.github.request<{ content?: string; encoding?: string }>(token, `/repositories/${repoId}/contents/.gitattributes`);
+    if (!data?.content || data.encoding !== "base64") return [];
+    return linguistGlobPatterns(atob(data.content.replace(/\s/g, ""))).slice(0, 200);
+  } catch (error) {
+    if (error instanceof GitHubError && error.status === 404) return [];
+    throw error;
+  }
+}
+
+/** Blob hashes of the original project's default branch (one call; truncated trees are partial). */
+async function upstreamBlobs(ctx: Ctx, token: string, fullName: string): Promise<string[] | null> {
+  try {
+    const { data } = await ctx.github.request<{ tree: { type: string; sha: string }[] }>(
+      token,
+      `/repos/${fullName}/git/trees/HEAD?recursive=1`,
+    );
+    return data.tree.filter((t) => t.type === "blob").map((t) => t.sha).slice(0, 50_000);
+  } catch (error) {
+    // A private or deleted original: nothing to compare against.
+    if (error instanceof GitHubError && (error.status === 404 || error.status === 403 || error.status === 409)) return null;
+    throw error;
+  }
+}
+
 const STAGES: { [S in Message["stage"]]: (ctx: Ctx, msg: Extract<Message, { stage: S }>) => Promise<void> } = {
   /** List what the student shared through each installation; queue classification. */
   async discover(ctx, msg) {
@@ -195,6 +293,10 @@ const STAGES: { [S in Message["stage"]]: (ctx: Ctx, msg: Extract<Message, { stag
     const token = await userToken(ctx, msg.user_id);
     github.ensureBudget(token);
     await db.query("select private.update_sync_job($1, 'discover')", [msg.job_id]);
+
+    // Logins can change on GitHub; the numeric id is what binds the account.
+    const { data: me } = await github.request<{ id: number; login: string }>(token, "/user");
+    await db.query("select private.refresh_github_login($1, $2, $3)", [msg.user_id, me.id, me.login]);
 
     // New installations (another organisation) show up here without a webhook.
     const installations = await github.paginate<{ installations: Installation[] }, Installation>(
@@ -245,16 +347,12 @@ const STAGES: { [S in Message["stage"]]: (ctx: Ctx, msg: Extract<Message, { stag
       toClassify.push(...ids.map(Number));
     }
 
-    if (!toClassify.length) {
-      await db.query("select private.update_sync_job($1, 'done', 0, 0, 'done')", [msg.job_id]);
-      return;
-    }
     await db.query("select private.update_sync_job($1, 'classify', $2)", [msg.job_id, toClassify.length]);
-    for (const repoId of toClassify) {
-      await db.query("select private.enqueue_github($1::text::jsonb)", [
-        JSON.stringify({ stage: "classify", user_id: msg.user_id, job_id: msg.job_id, repo_id: repoId }),
-      ]);
-    }
+    await advance(
+      ctx,
+      msg.job_id,
+      toClassify.map((repoId) => ({ stage: "classify", user_id: msg.user_id, job_id: msg.job_id, repo_id: repoId })),
+    );
   },
 
   /** Owned, collaborator, fork or template, from the repository's own metadata. */
@@ -264,6 +362,7 @@ const STAGES: { [S in Message["stage"]]: (ctx: Ctx, msg: Extract<Message, { stag
       "select installation_id from public.github_user_repos where user_id = $1 and repo_id = $2",
       [msg.user_id, msg.repo_id],
     );
+    const next: Message[] = [];
     if (repo) {
       const token = await github.installationToken(Number(repo.installation_id));
       github.ensureBudget(token);
@@ -277,19 +376,138 @@ const STAGES: { [S in Message["stage"]]: (ctx: Ctx, msg: Extract<Message, { stag
           data.parent?.full_name ?? null,
           data.template_repository?.full_name ?? null,
         ]);
+        // Language stats (L1), and the original project's files for a fork or template:
+        // those files are someone else's work, however they reached the student's commits.
+        const { data: languages } = await github.request<Record<string, number>>(token, `/repositories/${msg.repo_id}/languages`);
+        const upstream = data.parent?.full_name ?? data.template_repository?.full_name ?? null;
+        const blobs = upstream ? await upstreamBlobs(ctx, token, upstream) : null;
+        await db.query("select private.set_repo_details($1, $2, $3)", [msg.repo_id, Object.keys(languages ?? {}), blobs]);
+        next.push({ stage: "harvest", user_id: msg.user_id, job_id: msg.job_id, repo_id: msg.repo_id });
       } catch (error) {
         // Deleted or no longer shared: nothing to classify, the next discovery drops it.
         if (!(error instanceof GitHubError && error.status === 404)) throw error;
       }
     }
-    const [job] = await db.query<{ repos_done: number; repos_total: number }>(
-      "select repos_done, repos_total from private.update_sync_job($1, null, null, 1)",
-      [msg.job_id],
-    );
-    // Harvest, extract and levels arrive in phase 2 slice 3; until then a sync ends here.
-    if (job && job.repos_done >= job.repos_total) {
-      await db.query("select private.update_sync_job($1, 'done', null, 0, 'done')", [msg.job_id]);
+    await db.query("select private.update_sync_job($1, null, null, 1)", [msg.job_id]);
+    await advance(ctx, msg.job_id, next);
+  },
+
+  /**
+   * The student's own commits on the default branch (PRD 5.5 "harvest"): newest 500,
+   * kept only where GitHub's author.id is the student's account, which a spoofed
+   * `git config user.email` can't produce.
+   */
+  async harvest(ctx, msg) {
+    const { db, github } = ctx;
+    const [repo] = await db.query<RepoRow>(REPO_QUERY, [msg.user_id, msg.repo_id]);
+    if (!repo || repo.excluded || !repo.kind) {
+      await advance(ctx, msg.job_id, []);
+      return;
     }
+    const token = await github.installationToken(Number(repo.installation_id));
+    github.ensureBudget(token);
+    const branch = repo.default_branch ? `&sha=${encodeURIComponent(repo.default_branch)}` : "";
+    let listed: ListedCommit[] = [];
+    try {
+      listed = await github.paginate<ListedCommit[], ListedCommit>(
+        token,
+        `/repositories/${msg.repo_id}/commits?author=${encodeURIComponent(repo.login)}${branch}&per_page=100`,
+        (page) => page,
+        MAX_COMMITS / 100,
+      );
+    } catch (error) {
+      // 409: an empty repository. 404: gone meanwhile.
+      if (!(error instanceof GitHubError && (error.status === 409 || error.status === 404))) throw error;
+    }
+    const own = listed.filter((c) => c.author?.id === Number(repo.github_id));
+
+    await db.query("select private.set_repo_linguist_excludes($1, $2)", [msg.repo_id, await linguistExcludes(ctx, token, msg.repo_id)]);
+    const [{ shas }] = await db.query<{ shas: string[] }>("select private.harvest_commits($1, $2, $3::text::jsonb, $4) as shas", [
+      msg.user_id,
+      msg.repo_id,
+      JSON.stringify(
+        own.map((c) => ({
+          sha: c.sha,
+          authored_at: c.commit.author?.date ?? null,
+          committed_at: c.commit.committer?.date ?? null,
+          parents: c.parents.length,
+          signed: c.commit.verification?.verified === true,
+        })),
+      ),
+      listed.length < MAX_COMMITS,
+    ]);
+    await db.query("select private.recompute_user_skills($1)", [msg.user_id]);
+    const batches: Message[] = [];
+    for (let i = 0; i < shas.length; i += EXTRACT_BATCH) {
+      batches.push({ stage: "extract", user_id: msg.user_id, job_id: msg.job_id, repo_id: msg.repo_id, shas: shas.slice(i, i + EXTRACT_BATCH) });
+    }
+    await advance(ctx, msg.job_id, batches, 0, "extract");
+  },
+
+  /**
+   * Each commit's files through the taxonomy's detectors (PRD 5.5 "extract"), then the
+   * levels. Commits pushed after connecting arrive here straight from the push webhook,
+   * with the push time; their author is checked the same way.
+   */
+  async extract(ctx, msg) {
+    const { db, github } = ctx;
+    const [repo] = await db.query<RepoRow>(REPO_QUERY, [msg.user_id, msg.repo_id]);
+    if (!repo || repo.excluded) {
+      await advance(ctx, msg.job_id, []);
+      return;
+    }
+    const token = await github.installationToken(Number(repo.installation_id));
+    github.ensureBudget(token);
+    const taxonomy = await loadTaxonomy(ctx);
+    const excludeGlobs = repo.linguist_excludes.map(globToRegExp);
+    const upstream = new Set(
+      (await db.query<{ blob_sha: string }>("select blob_sha from private.github_upstream_blobs where repo_id = $1", [msg.repo_id])).map(
+        (r) => r.blob_sha,
+      ),
+    );
+
+    let recorded = 0;
+    for (const sha of msg.shas) {
+      if (!/^[0-9a-f]{40}$/.test(sha)) continue;
+      let commit: CommitDetail;
+      try {
+        ({ data: commit } = await github.request<CommitDetail>(token, `/repositories/${msg.repo_id}/commits/${sha}`));
+      } catch (error) {
+        if (error instanceof GitHubError && (error.status === 404 || error.status === 422)) continue; // rewritten away
+        throw error;
+      }
+      // Only commits GitHub attributes to the student's account (never the email alone).
+      if (commit.author?.id !== Number(repo.github_id)) continue;
+
+      const files = (commit.files ?? []).filter((f) => !(f.sha && upstream.has(f.sha)));
+      const parents = commit.parents?.length ?? 1;
+      const analysis = analyseCommit(files, taxonomy.compiled, { excludeGlobs });
+      const excluded =
+        parents > 1 ? "merge" : isBulkImport(parents, commit.files ?? []) ? "bulk_import" : analysis.excluded;
+      const [{ recorded: isNew }] = await db.query<{ recorded: boolean }>(
+        "select private.record_commit($1, $2, $3::text::jsonb) as recorded",
+        [
+          msg.user_id,
+          msg.repo_id,
+          JSON.stringify({
+            sha,
+            authored_at: commit.commit.author?.date ?? null,
+            committed_at: commit.commit.committer?.date ?? null,
+            pushed_at: msg.pushed_at ?? null,
+            seen_via: msg.pushed_at ? "push" : "harvest",
+            signed: commit.commit.verification?.verified === true,
+            files: (commit.files ?? []).length,
+            meaningful_lines: excluded ? 0 : analysis.meaningfulLines,
+            excluded,
+            detections: excluded === "merge" ? [] : analysis.detections.map((d) => ({ skill: d.skillId, kind: d.kind, path: d.path, lines: d.lines })),
+            blobs: excluded ? [] : duplicateCandidates(files, { excludeGlobs }),
+          }),
+        ],
+      );
+      if (isNew) recorded++;
+    }
+    await db.query("select private.recompute_user_skills($1)", [msg.user_id]);
+    await advance(ctx, msg.job_id, [], recorded);
   },
 
   /** Installation changes are applied in SQL; affected students get a fresh discovery. */

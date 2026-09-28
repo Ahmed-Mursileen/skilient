@@ -44,8 +44,8 @@ Legend: 📖 = PRD files to read (in `docs/prd/`), ✅ = done-when checks.
 📖 `05-05-github-skill-extraction-and-verification.md`, `05-07-ventures-and-join-flows.md`, `05-14-contribution-log.md`, `05-15-venture-lifecycle.md`, `05-28-…` (Ventures section)
 
 - [x] GitHub App: install/callback with server-side identity binding; tokens in Vault; webhook route — *ticket-based binding in the `github-link` Edge Function; webhooks stored once per delivery; discover and classify stages run (decisions.md)*
-- [ ] pgmq pipeline (discover → classify → harvest → extract → prs → level); taxonomy v1 YAML + detectors with unit tests
-- [ ] L1–L2 levels, anti-gaming holds, skill drawer, Settings → GitHub
+- [x] pgmq pipeline (discover → classify → harvest → extract → prs → level); taxonomy v1 YAML + detectors with unit tests — *`prs` moves to phase 4 with L3, its only consumer; push webhooks and a nightly sync keep it current (decisions.md)*
+- [ ] L1–L2 levels, anti-gaming holds, skill drawer, Settings → GitHub — *levels and holds computed since slice 3; the skill drawer, profile chips and held items in Settings come in slice 4*
 - [ ] Ventures: create, roles, visibility, invites, apply with questions, max 6 members, lifecycle state machine, deliverables (members only), updates, follows
 - [ ] Contribution log (insert-only, corrections, confirmations, GitHub-sourced entries)
 

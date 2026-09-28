@@ -68,6 +68,25 @@ isOneToOne: false
                   Relationships: [
                     
                   ]
+                },"github_commits": {
+                  Row: {
+                    "authored_at": string | null,"exclusion": string | null,"extracted_at": string | null,"files": number,"first_seen_at": string,"meaningful_lines": number,"occurred_at": string,"repo_id": number,"seen_via": string,"sha": string,"signed": boolean,"status": Database["public"]['Enums']["github_commit_status"],"user_id": string
+                  }
+                  Insert: {
+                    "authored_at"?: string | null,"exclusion"?: string | null,"extracted_at"?: string | null,"files"?: number,"first_seen_at"?: string,"meaningful_lines"?: number,"occurred_at": string,"repo_id": number,"seen_via": string,"sha": string,"signed"?: boolean,"status"?: Database["public"]['Enums']["github_commit_status"],"user_id": string
+                  }
+                  Update: {
+                    "authored_at"?: string | null,"exclusion"?: string | null,"extracted_at"?: string | null,"files"?: number,"first_seen_at"?: string,"meaningful_lines"?: number,"occurred_at"?: string,"repo_id"?: number,"seen_via"?: string,"sha"?: string,"signed"?: boolean,"status"?: Database["public"]['Enums']["github_commit_status"],"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "github_commits_user_id_repo_id_fkey"
+      columns: ["user_id","repo_id"]
+isOneToOne: false
+      referencedRelation: "github_user_repos"
+      referencedColumns: ["user_id","repo_id"]
+    }
+                  ]
                 },"github_installations": {
                   Row: {
                     "account_id": number,"account_login": string,"account_type": string,"created_at": string,"deleted_at": string | null,"installation_id": number,"repository_selection": string,"suspended_at": string | null,"updated_at": string
@@ -96,13 +115,13 @@ isOneToOne: false
                   ]
                 },"github_repos": {
                   Row: {
-                    "created_at": string,"default_branch": string | null,"fork": boolean,"full_name": string,"owner_id": number,"parent_full_name": string | null,"private": boolean,"pushed_at": string | null,"repo_id": number,"template_full_name": string | null,"updated_at": string
+                    "created_at": string,"default_branch": string | null,"fork": boolean,"full_name": string,"languages": (string)[],"linguist_excludes": (string)[],"owner_id": number,"parent_full_name": string | null,"private": boolean,"pushed_at": string | null,"repo_id": number,"template_full_name": string | null,"updated_at": string
                   }
                   Insert: {
-                    "created_at"?: string,"default_branch"?: string | null,"fork"?: boolean,"full_name": string,"owner_id": number,"parent_full_name"?: string | null,"private": boolean,"pushed_at"?: string | null,"repo_id": number,"template_full_name"?: string | null,"updated_at"?: string
+                    "created_at"?: string,"default_branch"?: string | null,"fork"?: boolean,"full_name": string,"languages"?: (string)[],"linguist_excludes"?: (string)[],"owner_id": number,"parent_full_name"?: string | null,"private": boolean,"pushed_at"?: string | null,"repo_id": number,"template_full_name"?: string | null,"updated_at"?: string
                   }
                   Update: {
-                    "created_at"?: string,"default_branch"?: string | null,"fork"?: boolean,"full_name"?: string,"owner_id"?: number,"parent_full_name"?: string | null,"private"?: boolean,"pushed_at"?: string | null,"repo_id"?: number,"template_full_name"?: string | null,"updated_at"?: string
+                    "created_at"?: string,"default_branch"?: string | null,"fork"?: boolean,"full_name"?: string,"languages"?: (string)[],"linguist_excludes"?: (string)[],"owner_id"?: number,"parent_full_name"?: string | null,"private"?: boolean,"pushed_at"?: string | null,"repo_id"?: number,"template_full_name"?: string | null,"updated_at"?: string
                   }
                   Relationships: [
                     
@@ -128,13 +147,13 @@ isOneToOne: false
                   ]
                 },"github_user_repos": {
                   Row: {
-                    "classified_at": string | null,"discovered_at": string,"excluded": boolean,"installation_id": number,"kind": Database["public"]['Enums']["github_repo_kind"] | null,"last_synced_at": string | null,"repo_id": number,"user_id": string
+                    "classified_at": string | null,"discovered_at": string,"excluded": boolean,"harvested_at": string | null,"installation_id": number,"kind": Database["public"]['Enums']["github_repo_kind"] | null,"last_synced_at": string | null,"repo_id": number,"user_id": string
                   }
                   Insert: {
-                    "classified_at"?: string | null,"discovered_at"?: string,"excluded"?: boolean,"installation_id": number,"kind"?: Database["public"]['Enums']["github_repo_kind"] | null,"last_synced_at"?: string | null,"repo_id": number,"user_id": string
+                    "classified_at"?: string | null,"discovered_at"?: string,"excluded"?: boolean,"harvested_at"?: string | null,"installation_id": number,"kind"?: Database["public"]['Enums']["github_repo_kind"] | null,"last_synced_at"?: string | null,"repo_id": number,"user_id": string
                   }
                   Update: {
-                    "classified_at"?: string | null,"discovered_at"?: string,"excluded"?: boolean,"installation_id"?: number,"kind"?: Database["public"]['Enums']["github_repo_kind"] | null,"last_synced_at"?: string | null,"repo_id"?: number,"user_id"?: string
+                    "classified_at"?: string | null,"discovered_at"?: string,"excluded"?: boolean,"harvested_at"?: string | null,"installation_id"?: number,"kind"?: Database["public"]['Enums']["github_repo_kind"] | null,"last_synced_at"?: string | null,"repo_id"?: number,"user_id"?: string
                   }
                   Relationships: [
                     {
@@ -228,6 +247,19 @@ isOneToOne: true
       referencedColumns: ["user_id"]
     }
                   ]
+                },"review_flags": {
+                  Row: {
+                    "created_at": string,"id": number,"key": string,"kind": Database["public"]['Enums']["review_flag_kind"],"note": string | null,"refs": NonNullable<Json>,"resolved_at": string | null,"reviewer_id": string | null,"status": Database["public"]['Enums']["review_flag_status"],"user_id": string
+                  }
+                  Insert: {
+                    "created_at"?: string,"id"?: never,"key": string,"kind": Database["public"]['Enums']["review_flag_kind"],"note"?: string | null,"refs"?: NonNullable<Json>,"resolved_at"?: string | null,"reviewer_id"?: string | null,"status"?: Database["public"]['Enums']["review_flag_status"],"user_id": string
+                  }
+                  Update: {
+                    "created_at"?: string,"id"?: never,"key"?: string,"kind"?: Database["public"]['Enums']["review_flag_kind"],"note"?: string | null,"refs"?: NonNullable<Json>,"resolved_at"?: string | null,"reviewer_id"?: string | null,"status"?: Database["public"]['Enums']["review_flag_status"],"user_id"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
                 },"security_events": {
                   Row: {
                     "created_at": string,"id": string,"ip_hash": string | null,"kind": string,"meta": NonNullable<Json>,"user_agent": string | null,"user_id": string
@@ -240,6 +272,31 @@ isOneToOne: true
                   }
                   Relationships: [
                     
+                  ]
+                },"skill_evidence": {
+                  Row: {
+                    "created_at": string,"detectors": (string)[],"id": number,"lines": number,"occurred_at": string,"paths": (string)[],"repo_id": number,"sha": string,"skill_id": string,"source": string,"user_id": string
+                  }
+                  Insert: {
+                    "created_at"?: string,"detectors": (string)[],"id"?: never,"lines"?: number,"occurred_at": string,"paths"?: (string)[],"repo_id": number,"sha": string,"skill_id": string,"source"?: string,"user_id": string
+                  }
+                  Update: {
+                    "created_at"?: string,"detectors"?: (string)[],"id"?: never,"lines"?: number,"occurred_at"?: string,"paths"?: (string)[],"repo_id"?: number,"sha"?: string,"skill_id"?: string,"source"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "skill_evidence_skill_id_fkey"
+      columns: ["skill_id"]
+isOneToOne: false
+      referencedRelation: "skills"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "skill_evidence_user_id_repo_id_sha_fkey"
+      columns: ["user_id","repo_id","sha"]
+isOneToOne: false
+      referencedRelation: "github_commits"
+      referencedColumns: ["user_id","repo_id","sha"]
+    }
                   ]
                 },"skills": {
                   Row: {
@@ -275,13 +332,13 @@ isOneToOne: false
                   ]
                 },"sync_jobs": {
                   Row: {
-                    "commits_analysed": number,"created_at": string,"error": string | null,"finished_at": string | null,"id": number,"repos_done": number,"repos_total": number,"skills_found": number,"stage": string | null,"status": Database["public"]['Enums']["sync_status"],"trigger": string,"updated_at": string,"user_id": string
+                    "commits_analysed": number,"created_at": string,"error": string | null,"finished_at": string | null,"id": number,"pending": number,"repos_done": number,"repos_total": number,"skills_found": number,"stage": string | null,"status": Database["public"]['Enums']["sync_status"],"trigger": string,"updated_at": string,"user_id": string
                   }
                   Insert: {
-                    "commits_analysed"?: number,"created_at"?: string,"error"?: string | null,"finished_at"?: string | null,"id"?: never,"repos_done"?: number,"repos_total"?: number,"skills_found"?: number,"stage"?: string | null,"status"?: Database["public"]['Enums']["sync_status"],"trigger": string,"updated_at"?: string,"user_id": string
+                    "commits_analysed"?: number,"created_at"?: string,"error"?: string | null,"finished_at"?: string | null,"id"?: never,"pending"?: number,"repos_done"?: number,"repos_total"?: number,"skills_found"?: number,"stage"?: string | null,"status"?: Database["public"]['Enums']["sync_status"],"trigger": string,"updated_at"?: string,"user_id": string
                   }
                   Update: {
-                    "commits_analysed"?: number,"created_at"?: string,"error"?: string | null,"finished_at"?: string | null,"id"?: never,"repos_done"?: number,"repos_total"?: number,"skills_found"?: number,"stage"?: string | null,"status"?: Database["public"]['Enums']["sync_status"],"trigger"?: string,"updated_at"?: string,"user_id"?: string
+                    "commits_analysed"?: number,"created_at"?: string,"error"?: string | null,"finished_at"?: string | null,"id"?: never,"pending"?: number,"repos_done"?: number,"repos_total"?: number,"skills_found"?: number,"stage"?: string | null,"status"?: Database["public"]['Enums']["sync_status"],"trigger"?: string,"updated_at"?: string,"user_id"?: string
                   }
                   Relationships: [
                     
@@ -330,6 +387,25 @@ isOneToOne: false
                   }
                   Relationships: [
                     
+                  ]
+                },"user_skills": {
+                  Row: {
+                    "active_days": number,"hits": number,"last_used_at": string | null,"level": number,"lines": number,"repos": number,"skill_id": string,"updated_at": string,"user_id": string
+                  }
+                  Insert: {
+                    "active_days"?: number,"hits"?: number,"last_used_at"?: string | null,"level": number,"lines"?: number,"repos"?: number,"skill_id": string,"updated_at"?: string,"user_id": string
+                  }
+                  Update: {
+                    "active_days"?: number,"hits"?: number,"last_used_at"?: string | null,"level"?: number,"lines"?: number,"repos"?: number,"skill_id"?: string,"updated_at"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "user_skills_skill_id_fkey"
+      columns: ["skill_id"]
+isOneToOne: false
+      referencedRelation: "skills"
+      referencedColumns: ["id"]
+    }
                   ]
                 }
           }
@@ -390,6 +466,14 @@ isOneToOne: false
 "request_github_resync":
 { Args: Record<PropertyKey, never>; Returns: boolean
                            },
+"resolve_review_flag":
+{ Args: { "p_flag": number,"p_note": string,"p_upheld": boolean }; Returns: boolean
+                           },
+"review_flag_details":
+{ Args: { "p_flag": number }; Returns: {
+              "commits": number,"created_at": string,"id": number,"kind": Database["public"]['Enums']["review_flag_kind"],"refs": Json,"status": Database["public"]['Enums']["review_flag_status"],"user_id": string
+            }[]
+                           },
 "security_not_me":
 { Args: { "p_token": string }; Returns: Json
                            },
@@ -413,7 +497,7 @@ isOneToOne: false
                            }
           }
           Enums: {
-            "account_role": "student"|"faculty"|"recruiter"|"university_admin","domain_kind": "student"|"faculty"|"both","github_repo_kind": "owned"|"collaborator"|"fork"|"template","job_run_status": "running"|"succeeded"|"failed","looking_for_option": "internship"|"job"|"teammates"|"project"|"mentorship","profile_visibility": "friends"|"university"|"global","skill_category": "language"|"framework"|"library"|"tool"|"platform"|"practice","staff_role": "moderator"|"trust_reviewer"|"accounts"|"super_admin","sync_status": "queued"|"running"|"done"|"failed"|"cancelled"
+            "account_role": "student"|"faculty"|"recruiter"|"university_admin","domain_kind": "student"|"faculty"|"both","github_commit_status": "pending"|"counted"|"held"|"excluded","github_repo_kind": "owned"|"collaborator"|"fork"|"template","job_run_status": "running"|"succeeded"|"failed","looking_for_option": "internship"|"job"|"teammates"|"project"|"mentorship","profile_visibility": "friends"|"university"|"global","review_flag_kind": "burst"|"backdating"|"cross_account_duplicate","review_flag_status": "open"|"cleared"|"upheld","skill_category": "language"|"framework"|"library"|"tool"|"platform"|"practice","staff_role": "moderator"|"trust_reviewer"|"accounts"|"super_admin","sync_status": "queued"|"running"|"done"|"failed"|"cancelled"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -533,7 +617,7 @@ export const Constants = {
           }
         },"public": {
           Enums: {
-            "account_role": ["student", "faculty", "recruiter", "university_admin"],"domain_kind": ["student", "faculty", "both"],"github_repo_kind": ["owned", "collaborator", "fork", "template"],"job_run_status": ["running", "succeeded", "failed"],"looking_for_option": ["internship", "job", "teammates", "project", "mentorship"],"profile_visibility": ["friends", "university", "global"],"skill_category": ["language", "framework", "library", "tool", "platform", "practice"],"staff_role": ["moderator", "trust_reviewer", "accounts", "super_admin"],"sync_status": ["queued", "running", "done", "failed", "cancelled"]
+            "account_role": ["student", "faculty", "recruiter", "university_admin"],"domain_kind": ["student", "faculty", "both"],"github_commit_status": ["pending", "counted", "held", "excluded"],"github_repo_kind": ["owned", "collaborator", "fork", "template"],"job_run_status": ["running", "succeeded", "failed"],"looking_for_option": ["internship", "job", "teammates", "project", "mentorship"],"profile_visibility": ["friends", "university", "global"],"review_flag_kind": ["burst", "backdating", "cross_account_duplicate"],"review_flag_status": ["open", "cleared", "upheld"],"skill_category": ["language", "framework", "library", "tool", "platform", "practice"],"staff_role": ["moderator", "trust_reviewer", "accounts", "super_admin"],"sync_status": ["queued", "running", "done", "failed", "cancelled"]
           }
         }
 } as const

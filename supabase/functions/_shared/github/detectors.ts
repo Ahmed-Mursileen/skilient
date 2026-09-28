@@ -32,6 +32,8 @@ export interface ChangedFile {
   deletions?: number;
   /** Unified diff; GitHub omits it for binary and very large files. */
   patch?: string | null;
+  /** Git blob hash of the file after the commit. */
+  sha?: string | null;
 }
 
 export type DetectionKind = "lines" | "file" | "path" | "manifest" | "import";
@@ -117,18 +119,21 @@ export function isExcludedPath(path: string, extraGlobs: RegExp[] = []): boolean
   return EXCLUDED_DIRS.test(path) || EXCLUDED_FILES.some((re) => re.test(path)) || extraGlobs.some((re) => re.test(path));
 }
 
-/** Globs from `.gitattributes` lines marking files linguist-generated or linguist-vendored. */
-export function generatedGlobs(gitattributes: string): RegExp[] {
-  const globs: RegExp[] = [];
+/** Glob patterns from `.gitattributes` lines marking files linguist-generated or linguist-vendored. */
+export function linguistGlobPatterns(gitattributes: string): string[] {
+  const globs: string[] = [];
   for (const line of gitattributes.split(/\r?\n/)) {
     const [pattern, ...attrs] = line.trim().split(/\s+/);
     if (!pattern || pattern.startsWith("#")) continue;
     const marked = attrs.some((a) => /^linguist-(?:generated|vendored)(?:=true)?$/.test(a));
     if (!marked) continue;
-    const glob = pattern.startsWith("/") ? pattern.slice(1) : pattern.endsWith("/") ? `${pattern}**` : pattern;
-    globs.push(globToRegExp(glob));
+    globs.push(pattern.startsWith("/") ? pattern.slice(1) : pattern.endsWith("/") ? `${pattern}**` : pattern);
   }
   return globs;
+}
+
+export function generatedGlobs(gitattributes: string): RegExp[] {
+  return linguistGlobPatterns(gitattributes).map(globToRegExp);
 }
 
 // --- Patches ------------------------------------------------------------------------
@@ -259,4 +264,31 @@ export function analyseCommit(
 export function linguistSkills(languages: string[], skills: TaxonomySkill[]): string[] {
   const wanted = new Set(languages);
   return skills.filter((s) => (s.detectors.linguist ?? []).some((l) => wanted.has(l))).map((s) => s.id);
+}
+
+/**
+ * Blob hashes of substantial files a commit ADDS (20+ non-blank lines, not vendored or
+ * generated), for the cross-account duplicate check (PRD 5.5). Small shared files
+ * (licences, empty __init__.py) would match across students by accident, so they're left out.
+ */
+export const DUPLICATE_MIN_LINES = 20;
+
+export function duplicateCandidates(files: ChangedFile[], options: { excludeGlobs?: RegExp[] } = {}): string[] {
+  return files
+    .filter(
+      (f) =>
+        f.status === "added" &&
+        f.sha &&
+        /^[0-9a-f]{40}$/.test(f.sha) &&
+        !isExcludedPath(f.path, options.excludeGlobs) &&
+        nonBlank(addedLines(f.patch)) >= DUPLICATE_MIN_LINES,
+    )
+    .map((f) => f.sha as string);
+}
+
+/** PRD 5.5 "Bulk import": a repository's first commit adding > 2,000 lines or > 50 files. */
+export function isBulkImport(parents: number, files: ChangedFile[]): boolean {
+  if (parents !== 0) return false;
+  const added = files.reduce((n, f) => n + (f.additions ?? 0), 0);
+  return added > 2000 || files.length > 50;
 }
