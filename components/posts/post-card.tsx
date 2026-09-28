@@ -1,12 +1,13 @@
 "use client";
 
-import { Globe, Megaphone, PushPin, RocketLaunch, UsersThree } from "@phosphor-icons/react";
+import { ChatCircle, Globe, Megaphone, PushPin, RocketLaunch, UsersThree } from "@phosphor-icons/react";
 import type { Route } from "next";
 import Link from "next/link";
 import { useState } from "react";
 import { EventBlock } from "@/components/posts/event-block";
 import { PollBlock } from "@/components/posts/poll-block";
 import { PostMenu } from "@/components/posts/post-menu";
+import { FoldedPost, ViewerActions } from "@/components/posts/viewer-actions";
 import { Avatar, Badge, Button } from "@/components/ui";
 import type { PostCardData } from "@/lib/data/posts";
 import { linkify } from "@/lib/format/linkify";
@@ -25,9 +26,13 @@ const TYPE_LABEL: Partial<Record<PostCardData["type"], string>> = {
  * One post (PRD 5.28). No like, reaction, save or share controls exist; the micro-survey
  * strip (slice 5) and comments (slice 4) attach below the body.
  */
-export function PostCard({ post, headingLevel = 2 }: { post: PostCardData; headingLevel?: 2 | 3 }) {
+export function PostCard({ post, headingLevel = 2, showCommentsLink = true }: { post: PostCardData; headingLevel?: 2 | 3; showCommentsLink?: boolean }) {
   const [gone, setGone] = useState(false);
+  const [folded, setFolded] = useState<"hidden" | "muted" | null>(null);
   if (gone) return null;
+  if (folded) {
+    return <FoldedPost state={folded} postId={post.id} authorUsername={post.author.username} authorName={post.author.name} onUndo={() => setFolded(null)} />;
+  }
   const Heading = headingLevel === 2 ? "h2" : "h3";
   const label = TYPE_LABEL[post.type];
   const pinned = post.pinned;
@@ -105,12 +110,47 @@ export function PostCard({ post, headingLevel = 2 }: { post: PostCardData; headi
       {post.poll ? <PollBlock postId={post.id} poll={post.poll} isMine={post.isMine} /> : null}
       {post.type === "invite" || post.type === "shipped" ? <VentureBlock post={post} /> : null}
 
-      {post.isMine && post.type !== "shipped" ? (
-        <footer className="flex justify-end border-t border-border-muted pt-2">
-          <PostMenu postId={post.id} body={post.body} canEdit={post.canEdit} onDeleted={() => setGone(true)} />
-        </footer>
-      ) : null}
+      {post.link && !post.images.length ? <LinkPreview link={post.link} /> : null}
+
+      <footer className="flex flex-wrap items-center justify-between gap-2 border-t border-border-muted pt-2">
+        {showCommentsLink ? (
+          <Link
+            href={`/post/${post.id}#comments` as Route}
+            className="inline-flex min-h-9 items-center gap-1.5 rounded-md px-2 text-body-sm text-text-secondary hover:bg-bg-subtle hover:text-text-primary"
+          >
+            <ChatCircle aria-hidden weight="bold" className="size-4" />
+            {post.commentCount === 0 ? "Comment" : `${post.commentCount} ${post.commentCount === 1 ? "comment" : "comments"}`}
+          </Link>
+        ) : (
+          <span />
+        )}
+        {post.isMine ? (
+          post.type !== "shipped" ? <PostMenu postId={post.id} body={post.body} canEdit={post.canEdit} onDeleted={() => setGone(true)} /> : null
+        ) : (
+          <ViewerActions postId={post.id} authorUsername={post.author.username} authorName={post.author.name} onChange={setFolded} />
+        )}
+      </footer>
     </article>
+  );
+}
+
+function LinkPreview({ link }: { link: NonNullable<PostCardData["link"]> }) {
+  return (
+    <a
+      href={link.url}
+      target="_blank"
+      rel="noopener noreferrer nofollow ugc"
+      className="flex overflow-hidden rounded-md border border-border-default hover:border-border-strong"
+      data-testid="link-preview"
+    >
+      {/* No third-party preview image: the CSP allows images only from Skilient, and loading
+          one would tell the linked site who is reading (decisions.md 2026-09-29). */}
+      <span className="flex min-w-0 flex-col gap-0.5 p-3">
+        {link.siteName ? <span className="text-caption text-text-secondary">{link.siteName}</span> : null}
+        <span className="line-clamp-2 text-body-sm font-semibold">{link.title ?? link.url}</span>
+        {link.description ? <span className="line-clamp-2 text-caption text-text-secondary">{link.description}</span> : null}
+      </span>
+    </a>
   );
 }
 

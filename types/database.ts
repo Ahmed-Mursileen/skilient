@@ -389,6 +389,19 @@ isOneToOne: false
                   Relationships: [
                     
                   ]
+                },"link_previews": {
+                  Row: {
+                    "description": string | null,"fetched_at": string,"image_url": string | null,"site_name": string | null,"status": string,"title": string | null,"url": string,"url_hash": string
+                  }
+                  Insert: {
+                    "description"?: string | null,"fetched_at"?: string,"image_url"?: string | null,"site_name"?: string | null,"status": string,"title"?: string | null,"url": string,"url_hash": string
+                  }
+                  Update: {
+                    "description"?: string | null,"fetched_at"?: string,"image_url"?: string | null,"site_name"?: string | null,"status"?: string,"title"?: string | null,"url"?: string,"url_hash"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
                 },"notification_categories": {
                   Row: {
                     "allow_instant": boolean,"category": string,"default_channel": Database["public"]['Enums']["email_channel"],"description": string,"label": string,"position": number
@@ -542,6 +555,31 @@ isOneToOne: false
       referencedColumns: ["post_id","position"]
     }
                   ]
+                },"post_comments": {
+                  Row: {
+                    "author_id": string,"body": string,"created_at": string,"deleted_at": string | null,"id": string,"parent_id": string | null,"pinned": boolean,"post_id": string
+                  }
+                  Insert: {
+                    "author_id": string,"body": string,"created_at"?: string,"deleted_at"?: string | null,"id"?: string,"parent_id"?: string | null,"pinned"?: boolean,"post_id": string
+                  }
+                  Update: {
+                    "author_id"?: string,"body"?: string,"created_at"?: string,"deleted_at"?: string | null,"id"?: string,"parent_id"?: string | null,"pinned"?: boolean,"post_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "post_comments_parent_id_fkey"
+      columns: ["parent_id"]
+isOneToOne: false
+      referencedRelation: "post_comments"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "post_comments_post_id_fkey"
+      columns: ["post_id"]
+isOneToOne: false
+      referencedRelation: "posts"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"post_events": {
                   Row: {
                     "place": string | null,"post_id": string,"starts_at": string,"url": string | null
@@ -557,6 +595,25 @@ isOneToOne: false
       foreignKeyName: "post_events_post_id_fkey"
       columns: ["post_id"]
 isOneToOne: true
+      referencedRelation: "posts"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"post_hides": {
+                  Row: {
+                    "created_at": string,"post_id": string,"user_id": string
+                  }
+                  Insert: {
+                    "created_at"?: string,"post_id": string,"user_id": string
+                  }
+                  Update: {
+                    "created_at"?: string,"post_id"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "post_hides_post_id_fkey"
+      columns: ["post_id"]
+isOneToOne: false
       referencedRelation: "posts"
       referencedColumns: ["id"]
     }
@@ -601,13 +658,13 @@ isOneToOne: true
                   ]
                 },"posts": {
                   Row: {
-                    "audience": Database["public"]['Enums']["post_audience"],"author_id": string,"body": string,"created_at": string,"edited_at": string | null,"id": string,"pinned_until": string | null,"stage": Database["public"]['Enums']["post_stage"],"stage_changed_at": string,"type": Database["public"]['Enums']["post_type"],"university_id": string | null,"venture_id": string | null
+                    "audience": Database["public"]['Enums']["post_audience"],"author_id": string,"body": string,"created_at": string,"edited_at": string | null,"id": string,"link_url": string | null,"pinned_until": string | null,"stage": Database["public"]['Enums']["post_stage"],"stage_changed_at": string,"type": Database["public"]['Enums']["post_type"],"university_id": string | null,"venture_id": string | null
                   }
                   Insert: {
-                    "audience": Database["public"]['Enums']["post_audience"],"author_id": string,"body": string,"created_at"?: string,"edited_at"?: string | null,"id"?: string,"pinned_until"?: string | null,"stage"?: Database["public"]['Enums']["post_stage"],"stage_changed_at"?: string,"type": Database["public"]['Enums']["post_type"],"university_id"?: string | null,"venture_id"?: string | null
+                    "audience": Database["public"]['Enums']["post_audience"],"author_id": string,"body": string,"created_at"?: string,"edited_at"?: string | null,"id"?: string,"link_url"?: string | null,"pinned_until"?: string | null,"stage"?: Database["public"]['Enums']["post_stage"],"stage_changed_at"?: string,"type": Database["public"]['Enums']["post_type"],"university_id"?: string | null,"venture_id"?: string | null
                   }
                   Update: {
-                    "audience"?: Database["public"]['Enums']["post_audience"],"author_id"?: string,"body"?: string,"created_at"?: string,"edited_at"?: string | null,"id"?: string,"pinned_until"?: string | null,"stage"?: Database["public"]['Enums']["post_stage"],"stage_changed_at"?: string,"type"?: Database["public"]['Enums']["post_type"],"university_id"?: string | null,"venture_id"?: string | null
+                    "audience"?: Database["public"]['Enums']["post_audience"],"author_id"?: string,"body"?: string,"created_at"?: string,"edited_at"?: string | null,"id"?: string,"link_url"?: string | null,"pinned_until"?: string | null,"stage"?: Database["public"]['Enums']["post_stage"],"stage_changed_at"?: string,"type"?: Database["public"]['Enums']["post_type"],"university_id"?: string | null,"venture_id"?: string | null
                   }
                   Relationships: [
                     {
@@ -799,6 +856,19 @@ isOneToOne: false
                   }
                   Update: {
                     "device_hash"?: string,"first_seen_at"?: string,"last_seen_at"?: string,"user_agent"?: string | null,"user_id"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"user_mutes": {
+                  Row: {
+                    "created_at": string,"muted_id": string,"user_id": string
+                  }
+                  Insert: {
+                    "created_at"?: string,"muted_id": string,"user_id": string
+                  }
+                  Update: {
+                    "created_at"?: string,"muted_id"?: string,"user_id"?: string
                   }
                   Relationships: [
                     
@@ -1015,6 +1085,9 @@ isOneToOne: false
             "add_application_message":
 { Args: { "p_body": string,"p_thread": string }; Returns: number
                            },
+"add_comment":
+{ Args: { "p_body": string,"p_parent": string,"p_post": string }; Returns: string
+                           },
 "add_venture_deliverable":
 { Args: { "p_label": string,"p_url": string,"p_venture": string }; Returns: string
                            },
@@ -1058,6 +1131,9 @@ isOneToOne: false
 "decide_application":
 { Args: { "p_accept": boolean,"p_thread": string }; Returns: Database["public"]['Enums']["application_status"]
                            },
+"delete_comment":
+{ Args: { "p_comment": string }; Returns: undefined
+                           },
 "delete_mfa_backup_codes":
 { Args: Record<PropertyKey, never>; Returns: undefined
                            },
@@ -1091,6 +1167,9 @@ isOneToOne: false
                            },
 "health_check":
 { Args: Record<PropertyKey, never>; Returns: boolean
+                           },
+"hide_post":
+{ Args: { "p_hide": boolean,"p_post": string }; Returns: undefined
                            },
 "hook_before_user_created":
 { Args: { "event": Json }; Returns: Json
@@ -1133,6 +1212,9 @@ isOneToOne: false
 "mfa_backup_codes_remaining":
 { Args: Record<PropertyKey, never>; Returns: number
                            },
+"mute_user":
+{ Args: { "p_mute": boolean,"p_username": string }; Returns: undefined
+                           },
 "my_blocks":
 { Args: Record<PropertyKey, never>; Returns: {
               "created_at": string,"full_name": string,"username": string
@@ -1150,6 +1232,11 @@ isOneToOne: false
                            },
 "my_gate_state":
 { Args: Record<PropertyKey, never>; Returns: Json
+                           },
+"my_mutes":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "created_at": string,"full_name": string,"username": string
+            }[]
                            },
 "my_notification_settings":
 { Args: Record<PropertyKey, never>; Returns: {
@@ -1169,9 +1256,17 @@ isOneToOne: false
 "pending_friend_request_count":
 { Args: Record<PropertyKey, never>; Returns: number
                            },
+"pin_comment":
+{ Args: { "p_comment": string,"p_pin": boolean }; Returns: undefined
+                           },
 "post_cards":
 { Args: { "p_ids": (string)[] }; Returns: {
-              "audience": Database["public"]['Enums']["post_audience"],"author_avatar_path": string,"author_id": string,"author_name": string,"author_username": string,"body": string,"can_edit": boolean,"created_at": string,"edited_at": string,"event": Json,"id": string,"is_mine": boolean,"media": Json,"pinned_until": string,"poll": Json,"stage": Database["public"]['Enums']["post_stage"],"type": Database["public"]['Enums']["post_type"],"venture": Json
+              "audience": Database["public"]['Enums']["post_audience"],"author_avatar_path": string,"author_id": string,"author_muted": boolean,"author_name": string,"author_username": string,"body": string,"can_edit": boolean,"comment_count": number,"created_at": string,"edited_at": string,"event": Json,"id": string,"is_mine": boolean,"link": Json,"media": Json,"pinned_until": string,"poll": Json,"stage": Database["public"]['Enums']["post_stage"],"type": Database["public"]['Enums']["post_type"],"venture": Json
+            }[]
+                           },
+"post_comment_list":
+{ Args: { "p_post": string }; Returns: {
+              "author_avatar_path": string,"author_name": string,"author_username": string,"body": string,"can_delete": boolean,"created_at": string,"deleted": boolean,"id": string,"is_mine": boolean,"parent_id": string,"pinned": boolean
             }[]
                            },
 "post_venture_update":

@@ -59,7 +59,7 @@ Legend: 📖 = PRD files to read (in `docs/prd/`), ✅ = done-when checks.
 
 📖 `05-06-…`, `05-28-feed-micro-survey-ventures-and-chat-detail.md`, `05-08-friends-and-blocking.md`, `05-09-chat.md`, `05-10-explore.md`, `05-11-notifications-requests-and-announcements.md`, `05-12-moderation-and-admin.md`, `05-26-…` (queues + moderation only)
 
-- [ ] Posts (all types except Shipped wiring), audience, composer, images, link previews (SSRF-safe), comments, polls, events
+- [x] Posts (all types except Shipped wiring), audience, composer, images, link previews (SSRF-safe), comments, polls, events — *slices 3–4; Shipped is wired too (decisions.md 2026-09-29)*
 - [ ] Micro-survey: assignment on first view, one answer per reader, tick/cross strip, public line, anti-gaming weights
 - [ ] Feed algorithm: stages job, `feed_page` scoring, `feed_sessions` paging, exploration slots
 - [ ] Friends, blocking, DMs, venture group chat, typing, read receipts, replies, reactions, pins, search
@@ -73,6 +73,8 @@ Legend: 📖 = PRD files to read (in `docs/prd/`), ✅ = done-when checks.
 *Slice 2 (notifications): trigger-written notifications for friend requests and every venture event deferred from phase 2 (applications, invites, ownership transfer, members leaving or removed, completion), Realtime bell, `/notifications` (Today / Earlier, mark read, mark all read), `/settings/notifications` (instant email for four categories only, daily digest, off), instant emails and the daily digest through the `notify-worker` Edge Function and Resend. Each trigger fires once per event and no user can insert a notification (pgTAP `18_notifications`, E2E `notifications.spec.ts`); the worker is tested against the local database with a fake Resend (`tests/worker/notify-worker`).*
 
 *Slice 3 (posts): General, Venture invite, Event, Poll, Announcement (staff) and Shipped posts; audiences; composer with drafts and images (browser downscale, server re-encode with EXIF/GPS stripped); edit within 15 minutes; delete; polls and RSVPs; `/post/[id]`; filter chips; venture update images. Every limit is refused in SQL when called directly and cross-university reads return nothing (pgTAP `19_posts`, E2E `posts.spec.ts`). Link previews and comments come with slice 4, the ranked feed with slice 6.*
+
+*Slice 4 (comments, hides, mutes, link previews): comments with one level of replies, @mentions, pin, delete; Not for me and Mute; link previews through an SSRF-safe Edge Function (private and loopback addresses and redirects into them refused, 3 redirects, 3 s, 7-day cache). pgTAP `20_comments`, unit `links.test.ts` (SSRF guard and parser), worker `link-preview.test.ts`, E2E `comments.spec.ts`.*
 
 ## ★ Slice checkpoint
 

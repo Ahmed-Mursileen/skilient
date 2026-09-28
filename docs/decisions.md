@@ -616,3 +616,22 @@ Append-only. One dated entry per product decision, with the reason. Carried over
   set over 4 MB; the server fits them within 2,000 px again. Deleting a teammate's venture
   update as owner leaves that teammate's image files (storage lets people delete only
   their own), unreferenced.
+- 2026-09-29 (phase 3, slice 4): Comments, hides, mutes and link previews as built.
+  Comments: 1 to 1,000 characters, one level of replies (enforced by a trigger too), 10 s
+  cooldown, oldest first with the post author's one pinned comment on top; deleting keeps
+  a "Comment deleted" placeholder so replies keep their context; the post author may
+  delete any comment on their post; no reactions. The post author, the person replied to
+  and up to 5 @mentioned people who can see the post are notified (new categories
+  Comments and Mentions, digest by default, never instant). "Not for me" hides a post and
+  Mute takes someone's posts out of your feeds (not off their profile), each with Undo on
+  the card; muted people are listed under Friends → Blocked with Unmute.
+- 2026-09-29 (phase 3, slice 4): Link previews come from the first http(s) link in a post:
+  the `link_previews` queue and `link-preview` Edge Function fetch it with DNS resolved
+  over HTTPS (Cloudflare) and refuse private, loopback, link-local, CGNAT, multicast and
+  reserved addresses (IPv4 and IPv6, including mapped forms) at every hop, ports 80/443
+  only, at most 3 redirects, 3 s for the whole fetch, HTML only, first 256 KB. Results
+  (and failures) are cached 7 days. The card shows the site, title and description but no
+  preview image: the CSP allows images only from Skilient and Supabase, and loading a
+  third-party image would tell the linked site who is reading. Known limit: the address
+  is checked before the fetch, not pinned for it (a DNS-rebinding host could answer
+  differently in between); the fetch sends no cookies or credentials and reads HTML only.
