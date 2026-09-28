@@ -267,7 +267,7 @@ test.describe("auth", () => {
     await expect(page).toHaveURL(/\/settings\/security\?backup=used$/);
     await expect(page.getByRole("main").getByRole("alert")).toContainText("two-factor is now off");
     await expect(page.getByRole("button", { name: "Set up two-factor" })).toBeVisible();
-    await expect(page.getByText("Signed in with a backup code")).toBeVisible();
+    await expect(page.getByText("Signed in with a backup code (two-factor turned off)")).toBeVisible();
   });
 
   test("a new device shows up in recent activity", async ({ browser }, info) => {
