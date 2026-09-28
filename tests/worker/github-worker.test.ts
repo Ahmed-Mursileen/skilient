@@ -46,8 +46,9 @@ const TEMPLATE_BLOB = "b".repeat(40);
 const sha = (name: string) => createHash("sha1").update(name).digest("hex");
 const lines = (n: number, first = "") => [first, ...Array.from({ length: n }, (_, i) => `value_${i} = ${i}`)].filter(Boolean);
 const patch = (added: string[]) => `@@ -0,0 +1,${added.length} @@\n${added.map((l) => `+${l}`).join("\n")}`;
-const file = (path: string, added: string[], extra: Record<string, unknown> = {}) => ({
-  path, filename: path, status: "added", additions: added.length, deletions: 0, patch: patch(added), sha: sha(path + added.join()), ...extra,
+// GitHub's shape for a commit's files: `filename`, never `path` (a real sync crashed on that).
+const file = (filename: string, added: string[], extra: Record<string, unknown> = {}) => ({
+  filename, status: "added", additions: added.length, deletions: 0, changes: added.length, patch: patch(added), sha: sha(filename + added.join()), ...extra,
 });
 interface Fixture {
   sha: string;
