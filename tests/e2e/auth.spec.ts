@@ -129,7 +129,10 @@ test.describe("auth", () => {
 
     await signInWithPassword(page, a.email, a.password);
     await expect(page).toHaveURL(/\/feed$/);
-    await expect(page.getByRole("heading", { name: "Hi, Aisha" })).toBeVisible();
+    await expect(page.getByTestId("current-user-name")).toHaveText("Aisha Alpha");
+    // An unsent post draft in the composer is Aisha's residue too.
+    await page.getByTestId("composer").getByLabel("What's on your mind?").fill("Aisha's unsent post");
+    await expect.poll(() => page.evaluate(() => Object.keys(localStorage).some((k) => k.startsWith("sk:draft:")))).toBe(true);
     await page.evaluate(() => {
       sessionStorage.setItem("draft", "Aisha's unsent draft");
       localStorage.setItem("sk:draft", "Aisha's unsent draft");
@@ -145,8 +148,8 @@ test.describe("auth", () => {
 
     await signInWithPassword(page, b.email, b.password);
     await expect(page).toHaveURL(/\/feed$/);
-    await expect(page.getByRole("heading", { name: "Hi, Bilal" })).toBeVisible();
     await expect(page.getByTestId("current-user-name")).toHaveText("Bilal Bravo");
+    await expect(page.getByTestId("composer").getByLabel("What's on your mind?")).toHaveValue("");
     await expectNoResidue(page, a);
     await page.goto("/settings/security");
     await expectNoResidue(page, a);
