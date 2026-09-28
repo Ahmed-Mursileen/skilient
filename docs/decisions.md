@@ -512,3 +512,26 @@ Append-only. One dated entry per product decision, with the reason. Carried over
   *current* members (PRD 5.15). Entries by people who left or were removed stay on the log,
   marked, but don't count. `last_activity_at` for reputation decay doesn't exist yet; decay
   (phase 5) will read the newest contribution instead of a separate column.
+- 2026-09-28 (phase 2, owner review): Venture decisions confirmed as logged: outsiders see a
+  deliverable count, not the links; a corrected contribution needs a fresh confirmation;
+  completion counts current members only. With these changes:
+  - Team cards follow each member's own profile visibility: everyone on the team is listed
+    by name, but the profile link and photo show only where the viewer may see that
+    member's profile. Blocks hide a member from the team list in both directions
+    (`venture_team()`, via `private.can_view_profile()`; blocks are a stub until phase 3).
+  - Members who leave or are removed keep their peer-verified contributions on their own
+    record: the profile's Ventures tab lists those ventures as "Former member" with the
+    count, and the CV (phase 5) will include them. They still don't count toward the
+    2-member completion rule.
+  - GitHub import also takes a member's counted commits from up to 6 months before the
+    venture was created, marked "before Skilient". They count (peer-verified) only once
+    another member confirms them. Commits made after creation are verified as before;
+    older than 6 months, never imported. Replaces the "since the venture was created"
+    rule above.
+- 2026-09-28 (ops): Supabase runs on the **Free plan** by choice: the project may pause
+  when idle and there are no daily backups. Accepted for now; revisit before the closed
+  beta (Pro plan for backups and no pausing). Noted in the setup checklist.
+- 2026-09-28 (ops): No staging environment until a production build exists. Checks the
+  build plan runs "on staging" (the phase 3 end-to-end slice check) run on production with
+  test accounts instead. Phase 0 closed: production `/api/health` is 200 with database,
+  storage and realtime ok.

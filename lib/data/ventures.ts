@@ -436,6 +436,8 @@ export interface Contribution {
   confirmedByMe: boolean;
   /** False once the author left or was removed: the entry stays but no longer counts. */
   byMember: boolean;
+  /** A GitHub commit from before the venture was created: counts once a teammate confirms it. */
+  beforeVenture: boolean;
 }
 
 /** The venture's timeline, newest first (RLS: whoever can see the venture). */
@@ -443,7 +445,7 @@ export async function getContributions(ventureId: string): Promise<Contribution[
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("contributions_with_status")
-    .select("id, user_id, kind, description, evidence_url, hours, source, created_at, corrected_at, confirmations, peer_verified, confirmed_by_me, by_member")
+    .select("id, user_id, kind, description, evidence_url, hours, source, created_at, corrected_at, confirmations, peer_verified, confirmed_by_me, by_member, before_venture")
     .eq("venture_id", ventureId)
     .order("created_at", { ascending: false })
     .limit(300);
@@ -462,6 +464,7 @@ export async function getContributions(ventureId: string): Promise<Contribution[
     peerVerified: Boolean(c.peer_verified),
     confirmedByMe: Boolean(c.confirmed_by_me),
     byMember: Boolean(c.by_member),
+    beforeVenture: Boolean(c.before_venture),
   }));
 }
 
@@ -490,4 +493,23 @@ export async function getContributionSummary(userId: string): Promise<Map<string
     summary.set(row.venture_id!, s);
   }
   return summary;
+}
+
+/**
+ * Ventures a student left but keeps confirmed work in (decisions.md 2026-09-28): their
+ * peer-verified contributions stay on their record. Only ventures the viewer may see.
+ */
+export async function getFormerVentures(
+  userId: string,
+  currentIds: string[],
+  summary: Map<string, { entries: number; verified: number }>,
+): Promise<{ id: string; type: VentureType; title: string; status: VentureStatus; verified: number }[]> {
+  const ids = [...summary.entries()].filter(([id, s]) => s.verified > 0 && !currentIds.includes(id)).map(([id]) => id);
+  if (!ids.length) return [];
+  const supabase = await createClient();
+  const { data, error } = await supabase.from("ventures").select("id, type, title, status").in("id", ids.slice(0, 100));
+  if (error) throw new Error(`former ventures: ${error.code}`);
+  return (data ?? [])
+    .map((v) => ({ id: v.id, type: v.type, title: v.title, status: v.status, verified: summary.get(v.id)?.verified ?? 0 }))
+    .sort((a, b) => a.title.localeCompare(b.title));
 }

@@ -1,7 +1,7 @@
 -- Read functions for the venture screens: team cards, browse, profile ventures.
 -- A and B study at NUTECH, C at FAST.
 begin;
-select plan(12);
+select plan(14);
 
 insert into auth.users (id, email) values
   ('91000000-0000-0000-0000-00000000000a', 'a@nutech.edu.pk'),
@@ -28,9 +28,21 @@ select set_config('test.hidden', public.create_venture('{"type":"project","title
 select set_config('test.startup', public.create_venture('{"type":"startup","title":"Chai Co","description":"d"}')::text, false);
 
 select pg_temp.as_user('91000000-0000-0000-0000-00000000000c');
-select results_eq($$ select username, full_name, is_owner from public.venture_team(pg_temp.v('pub')) $$,
-  $$ values ('vw_a'::text, 'Student A'::text, true) $$,
-  'a student at another university sees a public venture''s team as cards');
+select results_eq($$ select username, full_name, avatar_path, is_owner, profile_visible from public.venture_team(pg_temp.v('pub')) $$,
+  $$ values (null::text, 'Student A'::text, null::text, true, false) $$,
+  'another university sees a public venture''s team by name only while the member''s profile is university-only');
+reset role;
+update public.profiles set visibility = 'global' where user_id = '91000000-0000-0000-0000-00000000000a';
+set local role authenticated;
+select results_eq($$ select username, profile_visible from public.venture_team(pg_temp.v('pub')) $$,
+  $$ values ('vw_a'::text, true) $$, 'the full card (profile link) once the member''s profile is global');
+reset role;
+update public.profiles set visibility = 'university' where user_id = '91000000-0000-0000-0000-00000000000a';
+set local role authenticated;
+select pg_temp.as_user('91000000-0000-0000-0000-00000000000b');
+select results_eq($$ select username, profile_visible from public.venture_team(pg_temp.v('pub')) $$,
+  $$ values ('vw_a'::text, true) $$, 'a classmate gets the full card of a university-only profile');
+select pg_temp.as_user('91000000-0000-0000-0000-00000000000c');
 select is_empty($$ select 1 from public.venture_team(pg_temp.v('uni')) $$, 'but not a university-only venture''s team');
 select results_eq($$ select title from public.browse_ventures('project') order by title $$,
   $$ values ('Open robots'::text) $$, 'browse lists only what they can see, never unlisted');

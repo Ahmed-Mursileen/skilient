@@ -17,20 +17,19 @@ function weekStart(iso: string): string {
 }
 
 function Status({ c }: { c: Contribution }) {
+  const verified = c.peerVerified ? <Badge tone="verified">Peer-verified</Badge> : null;
   if (c.source === "github") {
     return (
-      <Badge tone="neutral">
-        <GithubLogo aria-hidden weight="bold" className="size-3.5" />
-        From GitHub
-      </Badge>
+      <>
+        <Badge tone="neutral">
+          <GithubLogo aria-hidden weight="bold" className="size-3.5" />
+          {c.beforeVenture ? "From GitHub, before Skilient" : "From GitHub"}
+        </Badge>
+        {c.beforeVenture ? (verified ?? <Badge tone="neutral">Needs a teammate&apos;s confirmation</Badge>) : null}
+      </>
     );
   }
-  return c.peerVerified ? (
-    <Badge tone="verified">Peer-verified
-    </Badge>
-  ) : (
-    <Badge tone="neutral">Self-reported</Badge>
-  );
+  return verified ?? <Badge tone="neutral">Self-reported</Badge>;
 }
 
 /**
@@ -58,7 +57,7 @@ export default async function VentureContributionsPage({ params }: PageProps<"/v
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className="text-body-sm text-text-secondary">
-          Peer-verified entries were confirmed by a teammate; GitHub entries come from commits in the linked repository.
+          Peer-verified entries were confirmed by a teammate. GitHub entries come from commits in the linked repository; commits from before the venture started need a teammate&apos;s confirmation too.
         </p>
         {canLog ? (
           <ContributionSheet
@@ -87,9 +86,11 @@ export default async function VentureContributionsPage({ params }: PageProps<"/v
             </h2>
             <ol className="flex flex-col gap-3">
               {list.map((c) => {
-                const author = names.get(c.userId) ?? "A former member";
+                const author = names.get(c.userId) ?? (c.byMember ? "A team member" : "A former member");
                 const mine = c.userId === v.viewer.userId;
-                const canConfirm = open && v.viewer.isMember && !mine && c.source === "manual" && !c.confirmedByMe;
+                // Manual entries and pre-venture commits need a teammate; later commits are verified already.
+                const confirmable = c.source === "manual" || c.beforeVenture;
+                const canConfirm = open && v.viewer.isMember && !mine && confirmable && !c.confirmedByMe;
                 const canCorrect = open && mine && v.viewer.isMember && c.source === "manual" && now - Date.parse(c.createdAt) < CORRECTION_WINDOW_MS;
                 return (
                   <li key={c.id} className="rounded-lg border border-border-default bg-bg-surface p-4" aria-label={`${author}: ${KIND[c.kind]}`}>
@@ -120,7 +121,7 @@ export default async function VentureContributionsPage({ params }: PageProps<"/v
                         <span className="sr-only">{" (opens in a new tab)"}</span>
                       </a>
                     ) : null}
-                    {canConfirm || canCorrect || (c.confirmedByMe && c.source === "manual") ? (
+                    {canConfirm || canCorrect || (c.confirmedByMe && confirmable) ? (
                       <div className="mt-3 flex flex-wrap items-center gap-3">
                         {canConfirm ? (
                           <ConfirmAction
@@ -130,7 +131,7 @@ export default async function VentureContributionsPage({ params }: PageProps<"/v
                             ariaLabel={`Confirm ${author}'s entry`}
                           />
                         ) : null}
-                        {c.confirmedByMe && c.source === "manual" ? <span className="text-body-sm text-text-secondary">You confirmed this.</span> : null}
+                        {c.confirmedByMe && confirmable ? <span className="text-body-sm text-text-secondary">You confirmed this.</span> : null}
                         {canCorrect ? (
                           <ContributionSheet
                             ventureId={v.id}

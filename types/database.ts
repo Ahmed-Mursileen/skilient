@@ -132,13 +132,13 @@ isOneToOne: false
                   ]
                 },"contributions": {
                   Row: {
-                    "commit_sha": string | null,"corrects_id": string | null,"created_at": string,"description": string,"evidence_url": string | null,"hours": number | null,"id": string,"kind": Database["public"]['Enums']["contribution_kind"],"source": Database["public"]['Enums']["contribution_source"],"user_id": string,"venture_id": string
+                    "before_venture": boolean,"commit_sha": string | null,"corrects_id": string | null,"created_at": string,"description": string,"evidence_url": string | null,"hours": number | null,"id": string,"kind": Database["public"]['Enums']["contribution_kind"],"source": Database["public"]['Enums']["contribution_source"],"user_id": string,"venture_id": string
                   }
                   Insert: {
-                    "commit_sha"?: string | null,"corrects_id"?: string | null,"created_at"?: string,"description": string,"evidence_url"?: string | null,"hours"?: number | null,"id"?: string,"kind": Database["public"]['Enums']["contribution_kind"],"source"?: Database["public"]['Enums']["contribution_source"],"user_id": string,"venture_id": string
+                    "before_venture"?: boolean,"commit_sha"?: string | null,"corrects_id"?: string | null,"created_at"?: string,"description": string,"evidence_url"?: string | null,"hours"?: number | null,"id"?: string,"kind": Database["public"]['Enums']["contribution_kind"],"source"?: Database["public"]['Enums']["contribution_source"],"user_id": string,"venture_id": string
                   }
                   Update: {
-                    "commit_sha"?: string | null,"corrects_id"?: string | null,"created_at"?: string,"description"?: string,"evidence_url"?: string | null,"hours"?: number | null,"id"?: string,"kind"?: Database["public"]['Enums']["contribution_kind"],"source"?: Database["public"]['Enums']["contribution_source"],"user_id"?: string,"venture_id"?: string
+                    "before_venture"?: boolean,"commit_sha"?: string | null,"corrects_id"?: string | null,"created_at"?: string,"description"?: string,"evidence_url"?: string | null,"hours"?: number | null,"id"?: string,"kind"?: Database["public"]['Enums']["contribution_kind"],"source"?: Database["public"]['Enums']["contribution_source"],"user_id"?: string,"venture_id"?: string
                   }
                   Relationships: [
                     {
@@ -676,7 +676,7 @@ isOneToOne: false
           Views: {
             "contributions_with_status": {
                   Row: {
-                    "by_member": boolean | null,"commit_sha": string | null,"confirmations": number | null,"confirmed_by_me": boolean | null,"corrected_at": string | null,"created_at": string | null,"current_id": string | null,"description": string | null,"evidence_url": string | null,"hours": number | null,"id": string | null,"kind": Database["public"]['Enums']["contribution_kind"] | null,"peer_verified": boolean | null,"source": Database["public"]['Enums']["contribution_source"] | null,"user_id": string | null,"venture_id": string | null
+                    "before_venture": boolean | null,"by_member": boolean | null,"commit_sha": string | null,"confirmations": number | null,"confirmed_by_me": boolean | null,"corrected_at": string | null,"created_at": string | null,"current_id": string | null,"description": string | null,"evidence_url": string | null,"hours": number | null,"id": string | null,"kind": Database["public"]['Enums']["contribution_kind"] | null,"peer_verified": boolean | null,"source": Database["public"]['Enums']["contribution_source"] | null,"user_id": string | null,"venture_id": string | null
                   }
                   Relationships: [
                     {
@@ -879,7 +879,7 @@ isOneToOne: false
                            },
 "venture_team":
 { Args: { "p_venture": string }; Returns: {
-              "avatar_path": string,"full_name": string,"is_owner": boolean,"joined_at": string,"team_role": Database["public"]['Enums']["venture_team_role"],"user_id": string,"username": string
+              "avatar_path": string,"full_name": string,"is_owner": boolean,"joined_at": string,"profile_visible": boolean,"team_role": Database["public"]['Enums']["venture_team_role"],"user_id": string,"username": string
             }[]
                            },
 "venture_verified_contributors":

@@ -4,22 +4,31 @@ import Link from "next/link";
 import { VentureStatusBadge } from "@/components/ventures/status-badge";
 import { Button, EmptyState } from "@/components/ui";
 import { getProfile } from "@/lib/data/profiles";
-import { getContributionSummary, getProfileVentures } from "@/lib/data/ventures";
+import { getContributionSummary, getFormerVentures, getProfileVentures } from "@/lib/data/ventures";
 import { TEAM_ROLE_LABELS, TYPE_LABELS } from "@/lib/ventures/labels";
 
 function contributionText({ entries, verified }: { entries: number; verified: number }): string {
   return `${entries} ${entries === 1 ? "contribution" : "contributions"}, ${verified} peer-verified`;
 }
 
-/** Ventures tab (PRD 5.28): the ventures this student is on, with their role and a contribution summary (PRD 5.14). Only ones the viewer may see. */
+/**
+ * Ventures tab (PRD 5.28): the ventures this student is on, with their role and a contribution
+ * summary (PRD 5.14), then ones they left where their work was peer-verified. Only ventures
+ * the viewer may see.
+ */
 export default async function ProfileVenturesPage({ params }: PageProps<"/profile/[username]/ventures">) {
   const { username } = await params;
   const lookup = await getProfile(username);
   if (lookup.kind !== "full") return null;
   const p = lookup.profile;
   const [ventures, summary] = await Promise.all([getProfileVentures(p.userId), getContributionSummary(p.userId)]);
+  const former = await getFormerVentures(
+    p.userId,
+    ventures.map((v) => v.id),
+    summary,
+  );
 
-  if (!ventures.length) {
+  if (!ventures.length && !former.length) {
     return (
       <EmptyState
         icon={<Rocket aria-hidden className="size-8" />}
@@ -40,18 +49,31 @@ export default async function ProfileVenturesPage({ params }: PageProps<"/profil
     );
   }
 
+  const rows = [
+    ...ventures.map((v) => ({
+      id: v.id,
+      title: v.title,
+      status: v.status,
+      detail: `${TYPE_LABELS[v.type].one} · ${v.isOwner ? "Owner" : TEAM_ROLE_LABELS[v.teamRole]}${summary.get(v.id) ? ` · ${contributionText(summary.get(v.id)!)}` : ""}`,
+    })),
+    // Left the team, but their confirmed work stays on their record (decisions.md).
+    ...former.map((v) => ({
+      id: v.id,
+      title: v.title,
+      status: v.status,
+      detail: `${TYPE_LABELS[v.type].one} · Former member · ${v.verified} peer-verified ${v.verified === 1 ? "contribution" : "contributions"}`,
+    })),
+  ];
+
   return (
     <ul className="flex flex-col divide-y divide-border-default rounded-lg border border-border-default">
-      {ventures.map((v) => (
+      {rows.map((v) => (
         <li key={v.id} className="flex flex-wrap items-center justify-between gap-3 p-4">
           <div className="min-w-0">
             <Link href={`/ventures/${v.id}` as Route} className="text-body font-semibold underline-offset-4 hover:underline">
               {v.title}
             </Link>
-            <p className="text-body-sm text-text-secondary">
-              {TYPE_LABELS[v.type].one} · {v.isOwner ? "Owner" : TEAM_ROLE_LABELS[v.teamRole]}
-              {summary.get(v.id) ? ` · ${contributionText(summary.get(v.id)!)}` : ""}
-            </p>
+            <p className="text-body-sm text-text-secondary">{v.detail}</p>
           </div>
           <VentureStatusBadge status={v.status} />
         </li>
