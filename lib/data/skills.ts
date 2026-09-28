@@ -87,3 +87,11 @@ export const getGithubLogin = cache(async (userId: string): Promise<string | nul
   const { data } = await supabase.from("github_accounts").select("login").eq("user_id", userId).maybeSingle();
   return data?.login ?? null;
 });
+
+/** The live taxonomy, for skill pickers (venture skills and roles). */
+export const listTaxonomy = cache(async (): Promise<{ id: string; name: string; category: string }[]> => {
+  const supabase = await createClient();
+  const { data, error } = await supabase.from("skills").select("id, name, category").is("retired_at", null).order("name");
+  if (error) throw new Error(`taxonomy: ${error.code}`);
+  return data ?? [];
+});

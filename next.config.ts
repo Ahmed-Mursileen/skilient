@@ -15,7 +15,16 @@ const nextConfig: NextConfig = {
   },
   async redirects() {
     // Screen spec route note: old routes keep working. `edit` is a reserved username.
-    return [{ source: "/profile/edit", destination: "/settings/profile", permanent: true }];
+    // PRD 5.7: /projects and /startups merged into /ventures (type tabs).
+    return [
+      { source: "/profile/edit", destination: "/settings/profile", permanent: true },
+      { source: "/projects", destination: "/ventures", permanent: true },
+      { source: "/projects/new", destination: "/ventures/new", permanent: true },
+      { source: "/projects/:path*", destination: "/ventures/:path*", permanent: true },
+      { source: "/startups", destination: "/ventures?type=startup", permanent: true },
+      { source: "/startups/new", destination: "/ventures/new?type=startup", permanent: true },
+      { source: "/startups/:path*", destination: "/ventures/:path*", permanent: true },
+    ];
   },
 };
 

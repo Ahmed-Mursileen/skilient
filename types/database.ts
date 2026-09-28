@@ -615,8 +615,18 @@ isOneToOne: false
 "add_venture_deliverable":
 { Args: { "p_label": string,"p_url": string,"p_venture": string }; Returns: string
                            },
+"application_people":
+{ Args: { "p_ids": (string)[] }; Returns: {
+              "full_name": string,"user_id": string,"username": string
+            }[]
+                           },
 "apply_to_venture":
 { Args: { "p_answers"?: (string)[],"p_message": string,"p_role"?: string,"p_venture": string }; Returns: string
+                           },
+"browse_ventures":
+{ Args: { "p_before"?: string,"p_limit"?: number,"p_my_university"?: boolean,"p_open_roles"?: boolean,"p_status"?: Database["public"]['Enums']["venture_status"],"p_type": Database["public"]['Enums']["venture_type"] }; Returns: {
+              "created_at": string,"id": string,"members": number,"open_slots": number,"owner_name": string,"owner_username": string,"skill_ids": (string)[],"stage": Database["public"]['Enums']["venture_stage"],"status": Database["public"]['Enums']["venture_status"],"summary": string,"team_size": number,"title": string,"type": Database["public"]['Enums']["venture_type"],"university_name": string,"visibility": Database["public"]['Enums']["venture_visibility"]
+            }[]
                            },
 "complete_onboarding":
 { Args: Record<PropertyKey, never>; Returns: boolean
@@ -690,6 +700,11 @@ isOneToOne: false
                            },
 "post_venture_update":
 { Args: { "p_body": string,"p_venture": string }; Returns: string
+                           },
+"profile_ventures":
+{ Args: { "p_user": string }; Returns: {
+              "id": string,"is_owner": boolean,"joined_at": string,"status": Database["public"]['Enums']["venture_status"],"team_role": Database["public"]['Enums']["venture_team_role"],"title": string,"type": Database["public"]['Enums']["venture_type"]
+            }[]
                            },
 "rate_limit":
 { Args: { "p_key": string,"p_limit": number,"p_window_seconds": number }; Returns: boolean
@@ -770,6 +785,11 @@ isOneToOne: false
 "venture_counts":
 { Args: { "p_venture": string }; Returns: {
               "deliverables": number,"followers": number,"members": number,"updates": number
+            }[]
+                           },
+"venture_team":
+{ Args: { "p_venture": string }; Returns: {
+              "avatar_path": string,"full_name": string,"is_owner": boolean,"joined_at": string,"team_role": Database["public"]['Enums']["venture_team_role"],"user_id": string,"username": string
             }[]
                            },
 "withdraw_application":
