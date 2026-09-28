@@ -448,3 +448,14 @@ Append-only. One dated entry per product decision, with the reason. Carried over
 - 2026-09-28 (phase 2): The `prs` stage (merged pull requests and reviews) moves to phase 4
   with L3, its only consumer; `pull_request` webhooks are recorded until then. A nightly
   sync (02:17 PKT) re-reads every linked student as the reconcile.
+- 2026-09-28 (phase 2): Who sees what about a skill. Other students (wherever they can
+  read the full profile) see a skill's name, level and "last used"; the counts behind it
+  (active days, lines, hits, repositories) and the evidence are the owner's only.
+  `user_skills` is now column-granted (`user_id, skill_id, level, last_used_at`) and the
+  owner reads the counts through `my_skills()`. The skill drawer shows the owner their
+  commits (repository, commit link, what was detected, "being reviewed" / "not counted")
+  and how to reach the next level; everyone else sees the level ladder and that the
+  evidence is private. The profile links the student's GitHub login.
+- 2026-09-28 (phase 2): `/me/skills` (with the private L0 list) is a student-portal screen
+  (screen spec, phase 6), so this phase shows skills on the profile's Overview (top 8) and
+  Skills tab instead. L0 "skills I'm building" arrives with it.

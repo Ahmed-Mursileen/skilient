@@ -37,8 +37,10 @@ describe("ui primitives", () => {
   });
 
   it("SkillChip labels level and verification", () => {
-    render(<SkillChip name="TypeScript" level={3} verified />);
+    const { container } = render(<SkillChip name="TypeScript" level={3} />);
     expect(screen.getByLabelText("Level 3")).toHaveTextContent("L3");
+    expect(container.firstChild).toHaveClass("border-verified"); // L3+ is confirmed by others
+    render(<SkillChip name="Figma" verified />);
     expect(screen.getByLabelText("Verified")).toBeInTheDocument();
   });
 

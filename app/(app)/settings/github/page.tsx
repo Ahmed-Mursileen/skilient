@@ -1,5 +1,5 @@
 import { GithubLogo, ShieldCheck } from "@phosphor-icons/react/dist/ssr";
-import type { Metadata } from "next";
+import type { Metadata, Route } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { FormAlert } from "@/components/auth/form-alert";
@@ -7,9 +7,11 @@ import { AccountActions } from "@/components/github/account-actions";
 import { ConnectGithubButton } from "@/components/github/connect-button";
 import { RepoList } from "@/components/github/repo-list";
 import { SyncStatus } from "@/components/github/sync-status";
+import { HeldNotice } from "@/components/skills/held-notice";
 import { EmptyState } from "@/components/ui";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { getGithubOverview, GITHUB_OUTCOMES } from "@/lib/data/github";
+import { getHeldCount } from "@/lib/data/skills";
 import { githubApp } from "@/lib/github/config";
 
 export const metadata: Metadata = { title: "GitHub" };
@@ -22,7 +24,7 @@ export default async function GithubSettingsPage({ searchParams }: PageProps<"/s
   const user = await getCurrentUser();
   if (!user) notFound();
   const configured = githubApp() !== null;
-  const { account, sync, repos } = await getGithubOverview(user.id);
+  const [{ account, sync, repos }, held] = await Promise.all([getGithubOverview(user.id), getHeldCount(user.id)]);
   const outcome = typeof params.github === "string" ? GITHUB_OUTCOMES[params.github] : undefined;
   const syncing = sync?.status === "queued" || sync?.status === "running";
 
@@ -73,6 +75,15 @@ export default async function GithubSettingsPage({ searchParams }: PageProps<"/s
             ) : (
               <div className="mt-5 flex flex-col gap-5">
                 <SyncStatus sync={sync} />
+                {held ? <HeldNotice count={held} /> : null}
+                {user.username && sync?.skillsFound ? (
+                  <Link
+                    href={`/profile/${user.username}/skills` as Route}
+                    className="self-start text-body-sm font-semibold text-text-primary underline underline-offset-4"
+                  >
+                    See your skills and their evidence
+                  </Link>
+                ) : null}
                 <AccountActions syncing={syncing} />
               </div>
             )}

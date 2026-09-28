@@ -37,6 +37,7 @@ import {
   useToast,
   VerifiedStamp,
 } from "@/components/ui";
+import { SkillList } from "@/components/skills/skill-list";
 import { cn } from "@/lib/cn";
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
@@ -228,11 +229,27 @@ export function GalleryPanel({ theme }: { theme: "light" | "dark" }) {
           ))}
         </div>
         <div className="flex flex-wrap gap-2">
-          <SkillChip name="TypeScript" level={3} verified />
-          <SkillChip name="React" level={2} verified />
+          <SkillChip name="Django" level={4} />
+          <SkillChip name="TypeScript" level={3} />
+          <SkillChip name="React" level={2} />
           <SkillChip name="PostgreSQL" level={1} />
-          <SkillChip name="Figma" />
+          <SkillChip name="Rust" level={0} />
+          <SkillChip name="Figma" verified />
+          <SkillChip name="Kotlin" />
         </div>
+      </Section>
+
+      <Section title="Skill list and drawer (as a classmate sees it)">
+        <SkillList
+          ownerName="Ayesha"
+          isOwner={false}
+          skills={[
+            { id: "python", name: "Python", category: "language", level: 3, lastUsedAt: "2026-09-20T10:00:00Z" },
+            { id: "typescript", name: "TypeScript", category: "language", level: 2, lastUsedAt: "2026-09-25T10:00:00Z" },
+            { id: "django", name: "Django", category: "framework", level: 2, lastUsedAt: "2026-09-18T10:00:00Z" },
+            { id: "docker", name: "Docker", category: "tool", level: 1, lastUsedAt: null },
+          ]}
+        />
       </Section>
 
       <Section title="Verified stamp">

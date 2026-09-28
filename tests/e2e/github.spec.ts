@@ -132,6 +132,76 @@ test.describe("GitHub connection", () => {
     expect(data).toEqual([]);
   });
 
+  test("skills show their level to classmates, and their evidence and next step to the owner", async ({ page, browser }) => {
+    const problems = watchConsole(page);
+    const student = await createStudent({ domain: "nutech.edu.pk", fullName: "Sana Skills" });
+    const { login, repos } = await seedConnection(student);
+    const admin = adminClient();
+    const must = (r: { error: { message: string } | null }) => {
+      if (r.error) throw new Error(r.error.message);
+    };
+    const sha = (n: number) => n.toString(16).padStart(40, "a");
+    const days = [3, 2, 1].map((d) => new Date(Date.now() - d * 86_400_000).toISOString());
+    must(
+      await admin.from("github_commits").insert([
+        ...days.map((at, i) => ({
+          user_id: student.id, repo_id: repos[0], sha: sha(i + 1), occurred_at: at, seen_via: "harvest",
+          meaningful_lines: 60, status: "counted", extracted_at: at,
+        })),
+        { user_id: student.id, repo_id: repos[0], sha: sha(9), occurred_at: days[2], seen_via: "push", status: "held", extracted_at: days[2] },
+      ]),
+    );
+    must(
+      await admin.from("skill_evidence").insert([
+        ...days.map((at, i) => ({
+          user_id: student.id, skill_id: "python", repo_id: repos[0], sha: sha(i + 1),
+          detectors: ["lines"], paths: [`app/m${i}.py`], lines: 60, occurred_at: at,
+        })),
+        { user_id: student.id, skill_id: "fastapi", repo_id: repos[0], sha: sha(1), detectors: ["import"], paths: ["app/m0.py"], lines: 0, occurred_at: days[0] },
+      ]),
+    );
+    must(
+      await admin.from("user_skills").insert([
+        { user_id: student.id, skill_id: "python", level: 2, active_days: 3, lines: 180, hits: 0, repos: 1, last_used_at: days[2] },
+        { user_id: student.id, skill_id: "fastapi", level: 1, active_days: 1, lines: 0, hits: 1, repos: 1, last_used_at: days[0] },
+      ]),
+    );
+
+    // The owner: grouped chips, the drawer with counts, evidence and the next step.
+    await signInWithPassword(page, student.email, student.password);
+    await page.goto(`/profile/${student.username}/skills`);
+    await expect(page.getByRole("heading", { name: "Languages" })).toBeVisible();
+    await expect(page.getByText("Some of your activity is being reviewed (1 commit)")).toBeVisible();
+    await axe(page, "profile/skills (owner)");
+    await page.getByRole("button", { name: /^FastAPI, level 1/ }).click();
+    const drawer = page.getByRole("dialog", { name: "FastAPI" });
+    await expect(drawer.getByText("To reach L2, commit it on 2 more days (1 of 3) and import or add it in 2 more commits (1 of 3).")).toBeVisible();
+    await expect(drawer.getByText(`${login}/secret-robot`)).toBeVisible();
+    await expect(drawer.getByRole("link", { name: /^aaaaaaa/ })).toHaveAttribute("href", new RegExp(`/${login}/secret-robot/commit/`));
+    await axe(page, "skill drawer (owner)");
+    await page.keyboard.press("Escape");
+    await expect(drawer).toBeHidden();
+    await page.goto(`/profile/${student.username}`);
+    await expect(page.getByRole("heading", { name: "Top skills" })).toBeVisible();
+    await expect(page.getByRole("link", { name: new RegExp(`${login} on GitHub`) })).toHaveAttribute("href", `https://github.com/${login}`);
+    await page.goto("/settings/github");
+    await expect(page.getByText("Some of your activity is being reviewed")).toBeVisible();
+
+    // A classmate: the level and when it was last used, never the evidence or the counts.
+    const classmate = await createStudent({ domain: "nutech.edu.pk", fullName: "Classmate Viewer" });
+    const other = await (await browser.newContext()).newPage();
+    await signInWithPassword(other, classmate.email, classmate.password);
+    await other.goto(`/profile/${student.username}/skills`);
+    await other.getByRole("button", { name: /^Python, level 2: Written by them/ }).click();
+    const theirs = other.getByRole("dialog", { name: "Python" });
+    await expect(theirs.getByText("The commits behind this level are private to Sana.")).toBeVisible();
+    await expect(theirs.getByText("Lines of code")).toHaveCount(0);
+    expect(await other.content()).not.toContain("secret-robot");
+    await expect(other.getByText("being reviewed")).toHaveCount(0);
+    await axe(other, "skill drawer (classmate)");
+    expect(problems).toEqual([]);
+  });
+
   test("onboarding offers Connect GitHub, and skipping still works", async ({ page }) => {
     const student = await createStudent({ domain: "nu.edu.pk", fullName: "Onboarding GitHub", onboarded: false });
     const admin = adminClient();
