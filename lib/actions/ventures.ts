@@ -431,3 +431,74 @@ export async function removeVentureDeliverable(ventureId: string, deliverableId:
     `/ventures/${ventureId}/deliverables`,
   ]);
 }
+
+// ---------------------------------------------------------------------------
+// Contribution log (PRD 5.14): insert-only; corrections within 24 h; teammates confirm
+// ---------------------------------------------------------------------------
+
+const KINDS = ["code", "design", "research", "docs", "management", "other"] as const;
+
+const contributionFields = z.object({
+  kind: z.enum(KINDS, "Pick what kind of work it was."),
+  description: z.string().trim().min(1, "Describe what you did.").max(500, "Keep it under 500 characters."),
+  evidenceUrl: z
+    .string()
+    .trim()
+    .max(500, "Keep the link under 500 characters.")
+    .refine((v) => v === "" || /^https?:\/\/[^\s]+$/.test(v), "Use a full link starting with https://."),
+  hours: z
+    .number("Enter hours as a number.")
+    .positive("Hours must be more than 0.")
+    .max(100, "At most 100 hours per entry.")
+    .multipleOf(0.25, "Round to the nearest quarter hour.")
+    .nullable(),
+});
+export type ContributionInput = z.input<typeof contributionFields>;
+
+function contributionArgs(v: z.output<typeof contributionFields>) {
+  return { p_kind: v.kind, p_description: v.description, p_evidence_url: v.evidenceUrl || null, p_hours: v.hours };
+}
+
+export async function logContribution(ventureId: string, input: ContributionInput): Promise<ActionResult<string>> {
+  const ctx = await actionContext("ventures.log_contribution");
+  const parsed = z.object({ id: uuid, v: contributionFields }).safeParse({ id: ventureId, v: input });
+  if (!parsed.success) {
+    ctx.done("refused", { error_code: "invalid_input" });
+    return fail("invalid_input", "Check the highlighted fields.", { fields: fieldErrors(parsed.error.issues.map((i) => ({ ...i, path: i.path.slice(1) }))) });
+  }
+  const session = await signedIn(ctx);
+  if (!session) return NO_SESSION;
+  return call<string>(ctx, session.supabase, session.userId, "log_contribution", {
+    p_venture: ventureId,
+    ...contributionArgs(parsed.data.v),
+  }, [`/ventures/${ventureId}/contributions`]);
+}
+
+export async function correctContribution(ventureId: string, entryId: string, input: ContributionInput): Promise<ActionResult<string>> {
+  const ctx = await actionContext("ventures.correct_contribution");
+  const parsed = z.object({ id: uuid, entry: uuid, v: contributionFields }).safeParse({ id: ventureId, entry: entryId, v: input });
+  if (!parsed.success) {
+    ctx.done("refused", { error_code: "invalid_input" });
+    return fail("invalid_input", "Check the highlighted fields.", { fields: fieldErrors(parsed.error.issues.map((i) => ({ ...i, path: i.path.slice(1) }))) });
+  }
+  const session = await signedIn(ctx);
+  if (!session) return NO_SESSION;
+  return call<string>(ctx, session.supabase, session.userId, "correct_contribution", {
+    p_original: entryId,
+    ...contributionArgs(parsed.data.v),
+  }, [`/ventures/${ventureId}/contributions`]);
+}
+
+export async function confirmContribution(ventureId: string, entryId: string): Promise<ActionResult> {
+  const ctx = await actionContext("ventures.confirm_contribution");
+  if (!uuid.safeParse(ventureId).success || !uuid.safeParse(entryId).success) {
+    ctx.done("refused", { error_code: "invalid_input" });
+    return fail("invalid_input", "Refresh the page and try again.");
+  }
+  const session = await signedIn(ctx);
+  if (!session) return NO_SESSION;
+  const result = await call<boolean>(ctx, session.supabase, session.userId, "confirm_contribution", { p_entry: entryId }, [
+    `/ventures/${ventureId}/contributions`,
+  ]);
+  return result.ok ? ok(null) : result;
+}

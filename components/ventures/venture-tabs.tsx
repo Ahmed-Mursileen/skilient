@@ -6,8 +6,8 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/cn";
 
 /**
- * Venture page tabs (PRD 5.28): About, Team, Updates, Deliverables. Contributions, Reviews
- * and Chat join with the contribution log (slice 6), teachers (phase 7) and chat (phase 3).
+ * Venture page tabs (PRD 5.28): About, Team, Contributions, Updates, Deliverables. Reviews
+ * and Chat join with teachers (phase 7) and chat (phase 3).
  * Manage is the owner's.
  */
 export function VentureTabs({ id, isOwner }: { id: string; isOwner: boolean }) {
@@ -16,6 +16,7 @@ export function VentureTabs({ id, isOwner }: { id: string; isOwner: boolean }) {
   const tabs = [
     { href: base, label: "About" },
     { href: `${base}/team`, label: "Team" },
+    { href: `${base}/contributions`, label: "Contributions" },
     { href: `${base}/updates`, label: "Updates" },
     { href: `${base}/deliverables`, label: "Deliverables" },
     ...(isOwner ? [{ href: `${base}/manage`, label: "Manage" }] : []),

@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { ConfirmAction } from "@/components/ventures/confirm-action";
 import { DetailsForm, InviteForm, QuestionsEditor, RepoForm, RolesEditor } from "@/components/ventures/manage-forms";
 import { revokeInvite, transitionVenture } from "@/lib/actions/ventures";
-import { getOwnerInvites, getOwnerRepos, getVenture } from "@/lib/data/ventures";
+import { getOwnerInvites, getOwnerRepos, getVenture, getVerifiedContributors } from "@/lib/data/ventures";
 import { listTaxonomy } from "@/lib/data/skills";
 import { MAX_MEMBERS } from "@/lib/ventures/labels";
 
@@ -38,9 +38,14 @@ export default async function VentureManagePage({ params }: PageProps<"/ventures
     );
   }
 
-  const [skills, invites, repos] = await Promise.all([listTaxonomy(), getOwnerInvites(id), getOwnerRepos(v.viewer.userId)]);
+  const [skills, invites, repos, verified] = await Promise.all([
+    listTaxonomy(),
+    getOwnerInvites(id),
+    getOwnerRepos(v.viewer.userId),
+    getVerifiedContributors(id),
+  ]);
   const options = skills.map((s) => ({ id: s.id, name: s.name }));
-  const canComplete = v.counts.members >= 2 && v.counts.deliverables >= 1;
+  const canComplete = v.counts.members >= 2 && v.counts.deliverables >= 1 && verified >= 2;
   const teamFull = v.counts.members >= MAX_MEMBERS;
 
   return (
@@ -77,14 +82,27 @@ export default async function VentureManagePage({ params }: PageProps<"/ventures
           />
         </div>
         {v.status === "in_progress" && !canComplete ? (
-          <p className="text-body-sm text-text-secondary">
-            To complete it you need at least 2 members and at least 1{" "}
-            <Link href={`/ventures/${v.id}/deliverables` as Route} className="underline underline-offset-4">
-              deliverable
-            </Link>
-            . You have {v.counts.members} {v.counts.members === 1 ? "member" : "members"} and {v.counts.deliverables}{" "}
-            {v.counts.deliverables === 1 ? "deliverable" : "deliverables"}.
-          </p>
+          <div className="text-body-sm text-text-secondary">
+            <p>To complete it you need:</p>
+            <ul className="mt-1 list-disc pl-5">
+              <li>
+                at least 2 members (you have {v.counts.members})
+              </li>
+              <li>
+                at least 1{" "}
+                <Link href={`/ventures/${v.id}/deliverables` as Route} className="underline underline-offset-4">
+                  deliverable
+                </Link>{" "}
+                (you have {v.counts.deliverables})
+              </li>
+              <li>
+                <Link href={`/ventures/${v.id}/contributions` as Route} className="underline underline-offset-4">
+                  peer-verified contributions
+                </Link>{" "}
+                from at least 2 members (you have {verified})
+              </li>
+            </ul>
+          </div>
         ) : null}
       </Section>
 
@@ -114,7 +132,7 @@ export default async function VentureManagePage({ params }: PageProps<"/ventures
         <QuestionsEditor ventureId={v.id} questions={v.questions.map((q) => q.body)} />
       </Section>
 
-      <Section id="repo-heading" title="Repository" description="Link a repository you share with Skilient so the team's work can be traced to it.">
+      <Section id="repo-heading" title="Repository" description="Link a repository you share with Skilient. Members' counted commits there become verified contributions.">
         {repos.length ? (
           <RepoForm ventureId={v.id} repos={repos} current={v.repoFullName} />
         ) : (

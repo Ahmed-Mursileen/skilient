@@ -18,6 +18,7 @@ export function ConfirmAction({
   variant = "ghost",
   size = "sm",
   danger = false,
+  ariaLabel,
 }: {
   action: () => Promise<ActionResult>;
   label: string;
@@ -26,6 +27,8 @@ export function ConfirmAction({
   variant?: "primary" | "secondary" | "ghost" | "danger";
   size?: "sm" | "md";
   danger?: boolean;
+  /** A fuller name when several buttons share one label (e.g. "Confirm Amna's entry"). */
+  ariaLabel?: string;
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -47,7 +50,7 @@ export function ConfirmAction({
   if (!confirm) {
     return (
       <span className="inline-flex flex-col gap-2">
-        <Button variant={variant} size={size} loading={pending} onClick={run}>
+        <Button variant={variant} size={size} loading={pending} onClick={run} aria-label={ariaLabel}>
           {label}
         </Button>
         {error ? <FormAlert requestId={error.requestId}>{error.message}</FormAlert> : null}
@@ -64,7 +67,7 @@ export function ConfirmAction({
       }}
     >
       <DialogTrigger asChild>
-        <Button variant={variant} size={size}>
+        <Button variant={variant} size={size} aria-label={ariaLabel}>
           {label}
         </Button>
       </DialogTrigger>

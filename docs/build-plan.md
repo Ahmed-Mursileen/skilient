@@ -46,10 +46,12 @@ Legend: 📖 = PRD files to read (in `docs/prd/`), ✅ = done-when checks.
 - [x] GitHub App: install/callback with server-side identity binding; tokens in Vault; webhook route — *ticket-based binding in the `github-link` Edge Function; webhooks stored once per delivery; discover and classify stages run (decisions.md)*
 - [x] pgmq pipeline (discover → classify → harvest → extract → prs → level); taxonomy v1 YAML + detectors with unit tests — *`prs` moves to phase 4 with L3, its only consumer; push webhooks and a nightly sync keep it current (decisions.md)*
 - [x] L1–L2 levels, anti-gaming holds, skill drawer, Settings → GitHub — *levels and holds (slice 3); skill chips, drawer with evidence and next step, held-items notice (slice 4); others see level only (decisions.md)*
-- [x] Ventures: create, roles, visibility, invites, apply with questions, max 6 members, lifecycle state machine, deliverables (members only), updates, follows — *the "peer-verified contributions" completion rule lands with the contribution log*
-- [ ] Contribution log (insert-only, corrections, confirmations, GitHub-sourced entries)
+- [x] Ventures: create, roles, visibility, invites, apply with questions, max 6 members, lifecycle state machine, deliverables (members only), updates, follows — *completion also needs peer-verified contributions from 2 members (slice 6)*
+- [x] Contribution log (insert-only, corrections, confirmations, GitHub-sourced entries) — *corrections need a fresh confirmation; GitHub entries come from counted commits since the venture started (decisions.md)*
 
 ✅ A real GitHub account produces the expected L2 skills · spoofed `user.email` commits never count · webhook replay is idempotent · a venture completes only with ≥ 2 members, a deliverable and peer-verified contributions · a 7th member can't join under parallel accepts
+
+*Status 2026-09-28: every box ticked, across the slice PRs (GitHub connect, taxonomy, evidence and levels, skill UI, ventures database, venture screens, contribution log). Done-when as tested: spoofed `user.email` commits never count and webhook replay is idempotent (`tests/worker` with a fake GitHub, pgTAP `09_github_connect`, E2E `github.spec.ts`); completion needs 2 members, a deliverable and peer-verified contributions from 2 current members (pgTAP `14_ventures`, `16_contributions`, E2E `ventures.spec.ts`); a 7th member is refused under parallel accepts (`tests/worker/ventures-concurrency`). Still for a human: "a real GitHub account produces the expected L2 skills" needs the hosted GitHub App and a real account on staging, since CI only has a fake GitHub.*
 
 ## Phase 3 — Social core
 
