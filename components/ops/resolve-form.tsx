@@ -42,7 +42,7 @@ export function ResolveForm({ caseId, targetType }: { caseId: string; targetType
           setError("Choose an action.");
           return;
         }
-        if (action !== "dismiss" && !severity) {
+        if ((action === "remove" || action === "warn") && !severity) {
           setError("Choose a severity.");
           return;
         }
@@ -68,7 +68,9 @@ export function ResolveForm({ caseId, targetType }: { caseId: string; targetType
       </fieldset>
       {action && action !== "dismiss" ? (
         <fieldset className="flex flex-col gap-2">
-          <legend className="mb-1 text-body-sm font-semibold">Severity</legend>
+          <legend className="mb-1 text-body-sm font-semibold">
+            {action === "clear_profile" || action === "unlist" ? "Also warn the owner (optional)" : "Severity"}
+          </legend>
           {SEVERITIES.map((s) => (
             <label key={s.value} className="flex items-start gap-2 text-body-sm">
               <input type="radio" name={`${id}-severity`} value={s.value} checked={severity === s.value} onChange={() => setSeverity(s.value)} className="mt-1 size-4" />

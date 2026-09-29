@@ -1041,3 +1041,19 @@ Append-only. One dated entry per product decision, with the reason. Carried over
   mutual and ring marks; credentials; scored posts; active weeks; citizenship; penalties
   linking to the moderation notice); notices for a held gain, an exam pause, decay and a
   pending tier drop (with its date); and what the next tier needs (`next_tier_requirements`).
+- 2026-09-30 (Ahmed, phase 4 wrap-up): Phase 4 answers. "Clear bio and photo" and "Unlist" cost
+  no points by themselves; only Remove and Warn do (severity required there). A moderator can
+  give a severity on Clear or Unlist to add a Warn alongside (a warning sanction, a notice and
+  the penalty) when the content deserved one (migration `*_penalty_rules.sql`, pgTAP `36`).
+  Tiers stay cumulative (a top-10% student with no L3 skill stays Flare). `/me/credentials`
+  stays reached from Settings and the own profile until the phase 6 Me area. Students never see
+  who reviewed a credential; the reviewer is stored with every decision (`credentials.reviewer_id`,
+  `code_checks.grader_id`, `review_flags.reviewer_id`, `anti_gaming_flags.reviewed_by`,
+  `report_cases.resolved_by`, and `ops_audit_log.staff_id` on every step) for audits and phase
+  11 appeals: confirmed, nothing to add. The nightly run stays a 03:07 PKT start plus a
+  one-step-per-minute job.
+- 2026-09-30 (Ahmed, phase 4 wrap-up): Two-factor is on for ahmedmursileenf23@nutech.edu.pk and
+  the Phase 4 grant SQL was run, so that account has trust_reviewer and accounts. NUTECH exam
+  dates will be entered by hand at /ops/exam-periods; none are seeded or imported. The Phase 4
+  production check (`docs/phase-4-production-check.md`) is **deferred** to just before the
+  closed beta; it has not been done and Phase 4 is not marked passed on it.

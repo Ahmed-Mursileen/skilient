@@ -118,7 +118,7 @@ Legend: 📖 = PRD files to read (in `docs/prd/`), ✅ = done-when checks.
 
 *Slice 6 (leaderboard, /me/score, tier badges): `/leaderboard` (university with department and batch filters, or global; rank, tier and weekly change, never points; ties share a rank; blocked people hidden; your place pinned), `/me/score` (every component with its evidence, weekly change, held-gain, exam-pause, decay and tier-drop notices, what the next tier needs), tier badges on profiles, post cards, Explore, team cards and the board, and the opt-out in Settings → Privacy. pgTAP `35_leaderboard`, E2E `leaderboard.spec.ts`. With slices 1–5 this completes Phase 4's boxes and its done-when checks (reference students, 1,000-student tiers, decay paused by exams).*
 
-*Phase 4 wrap-up 2026-09-30: every box above is ticked and the done-when checks pass in CI (pgTAP `32_ranking_reference` for the 10 hand-worked students, `33_ranking_tiers` for 1,000 synthetic students, `34_ranking_nightly` for decay paused by an exam period). Open points are in `docs/phase-4-questions.md`; the production end-to-end check (Ahmed) is `docs/phase-4-production-check.md`.*
+*Phase 4 wrap-up 2026-09-30: every box above is ticked and the done-when checks pass in CI (pgTAP `32_ranking_reference` for the 10 hand-worked students, `33_ranking_tiers` for 1,000 synthetic students, `34_ranking_nightly` for decay paused by an exam period). Open points are in `docs/phase-4-questions.md`; the production end-to-end check (`docs/phase-4-production-check.md`) is **deferred** to just before the closed beta (Ahmed, 2026-09-30) and has not been done.*
 
 ## Phase 5 — Verified CV
 

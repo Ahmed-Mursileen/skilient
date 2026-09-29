@@ -102,7 +102,7 @@ select pg_temp.as_user('e');
 select public.claim_case(pg_temp.v('fc'), true);
 select throws_ok($$ select public.resolve_case(pg_temp.v('fc'), 'unlist', 'x x x', 'low') $$, '22023', null, 'a profile can''t be unlisted');
 select throws_ok($$ select public.resolve_case(pg_temp.v('fc'), 'remove', 'x x x', 'low') $$, '22023', null, 'or removed');
-select lives_ok($$ select public.resolve_case(pg_temp.v('fc'), 'clear_profile', 'Impersonating a teacher', 'low') $$, 'but its bio and photo can be cleared');
+select lives_ok($$ select public.resolve_case(pg_temp.v('fc'), 'clear_profile', 'Impersonating a teacher') $$, 'but its bio and photo can be cleared');
 reset role;
 select results_eq($$ select bio, avatar_path from public.profiles where user_id = '27000000-0000-0000-0000-00000000000a' $$,
   $$ values (null::text, null::text) $$, 'the bio and photo are gone');
@@ -112,7 +112,7 @@ set local role authenticated;
 select pg_temp.as_user('e');
 select public.claim_case(pg_temp.v('vc'), true);
 select throws_ok($$ select public.resolve_case(pg_temp.v('vc'), 'clear_profile', 'x x x', 'low') $$, '22023', null, 'a venture has no profile to clear');
-select lives_ok($$ select public.resolve_case(pg_temp.v('vc'), 'unlist', 'Selling exam answers', 'medium') $$, 'but it can be unlisted');
+select lives_ok($$ select public.resolve_case(pg_temp.v('vc'), 'unlist', 'Selling exam answers') $$, 'but it can be unlisted');
 reset role;
 select is((select visibility::text from public.ventures where id = current_setting('test.v')::uuid), 'unlisted', 'the venture is unlisted');
 select results_eq($$ select action, reason from public.ops_audit_log where target_id in (current_setting('test.fc'), current_setting('test.vc'))

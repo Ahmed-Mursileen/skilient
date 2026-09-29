@@ -28,7 +28,7 @@ Claude Code can't create these accounts or keys. Do them before (or alongside) p
 
 ## Phase 4
 
-- [ ] **Staff roles for Ahmed** (before slice 3's /ops trust queue): turn on two-factor for your
+- [x] **Staff roles for Ahmed** (done 2026-09-30: two-factor on, grant run) (before slice 3's /ops trust queue): turn on two-factor for your
   Skilient account (Settings → Security), then run in the Supabase SQL editor, with the email
   you sign in to Skilient with:
 
@@ -55,9 +55,9 @@ Claude Code can't create these accounts or keys. Do them before (or alongside) p
   ```
 
   Roles count only on a two-factor session: sign out and back in with your code afterwards.
-- [ ] **NUTECH exam periods**: enter them by hand at `/ops/exam-periods` once slice 5 ships
+- [ ] **NUTECH exam periods** (by hand, none seeded): enter them at `/ops/exam-periods` once slice 5 ships
   (nothing is seeded or imported).
-- [ ] **Production end-to-end check** (after slice 6): follow `docs/phase-4-production-check.md`.
+- [ ] **Production end-to-end check: DEFERRED to just before the closed beta, not yet done**: follow `docs/phase-4-production-check.md`.
 - [ ] **Review** the recognised-issuer list (slice 3) and the code-check change requests
   (slice 4) when they are sent.
 

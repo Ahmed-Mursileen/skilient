@@ -6,18 +6,7 @@ kept or changed in a follow-up PR. Answered items move to `docs/decisions.md`.
 
 ## Open
 
-- **/me/credentials link** (slice 3): reached from Settings (a "Credentials" row) and the owner's
-  profile until the phase 6 "Me" area. Assumed fine as a stopgap.
-- **Reviewer name** (slice 3): the student never sees who reviewed a credential (like
-  moderation). Assumed.
-
-- **Severity on Clear and Unlist** (slice 5): every decision that upholds a report takes a
-  severity and costs the owner points, including "Clear bio and photo" and "Unlist" (they are
-  Remove for profiles and ventures), not only Remove and Warn. Say if those two should cost
-  nothing.
-- **Tiers are cumulative** (slice 5): each tier needs its own milestone and every lower one's,
-  so a top-10% student with no L3 skill stays Flare. Assumed from "points plus a real-world
-  milestone for each tier".
+None.
 
 ## Waiting on Ahmed's review
 
@@ -28,6 +17,8 @@ kept or changed in a follow-up PR. Answered items move to `docs/decisions.md`.
   skill categories (48), plus the two fixed questions. Change or add any?
 
 ## Answered
+
+- **Phase 4 wrap-up questions** (2026-09-30): Clear and Unlist cost no points (Remove and Warn do; a severity on Clear/Unlist adds a Warn); tiers stay cumulative; `/me/credentials` stopgap fine; reviewer hidden from students but stored with every decision (confirmed). Logged in decisions.md.
 
 - **Plan questions 1–32** (2026-09-30): all defaults accepted, except: L4 endorsers may come from
   any of the student's ventures (Q3); credential PDFs ≤ 5 MB (Q14); PIAIC and NFTP added to the
