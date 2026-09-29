@@ -34,7 +34,7 @@ export interface VentureRow {
   createdAt: string;
 }
 
-async function skillNames(ids: string[]): Promise<Map<string, string>> {
+export async function skillNames(ids: string[]): Promise<Map<string, string>> {
   if (!ids.length) return new Map();
   const supabase = await createClient();
   const { data } = await supabase.from("skills").select("id, name").in("id", [...new Set(ids)]);

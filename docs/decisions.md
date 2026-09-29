@@ -688,3 +688,28 @@ Append-only. One dated entry per product decision, with the reason. Carried over
 - 2026-09-29 (phase 3, slice 7): Muting a thread (8 hours, a week, or until unmuted)
   stops its notifications and leaves it out of the header's unread count; the thread
   list still shows its unread number so nothing is lost.
+- 2026-09-29 (phase 3, slice 8): Chat extras. Replies quote a message in the same
+  thread (not a deleted one). Reactions are the fixed six (👍 ❤️ 😂 🎉 😮 🙏), several
+  per person, one of each, members only; blocked people's reactions are left out of
+  counts. Pins: venture team chats only, by the venture owner, up to 3 (serialised per
+  thread). DM read receipts are a per-person setting (`profiles.chat_read_receipts`, on
+  by default, `/settings/chat`); `dm_receipt()` returns the other person's read mark only
+  when both have them on, and a person with them off sends no "read" ping at all.
+  Typing and "changed" pings (reactions, pins, read) go over a private Realtime
+  broadcast channel `thread:{id}` whose `realtime.messages` policies admit members only;
+  a ping carries no data, the receiver re-reads through SQL, so blocks and settings
+  still apply. Chat search: a `tsvector` on messages with prefix matching of whole
+  words (single letters dropped), across your threads or within one, newest first, 30
+  results; the thread opens at a hit (`#m-{id}`) when it's among the loaded messages.
+  Links in messages reuse the posts' preview queue; a preview appears once fetched
+  (on the next load), not live.
+- 2026-09-29 (phase 3, slice 8): Explore follows PRD 5.10 over the phase 1 note that the
+  public card "can't be listed": people search lists card fields (name, username,
+  department, batch, university) to any signed-in student, with photo and skills only
+  where the profile is visible and the skill filter matching only visible skills.
+  Never self or anyone blocked either way; at least 2 characters (no browsing the
+  directory), 20 a page up to 200 deep, 60 searches a minute (shared with venture
+  search). Venture search follows `browse_ventures` visibility (never Unlisted, never a
+  blocked owner, University-only within the university) and returns the same row.
+  Ranking is text match only (exact username first, then name similarity); nothing
+  paid affects order. Listed in phase-3-questions.md (item 8).

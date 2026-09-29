@@ -62,8 +62,8 @@ Legend: 📖 = PRD files to read (in `docs/prd/`), ✅ = done-when checks.
 - [x] Posts (all types except Shipped wiring), audience, composer, images, link previews (SSRF-safe), comments, polls, events — *slices 3–4; Shipped is wired too (decisions.md 2026-09-29)*
 - [x] Micro-survey: assignment on first view, one answer per reader, tick/cross strip, public line, anti-gaming weights — *slice 5*
 - [x] Feed algorithm: stages job, `feed_page` scoring, `feed_sessions` paging, exploration slots — *slice 6*
-- [ ] Friends, blocking, DMs, venture group chat, typing, read receipts, replies, reactions, pins, search
-- [ ] Notifications (triggers, Realtime bell, email prefs + digest), explore/search
+- [x] Friends, blocking, DMs, venture group chat, typing, read receipts, replies, reactions, pins, search — *slices 1, 7, 8*
+- [x] Notifications (triggers, Realtime bell, email prefs + digest), explore/search — *slices 2, 8*
 - [ ] Reports + minimal `/ops` moderation queue with `ops_audit_log`
 
 ✅ Cross-account E2E flows pass · a reader's survey question never changes and a second answer is refused · paging returns no duplicates · a non-member can't read or join a thread via direct API · unfriend/block affect only the pair
@@ -81,6 +81,8 @@ Legend: 📖 = PRD files to read (in `docs/prd/`), ✅ = done-when checks.
 *Slice 6 (ranked feed): stage job, scoring, sessions, diversity, exploration, pinned announcement, followed venture updates, new posts pill. Hand-calculated scores, stage transitions, and paging with no duplicates under concurrent inserts, a second tab and session expiry (pgTAP `22_feed_ranking`, E2E `feed.spec.ts`); a post older than 7 days never appears.*
 
 *Slice 7 (chat core): DMs from the profile Message button (friends or an accepted application; closed by a block), venture group chats that follow membership, live delivery over Realtime, images in a private bucket, edit and delete, unread counts and one message notification per thread, mute. A non-member can't read, join or post to a thread through the API (pgTAP `23_chat`, E2E `chat.spec.ts`). Typing, read receipts, replies, reactions, pins and search: slice 8.*
+
+*Slice 8 (chat extras and Explore): replies, the six reactions, owner pins (up to 3) in team chats, typing and change pings over a members-only broadcast channel, DM read receipts with a setting that stops both sending and seeing them, search across chats and within a thread, link previews in messages; `/explore` with People, Projects and Startups, department, skill and university filters, friendship state and Add friend, never self or blocked (pgTAP `24_chat_extras`, `25_explore`; E2E `chat-extras.spec.ts`, `explore.spec.ts`).*
 
 ## ★ Slice checkpoint
 

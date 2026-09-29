@@ -126,17 +126,48 @@ isOneToOne: false
                   ]
                 },"chat_messages": {
                   Row: {
-                    "body": string,"created_at": string,"deleted_at": string | null,"edited_at": string | null,"id": string,"media_height": number | null,"media_path": string | null,"media_width": number | null,"sender_id": string,"thread_id": string
+                    "body": string,"created_at": string,"deleted_at": string | null,"edited_at": string | null,"id": string,"link_url": string | null,"media_height": number | null,"media_path": string | null,"media_width": number | null,"reply_to_id": string | null,"search": unknown,"sender_id": string,"thread_id": string
                   }
                   Insert: {
-                    "body"?: string,"created_at"?: string,"deleted_at"?: string | null,"edited_at"?: string | null,"id"?: string,"media_height"?: number | null,"media_path"?: string | null,"media_width"?: number | null,"sender_id": string,"thread_id": string
+                    "body"?: string,"created_at"?: string,"deleted_at"?: string | null,"edited_at"?: string | null,"id"?: string,"link_url"?: string | null,"media_height"?: number | null,"media_path"?: string | null,"media_width"?: number | null,"reply_to_id"?: string | null,"search"?: never,"sender_id": string,"thread_id": string
                   }
                   Update: {
-                    "body"?: string,"created_at"?: string,"deleted_at"?: string | null,"edited_at"?: string | null,"id"?: string,"media_height"?: number | null,"media_path"?: string | null,"media_width"?: number | null,"sender_id"?: string,"thread_id"?: string
+                    "body"?: string,"created_at"?: string,"deleted_at"?: string | null,"edited_at"?: string | null,"id"?: string,"link_url"?: string | null,"media_height"?: number | null,"media_path"?: string | null,"media_width"?: number | null,"reply_to_id"?: string | null,"search"?: never,"sender_id"?: string,"thread_id"?: string
                   }
                   Relationships: [
                     {
+      foreignKeyName: "chat_messages_reply_to_id_fkey"
+      columns: ["reply_to_id"]
+isOneToOne: false
+      referencedRelation: "chat_messages"
+      referencedColumns: ["id"]
+    },{
       foreignKeyName: "chat_messages_thread_id_fkey"
+      columns: ["thread_id"]
+isOneToOne: false
+      referencedRelation: "chat_threads"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"chat_pins": {
+                  Row: {
+                    "message_id": string,"pinned_at": string,"pinned_by": string,"thread_id": string
+                  }
+                  Insert: {
+                    "message_id": string,"pinned_at"?: string,"pinned_by": string,"thread_id": string
+                  }
+                  Update: {
+                    "message_id"?: string,"pinned_at"?: string,"pinned_by"?: string,"thread_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "chat_pins_message_id_fkey"
+      columns: ["message_id"]
+isOneToOne: true
+      referencedRelation: "chat_messages"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "chat_pins_thread_id_fkey"
       columns: ["thread_id"]
 isOneToOne: false
       referencedRelation: "chat_threads"
@@ -471,6 +502,31 @@ isOneToOne: false
                   }
                   Relationships: [
                     
+                  ]
+                },"message_reactions": {
+                  Row: {
+                    "created_at": string,"emoji": string,"message_id": string,"thread_id": string,"user_id": string
+                  }
+                  Insert: {
+                    "created_at"?: string,"emoji": string,"message_id": string,"thread_id": string,"user_id": string
+                  }
+                  Update: {
+                    "created_at"?: string,"emoji"?: string,"message_id"?: string,"thread_id"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "message_reactions_message_id_fkey"
+      columns: ["message_id"]
+isOneToOne: false
+      referencedRelation: "chat_messages"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "message_reactions_thread_id_fkey"
+      columns: ["thread_id"]
+isOneToOne: false
+      referencedRelation: "chat_threads"
+      referencedColumns: ["id"]
+    }
                   ]
                 },"micro_survey_assignments": {
                   Row: {
@@ -923,13 +979,13 @@ isOneToOne: false
                   ]
                 },"profiles": {
                   Row: {
-                    "avatar_path": string | null,"bio": string | null,"campus": string | null,"cover_path": string | null,"created_at": string,"department": string | null,"full_name": string,"graduation_year": number | null,"looking_for": (Database["public"]['Enums']["looking_for_option"])[],"onboarding_complete": boolean,"programme": string | null,"recruiter_visible": boolean,"role": Database["public"]['Enums']["account_role"],"university_id": string | null,"updated_at": string,"user_id": string,"username": string | null,"visibility": Database["public"]['Enums']["profile_visibility"]
+                    "avatar_path": string | null,"bio": string | null,"campus": string | null,"chat_read_receipts": boolean,"cover_path": string | null,"created_at": string,"department": string | null,"full_name": string,"graduation_year": number | null,"looking_for": (Database["public"]['Enums']["looking_for_option"])[],"onboarding_complete": boolean,"programme": string | null,"recruiter_visible": boolean,"role": Database["public"]['Enums']["account_role"],"university_id": string | null,"updated_at": string,"user_id": string,"username": string | null,"visibility": Database["public"]['Enums']["profile_visibility"]
                   }
                   Insert: {
-                    "avatar_path"?: string | null,"bio"?: string | null,"campus"?: string | null,"cover_path"?: string | null,"created_at"?: string,"department"?: string | null,"full_name": string,"graduation_year"?: number | null,"looking_for"?: (Database["public"]['Enums']["looking_for_option"])[],"onboarding_complete"?: boolean,"programme"?: string | null,"recruiter_visible"?: boolean,"role"?: Database["public"]['Enums']["account_role"],"university_id"?: string | null,"updated_at"?: string,"user_id": string,"username"?: string | null,"visibility"?: Database["public"]['Enums']["profile_visibility"]
+                    "avatar_path"?: string | null,"bio"?: string | null,"campus"?: string | null,"chat_read_receipts"?: boolean,"cover_path"?: string | null,"created_at"?: string,"department"?: string | null,"full_name": string,"graduation_year"?: number | null,"looking_for"?: (Database["public"]['Enums']["looking_for_option"])[],"onboarding_complete"?: boolean,"programme"?: string | null,"recruiter_visible"?: boolean,"role"?: Database["public"]['Enums']["account_role"],"university_id"?: string | null,"updated_at"?: string,"user_id": string,"username"?: string | null,"visibility"?: Database["public"]['Enums']["profile_visibility"]
                   }
                   Update: {
-                    "avatar_path"?: string | null,"bio"?: string | null,"campus"?: string | null,"cover_path"?: string | null,"created_at"?: string,"department"?: string | null,"full_name"?: string,"graduation_year"?: number | null,"looking_for"?: (Database["public"]['Enums']["looking_for_option"])[],"onboarding_complete"?: boolean,"programme"?: string | null,"recruiter_visible"?: boolean,"role"?: Database["public"]['Enums']["account_role"],"university_id"?: string | null,"updated_at"?: string,"user_id"?: string,"username"?: string | null,"visibility"?: Database["public"]['Enums']["profile_visibility"]
+                    "avatar_path"?: string | null,"bio"?: string | null,"campus"?: string | null,"chat_read_receipts"?: boolean,"cover_path"?: string | null,"created_at"?: string,"department"?: string | null,"full_name"?: string,"graduation_year"?: number | null,"looking_for"?: (Database["public"]['Enums']["looking_for_option"])[],"onboarding_complete"?: boolean,"programme"?: string | null,"recruiter_visible"?: boolean,"role"?: Database["public"]['Enums']["account_role"],"university_id"?: string | null,"updated_at"?: string,"user_id"?: string,"username"?: string | null,"visibility"?: Database["public"]['Enums']["profile_visibility"]
                   }
                   Relationships: [
                     {
@@ -942,13 +998,13 @@ isOneToOne: false
                   ]
                 },"profiles_public_card": {
                   Row: {
-                    "department": string | null,"full_name": string,"graduation_year": number | null,"user_id": string,"username": string | null
+                    "department": string | null,"full_name": string,"graduation_year": number | null,"search": unknown,"user_id": string,"username": string | null
                   }
                   Insert: {
-                    "department"?: string | null,"full_name": string,"graduation_year"?: number | null,"user_id": string,"username"?: string | null
+                    "department"?: string | null,"full_name": string,"graduation_year"?: number | null,"search"?: never,"user_id": string,"username"?: string | null
                   }
                   Update: {
-                    "department"?: string | null,"full_name"?: string,"graduation_year"?: number | null,"user_id"?: string,"username"?: string | null
+                    "department"?: string | null,"full_name"?: string,"graduation_year"?: number | null,"search"?: never,"user_id"?: string,"username"?: string | null
                   }
                   Relationships: [
                     {
@@ -1286,13 +1342,13 @@ isOneToOne: false
                   ]
                 },"ventures": {
                   Row: {
-                    "abandoned_at": string | null,"affiliation": string | null,"completed_at": string | null,"created_at": string,"description": string,"id": string,"owner_id": string,"pitch_url": string | null,"repo_full_name": string | null,"repo_id": number | null,"skill_ids": (string)[],"stage": Database["public"]['Enums']["venture_stage"] | null,"status": Database["public"]['Enums']["venture_status"],"team_size": number,"title": string,"type": Database["public"]['Enums']["venture_type"],"university_id": string,"updated_at": string,"visibility": Database["public"]['Enums']["venture_visibility"]
+                    "abandoned_at": string | null,"affiliation": string | null,"completed_at": string | null,"created_at": string,"description": string,"id": string,"owner_id": string,"pitch_url": string | null,"repo_full_name": string | null,"repo_id": number | null,"search": unknown,"skill_ids": (string)[],"stage": Database["public"]['Enums']["venture_stage"] | null,"status": Database["public"]['Enums']["venture_status"],"team_size": number,"title": string,"type": Database["public"]['Enums']["venture_type"],"university_id": string,"updated_at": string,"visibility": Database["public"]['Enums']["venture_visibility"]
                   }
                   Insert: {
-                    "abandoned_at"?: string | null,"affiliation"?: string | null,"completed_at"?: string | null,"created_at"?: string,"description": string,"id"?: string,"owner_id": string,"pitch_url"?: string | null,"repo_full_name"?: string | null,"repo_id"?: number | null,"skill_ids"?: (string)[],"stage"?: Database["public"]['Enums']["venture_stage"] | null,"status"?: Database["public"]['Enums']["venture_status"],"team_size"?: number,"title": string,"type": Database["public"]['Enums']["venture_type"],"university_id": string,"updated_at"?: string,"visibility"?: Database["public"]['Enums']["venture_visibility"]
+                    "abandoned_at"?: string | null,"affiliation"?: string | null,"completed_at"?: string | null,"created_at"?: string,"description": string,"id"?: string,"owner_id": string,"pitch_url"?: string | null,"repo_full_name"?: string | null,"repo_id"?: number | null,"search"?: never,"skill_ids"?: (string)[],"stage"?: Database["public"]['Enums']["venture_stage"] | null,"status"?: Database["public"]['Enums']["venture_status"],"team_size"?: number,"title": string,"type": Database["public"]['Enums']["venture_type"],"university_id": string,"updated_at"?: string,"visibility"?: Database["public"]['Enums']["venture_visibility"]
                   }
                   Update: {
-                    "abandoned_at"?: string | null,"affiliation"?: string | null,"completed_at"?: string | null,"created_at"?: string,"description"?: string,"id"?: string,"owner_id"?: string,"pitch_url"?: string | null,"repo_full_name"?: string | null,"repo_id"?: number | null,"skill_ids"?: (string)[],"stage"?: Database["public"]['Enums']["venture_stage"] | null,"status"?: Database["public"]['Enums']["venture_status"],"team_size"?: number,"title"?: string,"type"?: Database["public"]['Enums']["venture_type"],"university_id"?: string,"updated_at"?: string,"visibility"?: Database["public"]['Enums']["venture_visibility"]
+                    "abandoned_at"?: string | null,"affiliation"?: string | null,"completed_at"?: string | null,"created_at"?: string,"description"?: string,"id"?: string,"owner_id"?: string,"pitch_url"?: string | null,"repo_full_name"?: string | null,"repo_id"?: number | null,"search"?: never,"skill_ids"?: (string)[],"stage"?: Database["public"]['Enums']["venture_stage"] | null,"status"?: Database["public"]['Enums']["venture_status"],"team_size"?: number,"title"?: string,"type"?: Database["public"]['Enums']["venture_type"],"university_id"?: string,"updated_at"?: string,"visibility"?: Database["public"]['Enums']["venture_visibility"]
                   }
                   Relationships: [
                     {
@@ -1395,6 +1451,9 @@ isOneToOne: false
 "disconnect_github":
 { Args: Record<PropertyKey, never>; Returns: boolean
                            },
+"dm_receipt":
+{ Args: { "p_thread": string }; Returns: string
+                           },
 "edit_message":
 { Args: { "p_body": string,"p_message": string }; Returns: undefined
                            },
@@ -1488,6 +1547,11 @@ isOneToOne: false
               "created_at": string,"full_name": string,"username": string
             }[]
                            },
+"my_chat_settings":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "read_receipts": boolean
+            }[]
+                           },
 "my_friend_requests":
 { Args: Record<PropertyKey, never>; Returns: {
               "avatar_path": string,"created_at": string,"department": string,"direction": string,"full_name": string,"graduation_year": number,"id": string,"user_id": string,"username": string
@@ -1532,6 +1596,9 @@ isOneToOne: false
 "pin_comment":
 { Args: { "p_comment": string,"p_pin": boolean }; Returns: undefined
                            },
+"pin_message":
+{ Args: { "p_message": string,"p_pin": boolean }; Returns: undefined
+                           },
 "pinned_announcement":
 { Args: Record<PropertyKey, never>; Returns: string
                            },
@@ -1563,6 +1630,11 @@ isOneToOne: false
                            },
 "rate_limit":
 { Args: { "p_key": string,"p_limit": number,"p_window_seconds": number }; Returns: boolean
+                           },
+"reaction_summary":
+{ Args: { "p_messages": (string)[] }; Returns: {
+              "message_id": string,"reactions": Json
+            }[]
                            },
 "record_github_webhook":
 { Args: { "p_action"?: string,"p_delivery_id": string,"p_event": string,"p_installation_id"?: number,"p_payload": Json }; Returns: boolean
@@ -1605,6 +1677,21 @@ isOneToOne: false
 "save_venture_role":
 { Args: { "p_role"?: string,"p_skill_ids": (string)[],"p_slots": number,"p_title": string,"p_venture": string }; Returns: string
                            },
+"search_chats":
+{ Args: { "p_q": string,"p_thread"?: string }; Returns: {
+              "created_at": string,"excerpt": string,"message_id": string,"sender_name": string,"thread_id": string,"thread_title": string
+            }[]
+                           },
+"search_people":
+{ Args: { "p_department"?: string,"p_offset"?: number,"p_q": string,"p_skill"?: string,"p_university"?: string }; Returns: {
+              "avatar_path": string,"department": string,"friendship": string,"full_name": string,"graduation_year": number,"skills": (string)[],"university": string,"user_id": string,"username": string
+            }[]
+                           },
+"search_ventures":
+{ Args: { "p_offset"?: number,"p_q": string,"p_skill"?: string,"p_type": Database["public"]['Enums']["venture_type"],"p_university"?: string }; Returns: {
+              "created_at": string,"id": string,"members": number,"open_slots": number,"owner_name": string,"owner_username": string,"skill_ids": (string)[],"stage": Database["public"]['Enums']["venture_stage"],"status": Database["public"]['Enums']["venture_status"],"summary": string,"team_size": number,"title": string,"type": Database["public"]['Enums']["venture_type"],"university_name": string,"visibility": Database["public"]['Enums']["venture_visibility"]
+            }[]
+                           },
 "security_not_me":
 { Args: { "p_token": string }; Returns: Json
                            },
@@ -1614,7 +1701,7 @@ isOneToOne: false
             }[]
                            },
 "send_message":
-{ Args: { "p_body": string,"p_media"?: Json,"p_thread": string }; Returns: string
+{ Args: { "p_body": string,"p_media"?: Json,"p_reply_to"?: string,"p_thread": string }; Returns: string
                            },
 "set_member_role":
 { Args: { "p_member": string,"p_role": Database["public"]['Enums']["venture_team_role"],"p_venture": string }; Returns: undefined
@@ -1624,6 +1711,9 @@ isOneToOne: false
                            },
 "set_notification_pref":
 { Args: { "p_category": string,"p_channel": Database["public"]['Enums']["email_channel"] }; Returns: undefined
+                           },
+"set_read_receipts":
+{ Args: { "p_on": boolean }; Returns: undefined
                            },
 "set_venture_questions":
 { Args: { "p_questions": (string)[],"p_venture": string }; Returns: undefined
@@ -1644,13 +1734,21 @@ isOneToOne: false
                            },
 "thread_messages":
 { Args: { "p_before"?: string,"p_limit"?: number,"p_thread": string }; Returns: {
-              "body": string,"created_at": string,"deleted": boolean,"edited_at": string,"id": string,"media_height": number,"media_path": string,"media_width": number,"sender_id": string
+              "body": string,"created_at": string,"deleted": boolean,"edited_at": string,"id": string,"link": Json,"media_height": number,"media_path": string,"media_width": number,"pinned": boolean,"reactions": Json,"reply_excerpt": string,"reply_sender_id": string,"reply_to_id": string,"sender_id": string
             }[]
                            },
 "thread_people":
 { Args: { "p_thread": string }; Returns: {
               "avatar_path": string,"blocked": boolean,"is_me": boolean,"name": string,"user_id": string,"username": string
             }[]
+                           },
+"thread_pins":
+{ Args: { "p_thread": string }; Returns: {
+              "excerpt": string,"message_id": string,"pinned_at": string,"sender_id": string
+            }[]
+                           },
+"toggle_reaction":
+{ Args: { "p_emoji": string,"p_message": string }; Returns: boolean
                            },
 "touch_activity":
 { Args: Record<PropertyKey, never>; Returns: undefined

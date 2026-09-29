@@ -51,6 +51,19 @@ export interface ChatPerson {
   isMe: boolean;
 }
 
+export interface Reaction {
+  emoji: string;
+  count: number;
+  mine: boolean;
+}
+
+export interface ChatLink {
+  url: string;
+  title: string | null;
+  description: string | null;
+  siteName: string | null;
+}
+
 export interface ChatMessage {
   id: string;
   senderId: string;
@@ -62,6 +75,16 @@ export interface ChatMessage {
   timeLabel: string;
   edited: boolean;
   deleted: boolean;
+  replyTo: { id: string; senderId: string | null; excerpt: string } | null;
+  reactions: Reaction[];
+  pinned: boolean;
+  link: ChatLink | null;
+}
+
+export interface ChatPin {
+  messageId: string;
+  senderId: string;
+  excerpt: string;
 }
 
 export interface ThreadView {
@@ -69,6 +92,32 @@ export interface ThreadView {
   people: ChatPerson[];
   messages: ChatMessage[];
   hasOlder: boolean;
+  pins: ChatPin[];
+  /** DMs with receipts on both sides: when the other person last read the thread. */
+  receipt: string | null;
+  /** The caller's own read-receipts setting. */
+  readReceipts: boolean;
+  /** The venture owner may pin in the team chat. */
+  canPin: boolean;
+}
+
+export function toReactions(value: unknown): Reaction[] {
+  return Array.isArray(value)
+    ? value.map((r: Record<string, unknown>) => ({ emoji: String(r.emoji), count: Number(r.count), mine: Boolean(r.mine) }))
+    : [];
+}
+
+export function toLink(value: unknown): ChatLink | null {
+  if (!value || typeof value !== "object") return null;
+  const l = value as Record<string, string | null>;
+  return l.url ? { url: l.url, title: l.title ?? null, description: l.description ?? null, siteName: l.site_name ?? null } : null;
+}
+
+export async function getPins(threadId: string): Promise<ChatPin[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("thread_pins", { p_thread: threadId });
+  if (error) throw new Error(`thread_pins failed: ${error.code}`);
+  return (data ?? []).map((p) => ({ messageId: p.message_id, senderId: p.sender_id, excerpt: p.excerpt }));
 }
 
 const PAGE = 50;
@@ -88,9 +137,11 @@ export async function getThread(id: string, before: string | null = null): Promi
   const threads = await getThreads();
   const thread = threads.find((t) => t.id === id);
   const supabase = await createClient();
-  const [people, msgs] = await Promise.all([
+  const [people, msgs, receipt, settings] = await Promise.all([
     supabase.rpc("thread_people", { p_thread: id }),
     supabase.rpc("thread_messages", { p_thread: id, p_before: before ?? undefined, p_limit: PAGE }),
+    supabase.rpc("dm_receipt", { p_thread: id }),
+    supabase.rpc("my_chat_settings"),
   ]);
   if (people.error || msgs.error) throw new Error(`thread read failed: ${people.error?.code ?? msgs.error?.code}`);
   if (!people.data?.length) return null;
@@ -117,6 +168,13 @@ export async function getThread(id: string, before: string | null = null): Promi
     })()) as ThreadRow;
   if (!row) return null;
   const rows = msgs.data ?? [];
+  const [pins, owner] = await Promise.all([
+    row.type === "group" ? getPins(id) : Promise.resolve([]),
+    row.type === "group" && row.ventureId
+      ? supabase.from("ventures").select("owner_id").eq("id", row.ventureId).maybeSingle()
+      : Promise.resolve({ data: null }),
+  ]);
+  const me = people.data.find((p) => p.is_me)?.user_id;
   const signed = await signChatImages(rows.map((m) => m.media_path).filter((p): p is string => Boolean(p)));
   return {
     thread: row,
@@ -140,9 +198,17 @@ export async function getThread(id: string, before: string | null = null): Promi
         timeLabel: clockTime(m.created_at),
         edited: m.edited_at !== null,
         deleted: m.deleted,
+        replyTo: m.reply_to_id ? { id: m.reply_to_id, senderId: m.reply_sender_id, excerpt: m.reply_excerpt ?? "Earlier message" } : null,
+        reactions: toReactions(m.reactions),
+        pinned: m.pinned,
+        link: toLink(m.link),
       }))
       .reverse(),
     hasOlder: rows.length === PAGE,
+    pins,
+    receipt: receipt.data ?? null,
+    readReceipts: settings.data?.[0]?.read_receipts ?? true,
+    canPin: Boolean(me && owner.data?.owner_id === me),
   };
 }
 
@@ -156,4 +222,10 @@ export async function getUnreadChatCount(): Promise<number> {
   const supabase = await createClient();
   const { data } = await supabase.rpc("unread_chat_count");
   return data ?? 0;
+}
+
+export async function getChatSettings(): Promise<{ readReceipts: boolean }> {
+  const supabase = await createClient();
+  const { data } = await supabase.rpc("my_chat_settings");
+  return { readReceipts: data?.[0]?.read_receipts ?? true };
 }
