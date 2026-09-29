@@ -1,6 +1,7 @@
 "use client";
 
 import { PushPin } from "@phosphor-icons/react";
+import { ReportButton } from "@/components/reports/report-button";
 import type { Route } from "next";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -114,6 +115,7 @@ function CommentRow({ comment: c, postId, isPostAuthor, canReply }: { comment: C
               Delete
             </Button>
           ) : null}
+          {!c.isMine && !c.deleted ? <ReportButton targetType="comment" targetId={c.id} /> : null}
         </div>
         {error ? <FieldError>{error}</FieldError> : null}
         {replying ? <CommentForm postId={postId} parentId={c.id} label={`Reply to ${c.author.name ?? "this comment"}`} onDone={() => setReplying(false)} autoFocus /> : null}

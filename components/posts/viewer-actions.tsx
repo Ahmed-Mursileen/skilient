@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { ReportButton } from "@/components/reports/report-button";
 import { Button } from "@/components/ui";
 import { hidePost, muteUser } from "@/lib/actions/posts";
 
@@ -38,6 +39,7 @@ export function ViewerActions({
           Mute {authorName.split(" ")[0]}
         </Button>
       ) : null}
+      <ReportButton targetType="post" targetId={postId} />
       {error ? (
         <span role="alert" className="text-caption text-text-error">
           {error}

@@ -10,6 +10,7 @@ describe("describeNotification", () => {
       "friend_request", "friend_accepted", "application_received", "application_decided", "application_withdrawn",
       "invite_received", "invite_answered", "ownership_transferred", "member_left", "member_removed",
       "venture_completed", "venture_abandoned", "comment_received", "comment_reply", "comment_mention", "chat_message",
+      "content_removed", "moderation_warning",
     ];
     for (const type of types) {
       const d = describeNotification({ ...base, type });
@@ -18,6 +19,12 @@ describe("describeNotification", () => {
       expect(d.subject.length, type).toBeGreaterThan(5);
       expect(d.text, type).not.toMatch(/—/); // no em-dashes in UI copy (screen spec)
     }
+  });
+
+  it("names what was moderated, never who", () => {
+    const d = describeNotification({ ...base, type: "content_removed", actorName: null, entityId: "c1", data: { target_type: "comment" } });
+    expect(d.text).toBe("A moderator removed your comment for breaking the community guidelines.");
+    expect(d.href).toBe("/moderation/c1");
   });
 
   it("uses the decision in application_decided", () => {

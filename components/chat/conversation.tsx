@@ -39,6 +39,7 @@ import type { ChatLink, ChatMessage, ChatPerson, ChatPin, Reaction, ThreadRow } 
 import { prepareImages } from "@/lib/images/downscale";
 import { linkify } from "@/lib/format/linkify";
 import { clockTime } from "@/lib/format/time";
+import { ReportButton, type EarlierMessage } from "@/components/reports/report-button";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/cn";
 
@@ -449,6 +450,14 @@ export function Conversation({
                   setItems((prev) => prev.map((x) => (x.id === m.id ? { ...x, reactions } : x)));
                   ping("reactions", { messageId: m.id });
                 }}
+                earlier={
+                  mine
+                    ? []
+                    : items
+                        .slice(Math.max(0, i - 10), i)
+                        .filter((x) => x.status === "sent" && !x.deleted)
+                        .map((x) => ({ id: x.id, sender: x.senderId === meId ? "You" : (byId.get(x.senderId)?.name ?? "Former member"), excerpt: excerptOf(x) }))
+                }
                 onPinned={(next) => {
                   setPins(next);
                   const pinned = new Set(next.map((p) => p.messageId));
@@ -554,6 +563,7 @@ function MessageBubble({
   onReply,
   onReacted,
   onPinned,
+  earlier,
 }: {
   item: Item;
   mine: boolean;
@@ -566,6 +576,7 @@ function MessageBubble({
   onReply: () => void;
   onReacted: (reactions: Reaction[]) => void;
   onPinned: (pins: ChatPin[]) => void;
+  earlier: EarlierMessage[];
 }) {
   const [editing, setEditing] = useState(false);
   const [picking, setPicking] = useState(false);
@@ -717,6 +728,7 @@ function MessageBubble({
             ) : null}
           </>
         ) : null}
+        {!mine && sent && !editing ? <ReportButton targetType="message" targetId={m.id} earlier={earlier} compact /> : null}
         {mine && sent && !editing ? (
           <>
             {m.body ? (

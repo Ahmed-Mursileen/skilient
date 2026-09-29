@@ -64,7 +64,7 @@ Legend: 📖 = PRD files to read (in `docs/prd/`), ✅ = done-when checks.
 - [x] Feed algorithm: stages job, `feed_page` scoring, `feed_sessions` paging, exploration slots — *slice 6*
 - [x] Friends, blocking, DMs, venture group chat, typing, read receipts, replies, reactions, pins, search — *slices 1, 7, 8*
 - [x] Notifications (triggers, Realtime bell, email prefs + digest), explore/search — *slices 2, 8*
-- [ ] Reports + minimal `/ops` moderation queue with `ops_audit_log`
+- [x] Reports + minimal `/ops` moderation queue with `ops_audit_log` — *slice 9*
 
 ✅ Cross-account E2E flows pass · a reader's survey question never changes and a second answer is refused · paging returns no duplicates · a non-member can't read or join a thread via direct API · unfriend/block affect only the pair
 
@@ -83,6 +83,10 @@ Legend: 📖 = PRD files to read (in `docs/prd/`), ✅ = done-when checks.
 *Slice 7 (chat core): DMs from the profile Message button (friends or an accepted application; closed by a block), venture group chats that follow membership, live delivery over Realtime, images in a private bucket, edit and delete, unread counts and one message notification per thread, mute. A non-member can't read, join or post to a thread through the API (pgTAP `23_chat`, E2E `chat.spec.ts`). Typing, read receipts, replies, reactions, pins and search: slice 8.*
 
 *Slice 8 (chat extras and Explore): replies, the six reactions, owner pins (up to 3) in team chats, typing and change pings over a members-only broadcast channel, DM read receipts with a setting that stops both sending and seeing them, search across chats and within a thread, link previews in messages; `/explore` with People, Projects and Startups, department, skill and university filters, friendship state and Add friend, never self or blocked (pgTAP `24_chat_extras`, `25_explore`; E2E `chat-extras.spec.ts`, `explore.spec.ts`).*
+
+*Slice 9 (reports and minimal /ops): Report on posts, comments, messages, profiles (the restricted card too) and ventures, one per person and target, 60 s apart, a snapshot at report time and, for a message, up to 10 earlier messages the reporter ticks (copied; staff read nothing else of a chat); 3 post reports hold the post; 3 Appropriate crosses from non-friends open a soft-signal case. `/ops` for moderators with two-factor: one case per target, oldest first, claim before acting, dismiss (releases a held post), remove (hidden from everyone, the owner included) or warn, each with a reason in `ops_audit_log`; the owner is notified and reads the reason at `/moderation/[id]`. Suspend and ban are phase 11 (`docs/emergency-ban.md` until then). pgTAP `26_reports`, E2E `reports.spec.ts`.*
+
+*Phase 3 wrap-up 2026-09-29: every box above is ticked and the done-when checks pass in CI (cross-account E2E, fixed survey question and refused second answer, paging without duplicates, thread membership enforced through the raw API, unfriend/block only the pair). Still open: the production run of the end-to-end student journey (below, deferred until production is live), the Resend secrets (setup checklist), and the questions in `docs/phase-3-questions.md`.*
 
 ## ★ Slice checkpoint
 
