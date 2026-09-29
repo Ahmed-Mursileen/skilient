@@ -32,8 +32,8 @@ export type CaseAction = "dismiss" | "remove" | "clear_profile" | "unlist" | "wa
 export type Severity = "low" | "medium" | "high";
 
 /**
- * Anything but a dismissal upholds the report and needs a severity: the owner loses 50, 150
- * or 300 ranking points for 12 months (PRD 5.13 penalties, decisions.md 2026-09-30).
+ * Remove and Warn need a severity: the owner loses 50, 150 or 300 ranking points for 12
+ * months (PRD 5.13). Clear and Unlist cost nothing; a severity there adds a Warn alongside.
  */
 export async function resolveCase(caseId: string, action: CaseAction, reason: string, severity: Severity | null): Promise<ActionResult> {
   const ctx = await actionContext("ops.resolve");
@@ -44,7 +44,7 @@ export async function resolveCase(caseId: string, action: CaseAction, reason: st
       reason: z.string().trim().min(3, "Give a reason.").max(2000),
       severity: z.enum(["low", "medium", "high"]).nullable(),
     })
-    .refine((v) => v.action === "dismiss" || v.severity !== null, { message: "Choose a severity.", path: ["severity"] })
+    .refine((v) => !["remove", "warn"].includes(v.action) || v.severity !== null, { message: "Choose a severity.", path: ["severity"] })
     .safeParse({ id: caseId, action, reason, severity });
   if (!parsed.success) {
     ctx.done("refused", { error_code: "invalid_input" });
