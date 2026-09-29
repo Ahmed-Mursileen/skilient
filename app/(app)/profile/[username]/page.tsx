@@ -1,7 +1,9 @@
 import type { Route } from "next";
 import Link from "next/link";
+import { EndorsementList } from "@/components/endorsements/endorsement-list";
 import { SkillList } from "@/components/skills/skill-list";
 import { EmptyState } from "@/components/ui";
+import { getEndorsements } from "@/lib/data/endorsements";
 import { getProfile } from "@/lib/data/profiles";
 import { getProfileSkills } from "@/lib/data/skills";
 import { LOOKING_FOR, VISIBILITY } from "@/lib/profile/options";
@@ -9,20 +11,20 @@ import { LOOKING_FOR, VISIBILITY } from "@/lib/profile/options";
 /** Top skills on the overview; the Skills tab lists them all. */
 const TOP_SKILLS = 8;
 
-/** Overview tab: about, top skills, studies and what they're open to. */
+/** Overview tab: about, top skills, endorsements, studies and what they're open to. */
 export default async function ProfileOverviewPage({ params }: PageProps<"/profile/[username]">) {
   const { username } = await params;
   const lookup = await getProfile(username);
   if (lookup.kind !== "full") return null;
   const p = lookup.profile;
-  const skills = await getProfileSkills(p.userId, p.isOwner);
+  const [skills, endorsements] = await Promise.all([getProfileSkills(p.userId, p.isOwner), getEndorsements(p.userId)]);
   const openTo = LOOKING_FOR.filter((o) => p.lookingFor.includes(o.value)).map((o) => o.label);
   const details = [
     { label: "Programme", value: p.programme },
     { label: "Campus", value: p.campus },
   ].filter((d) => d.value);
 
-  if (!p.bio && !details.length && !openTo.length && !skills.length) {
+  if (!p.bio && !details.length && !openTo.length && !skills.length && !endorsements.length) {
     return (
       <EmptyState
         title={p.isOwner ? "Tell people about yourself" : "Nothing here yet"}
@@ -62,6 +64,24 @@ export default async function ProfileOverviewPage({ params }: PageProps<"/profil
             ownerName={p.fullName.split(/\s+/)[0] ?? p.fullName}
             grouped={false}
           />
+        </section>
+      ) : null}
+      {endorsements.length ? (
+        <section aria-labelledby="endorsements" id="endorsements-section">
+          <h2 id="endorsements" className="mb-3 text-h4">
+            Endorsements
+          </h2>
+          <EndorsementList groups={endorsements} isOwner={p.isOwner} username={p.username} />
+        </section>
+      ) : p.isOwner && skills.length ? (
+        <section aria-labelledby="endorsements" id="endorsements-section">
+          <h2 id="endorsements" className="text-h4">
+            Endorsements
+          </h2>
+          <p className="mt-2 text-body-sm text-text-secondary">
+            None yet. Teammates endorse you from a venture&apos;s Team tab once it&apos;s in progress; two different teammates on a
+            skill make it peer-verified.
+          </p>
         </section>
       ) : null}
       {details.length ? (

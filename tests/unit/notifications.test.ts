@@ -40,6 +40,18 @@ describe("describeNotification", () => {
       .toBe("/requests?tab=sent");
   });
 
+  it("names the endorsed skills and opens the endorsee's profile or the endorse sheet", () => {
+    const d = describeNotification({
+      ...base,
+      type: "endorsement_received",
+      data: { ...base.data, skills: ["React", "Python"], username: "amna_k" },
+    });
+    expect(d.text).toContain("endorsed you for React, Python");
+    expect(d.href).toBe("/profile/amna_k#endorsements");
+    const prompt = describeNotification({ ...base, type: "endorse_teammates", actorName: null });
+    expect(prompt.href).toMatch(/\/ventures\/[^/]+\/team\?endorse=1$/);
+  });
+
   it("falls back to 'Someone' and 'a venture' when details are missing", () => {
     const d = describeNotification({ type: "application_received", actorName: null, entityType: "application", entityId: "x", data: {} });
     expect(d.text).toBe("Someone applied to join a venture.");

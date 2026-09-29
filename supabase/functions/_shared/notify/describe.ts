@@ -140,6 +140,22 @@ export function describeNotification(n: NotificationInput): NotificationText {
         subject: where ? `New messages in ${where}` : `${who} sent you a message`,
       };
     }
+    case "endorsement_received": {
+      const skills = Array.isArray(n.data.skills) ? n.data.skills.filter((s): s is string => typeof s === "string") : [];
+      const list = skills.length ? skills.join(", ") : "a skill";
+      const username = str(n.data.username);
+      return {
+        text: `${who} endorsed you for ${list} on ${venture}.`,
+        href: username ? `/profile/${username}#endorsements` : venturePath,
+        subject: `${who} endorsed you on Skilient`,
+      };
+    }
+    case "endorse_teammates":
+      return {
+        text: `${venture} is complete. Endorse your teammates for the skills you saw them use.`,
+        href: ventureId ? `${venturePath}/team?endorse=1` : "/ventures",
+        subject: `Endorse your teammates on ${venture}`,
+      };
     case "venture_abandoned":
       return { text: `${venture} was closed without finishing.`, href: venturePath, subject: `${venture} was closed` };
     default:

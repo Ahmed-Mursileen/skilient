@@ -280,6 +280,49 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"endorsements": {
+                  Row: {
+                    "created_at": string,"endorsee_id": string,"endorser_id": string,"evidence_id": string | null,"hidden": boolean,"hidden_at": string | null,"id": string,"note": string | null,"skill_id": string,"venture_id": string
+                  }
+                  Insert: {
+                    "created_at"?: string,"endorsee_id": string,"endorser_id": string,"evidence_id"?: string | null,"hidden"?: boolean,"hidden_at"?: string | null,"id"?: string,"note"?: string | null,"skill_id": string,"venture_id": string
+                  }
+                  Update: {
+                    "created_at"?: string,"endorsee_id"?: string,"endorser_id"?: string,"evidence_id"?: string | null,"hidden"?: boolean,"hidden_at"?: string | null,"id"?: string,"note"?: string | null,"skill_id"?: string,"venture_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "endorsements_evidence_id_fkey"
+      columns: ["evidence_id"]
+isOneToOne: false
+      referencedRelation: "contributions"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "endorsements_evidence_id_fkey"
+      columns: ["evidence_id"]
+isOneToOne: false
+      referencedRelation: "contributions_with_status"
+      referencedColumns: ["current_id"]
+    },{
+      foreignKeyName: "endorsements_evidence_id_fkey"
+      columns: ["evidence_id"]
+isOneToOne: false
+      referencedRelation: "contributions_with_status"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "endorsements_skill_id_fkey"
+      columns: ["skill_id"]
+isOneToOne: false
+      referencedRelation: "skills"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "endorsements_venture_id_fkey"
+      columns: ["venture_id"]
+isOneToOne: false
+      referencedRelation: "ventures"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"event_rsvps": {
                   Row: {
                     "created_at": string,"post_id": string,"status": Database["public"]['Enums']["rsvp_status"],"user_id": string
@@ -1241,13 +1284,13 @@ isOneToOne: false
                   ]
                 },"user_skills": {
                   Row: {
-                    "active_days": number,"hits": number,"last_used_at": string | null,"level": number,"lines": number,"repos": number,"skill_id": string,"updated_at": string,"user_id": string
+                    "active_days": number,"hits": number,"last_used_at": string | null,"level": number,"lines": number,"peer_verified": boolean,"repos": number,"skill_id": string,"updated_at": string,"user_id": string
                   }
                   Insert: {
-                    "active_days"?: number,"hits"?: number,"last_used_at"?: string | null,"level": number,"lines"?: number,"repos"?: number,"skill_id": string,"updated_at"?: string,"user_id": string
+                    "active_days"?: number,"hits"?: number,"last_used_at"?: string | null,"level": number,"lines"?: number,"peer_verified"?: boolean,"repos"?: number,"skill_id": string,"updated_at"?: string,"user_id": string
                   }
                   Update: {
-                    "active_days"?: number,"hits"?: number,"last_used_at"?: string | null,"level"?: number,"lines"?: number,"repos"?: number,"skill_id"?: string,"updated_at"?: string,"user_id"?: string
+                    "active_days"?: number,"hits"?: number,"last_used_at"?: string | null,"level"?: number,"lines"?: number,"peer_verified"?: boolean,"repos"?: number,"skill_id"?: string,"updated_at"?: string,"user_id"?: string
                   }
                   Relationships: [
                     {
@@ -1533,6 +1576,19 @@ isOneToOne: false
 "edit_post":
 { Args: { "p_body": string,"p_post": string }; Returns: undefined
                            },
+"endorse":
+{ Args: { "p_endorsee": string,"p_items": Json,"p_note"?: string,"p_venture": string }; Returns: number
+                           },
+"endorse_options":
+{ Args: { "p_venture": string }; Returns: {
+              "avatar_path": string,"evidence": Json,"full_name": string,"given": (string)[],"month_left": number,"skills": Json,"user_id": string,"username": string
+            }[]
+                           },
+"endorsements_for":
+{ Args: { "p_user": string }; Returns: {
+              "created_at": string,"endorser_avatar_path": string,"endorser_id": string,"endorser_name": string,"endorser_username": string,"has_evidence": boolean,"hidden": boolean,"id": string,"note": string,"skill_id": string,"skill_name": string,"venture_id": string,"venture_title": string
+            }[]
+                           },
 "feed_page":
 { Args: { "p_audience": Database["public"]['Enums']["post_audience"],"p_cursor"?: string,"p_filter"?: string,"p_limit"?: number }; Returns: {
               "next_cursor": string,"post_id": string,"rank": number
@@ -1561,6 +1617,9 @@ isOneToOne: false
                            },
 "health_check":
 { Args: Record<PropertyKey, never>; Returns: boolean
+                           },
+"hide_endorsement":
+{ Args: { "p_hidden"?: boolean,"p_id": string }; Returns: boolean
                            },
 "hide_post":
 { Args: { "p_hide": boolean,"p_post": string }; Returns: undefined

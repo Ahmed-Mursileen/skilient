@@ -38,3 +38,8 @@ export function ageLabel(iso: string, now: Date = new Date()): string {
   if (hours < 48) return `${hours} h`;
   return `${Math.floor(hours / 24)} days`;
 }
+
+/** "12 Sep 2026" in Pakistan time, for dates on records (endorsements, credentials). */
+export function dayLabel(iso: string): string {
+  return dayOnly.format(new Date(iso));
+}

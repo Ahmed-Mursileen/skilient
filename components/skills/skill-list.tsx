@@ -63,10 +63,10 @@ export function SkillList({
                       opener.current = e.currentTarget;
                       setOpen(s);
                     }}
-                    aria-label={`${s.name}, level ${s.level}: ${isOwner ? LEVELS[s.level].own : LEVELS[s.level].other}. Details`}
+                    aria-label={`${s.name}, level ${s.level}: ${isOwner ? LEVELS[s.level].own : LEVELS[s.level].other}${s.peerVerified ? ", peer-verified" : ""}. Details`}
                     className="rounded-sm transition-colors duration-[120ms] hover:[&>span]:border-border-strong"
                   >
-                    <SkillChip name={s.name} level={s.level} />
+                    <SkillChip name={s.name} level={s.level} peerVerified={s.peerVerified} />
                   </button>
                 </li>
               ))}
@@ -115,6 +115,12 @@ function SkillDrawer({
     >
       <div className="flex flex-col gap-6">
         <LevelLadder level={skill.level} isOwner={isOwner} />
+        {skill.peerVerified ? (
+          <p className="flex items-start gap-2 text-body-sm text-text-primary">
+            <CheckCircle aria-hidden weight="fill" className="mt-0.5 size-4 shrink-0 text-verified" />
+            Peer-verified: at least two teammates endorsed {isOwner ? "you" : ownerName} for {skill.name}.
+          </p>
+        ) : null}
 
         {isOwner && skill.stats ? (
           <>

@@ -230,7 +230,7 @@ export function GalleryPanel({ theme }: { theme: "light" | "dark" }) {
         </div>
         <div className="flex flex-wrap gap-2">
           <SkillChip name="Django" level={4} />
-          <SkillChip name="TypeScript" level={3} />
+          <SkillChip name="TypeScript" level={3} peerVerified />
           <SkillChip name="React" level={2} />
           <SkillChip name="PostgreSQL" level={1} />
           <SkillChip name="Rust" level={0} />
@@ -244,10 +244,10 @@ export function GalleryPanel({ theme }: { theme: "light" | "dark" }) {
           ownerName="Ayesha"
           isOwner={false}
           skills={[
-            { id: "python", name: "Python", category: "language", level: 3, lastUsedAt: "2026-09-20T10:00:00Z" },
-            { id: "typescript", name: "TypeScript", category: "language", level: 2, lastUsedAt: "2026-09-25T10:00:00Z" },
-            { id: "django", name: "Django", category: "framework", level: 2, lastUsedAt: "2026-09-18T10:00:00Z" },
-            { id: "docker", name: "Docker", category: "tool", level: 1, lastUsedAt: null },
+            { id: "python", name: "Python", category: "language", level: 3, lastUsedAt: "2026-09-20T10:00:00Z", peerVerified: true },
+            { id: "typescript", name: "TypeScript", category: "language", level: 2, lastUsedAt: "2026-09-25T10:00:00Z", peerVerified: false },
+            { id: "django", name: "Django", category: "framework", level: 2, lastUsedAt: "2026-09-18T10:00:00Z", peerVerified: false },
+            { id: "docker", name: "Docker", category: "tool", level: 1, lastUsedAt: null, peerVerified: false },
           ]}
         />
       </Section>

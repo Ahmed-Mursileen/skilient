@@ -10,6 +10,8 @@ export interface ProfileSkill {
   category: SkillCategory;
   level: 1 | 2 | 3 | 4;
   lastUsedAt: string | null;
+  /** Endorsed by 2+ different teammates (PRD 5.16). */
+  peerVerified: boolean;
   /** The owner's own counts; absent for everyone else (PRD 6: others see the level). */
   stats?: SkillStats & { repos: number };
 }
@@ -24,9 +26,13 @@ const byStrength = (a: ProfileSkill, b: ProfileSkill) =>
 export const getProfileSkills = cache(async (userId: string, isOwner: boolean): Promise<ProfileSkill[]> => {
   const supabase = await createClient();
   if (isOwner) {
-    const { data, error } = await supabase.rpc("my_skills");
+    const [{ data, error }, { data: marks }] = await Promise.all([
+      supabase.rpc("my_skills"),
+      supabase.from("user_skills").select("skill_id").eq("user_id", userId).eq("peer_verified", true),
+    ]);
     if (error) throw new Error(`my skills: ${error.code}`);
     if (!data?.length) return [];
+    const peerVerified = new Set((marks ?? []).map((m) => m.skill_id));
     const { data: names, error: namesError } = await supabase
       .from("skills")
       .select("id, name, category")
@@ -41,6 +47,7 @@ export const getProfileSkills = cache(async (userId: string, isOwner: boolean): 
         category: meta.get(s.skill_id)!.category,
         level: s.level as ProfileSkill["level"],
         lastUsedAt: s.last_used_at,
+        peerVerified: peerVerified.has(s.skill_id),
         stats: { activeDays: s.active_days, lines: s.lines, hits: s.hits, repos: s.repos },
       }))
       .sort(byStrength);
@@ -48,7 +55,7 @@ export const getProfileSkills = cache(async (userId: string, isOwner: boolean): 
 
   const { data, error } = await supabase
     .from("user_skills")
-    .select("skill_id, level, last_used_at, skills!inner(name, category)")
+    .select("skill_id, level, last_used_at, peer_verified, skills!inner(name, category)")
     .eq("user_id", userId)
     .gte("level", 1);
   if (error) throw new Error(`profile skills: ${error.code}`);
@@ -59,6 +66,7 @@ export const getProfileSkills = cache(async (userId: string, isOwner: boolean): 
       category: s.skills.category,
       level: s.level as ProfileSkill["level"],
       lastUsedAt: s.last_used_at,
+      peerVerified: s.peer_verified,
     }))
     .sort(byStrength);
 });

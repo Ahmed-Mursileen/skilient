@@ -773,3 +773,115 @@ Append-only. One dated entry per product decision, with the reason. Carried over
 - 2026-09-30 (tests): `01_job_runs` uses its own job name (`pgtap-probe`) instead of
   `feed-stage`, which the real every-5-minutes cron job also writes; the old name made
   the test fail whenever that job had run on the database first.
+- 2026-09-30 (Ahmed, phase 4 plan): Phase 4 ships in six slices, one PR each: endorsements;
+  L3 and L4 levels; credentials with the /ops trust queue; code checks; the ranking engine;
+  leaderboard, /me/score and tier badges. Claude merges each slice once CI is green and keeps
+  open points in `docs/phase-4-questions.md`.
+- 2026-09-30 (Ahmed, phase 4 answers): Endorsements. "5 skills per teammate per venture" is
+  per (endorser → endorsee, venture). Only current members of a shared in-progress or completed
+  venture endorse each other; blocked pairs are refused. Endorsers can't withdraw; the endorsee
+  hides and unhides. Endorser weight by the endorser's tier from the previous nightly run: Raw
+  0.5, Spark 0.7, Flare 0.9, Shine 1.1, Radiant 1.3, Luminary 1.5, not ranked 0.5 (teachers
+  1.5 from phase 7). Mutual: if B has endorsed A anywhere, both directions count × 0.5.
+- 2026-09-30 (Ahmed): L4 from endorsements needs evidence-tied endorsements of the skill from
+  at least 2 different teammates, who may come from any of the student's ventures (so a
+  2-person team can still reach L4 through a second venture). The evidence is one of the
+  endorsee's contribution entries in that venture that is tagged with, or detected as, the
+  skill. A teacher's evidence-tied endorsement counts alone from phase 7.
+- 2026-09-30 (Ahmed): Ring detection. Reciprocity alone is not a ring (every honest team
+  endorses each other after completion; the mutual × 0.5 covers it). A group where every pair
+  endorsed each other within 180 days is a ring only when none of the ventures they endorsed
+  through has outside evidence (completed with a deliverable, or counted GitHub commits from the
+  endorsee). Ring endorsements count 0 and raise an `anti_gaming_flags` row; a trust reviewer
+  clears it (weight restored) or upholds it (stays 0). Thresholds live in `platform_config`.
+- 2026-09-30 (Ahmed): L3 and L4 sources. Manual contribution entries get up to 3 optional skill
+  tags from the venture's tags; a teammate's confirmation makes those skills L3. A confirmed
+  "before Skilient" commit entry gives L3 for the skills detected in that commit. Commits made
+  after the venture started (auto-verified, never confirmed) don't give L3. L3 and L4 don't need
+  a lower level first, except the code check, which needs L2 code. Merged PRs count for L3 (and
+  Work) only when merged or approved by a different, non-bot GitHub account at least 90 days
+  old at merge time, in a repository whose owner isn't the student (organisation repositories
+  count); PRs are found through GitHub search (public) plus the student's installation
+  (private).
+- 2026-09-30 (Ahmed): Code checks. Until teachers (phase 7) every check goes straight to /ops;
+  graders are trust reviewers (and super admins) on two-factor, never a friend or venture
+  teammate of the student. Moderators keep reports only (PRD 5.26 over the "moderator or
+  trust_reviewer" wording in the phase brief). Claude drafts about 8 fixed, generic change
+  requests per skill category for Ahmed to review; skill-specific ones come with teachers and the
+  ops editor. The 30-day clock starts when the code is first shown; a timeout counts as an
+  attempt and submits what was saved; ungraded checks stay in the queue marked overdue after
+  72 h; answers ≤ 2,000 characters. Rubric: 4 parts pass/fail with a comment, pass = 3 of 4.
+  The student requests a check from the skill drawer and answers at `/me/code-checks/[id]`.
+- 2026-09-30 (Ahmed): Credentials. PDF limit is **5 MB** (not the PRD's 10 MB): Supabase stays
+  on the Free plan, whose storage is 1 GB in total. Images are shrunk in the browser and
+  re-encoded on the server (EXIF/GPS stripped); PDFs go from the browser straight to the private
+  bucket as-is. Recognised issuers seed: HEC, NAVTTC, PSEB, PIAIC, National Freelance Training
+  Programme (NFTP), DigiSkills, Google, Microsoft, AWS, Cisco, Oracle, Meta, IBM, CompTIA,
+  Linux Foundation, Red Hat, Huawei; the reviewer picks the issuer when approving. Approved
+  credentials show on the profile (title, issuer, dates) wherever the full profile is visible;
+  files are owner and reviewer only. Review target 72 h (age timer, no automatic action). A
+  student may delete any credential.
+- 2026-09-30 (Ahmed): Supabase stays on the **Free plan** by choice; nothing is planned around
+  a Pro upgrade (this corrects the phase 4 plan's note). Credential storage has to fit in 1 GB,
+  so storage use is reported (bytes per bucket against the 1 GB quota) where staff see it
+  coming.
+- 2026-09-30 (Ahmed): Formula v1 details. Creator 1.3× goes to the owner at completion. Verified
+  share: GitHub entries count once per active day (PKT), peer-verified manual entries 1 each,
+  unconfirmed manual entries 0.25; the median is over current members at completion; a median
+  of 0 gives a share of 1 to anyone with an entry. Complexity = 0.8 + 0.5 × the average of
+  (team size − 2)/4, (weeks − 1)/15 clamped, min(skill tags, 8)/8 and min(deliverables − 1, 3)/3,
+  stored at completion (existing completed ventures backfilled). Post quality index = the feed's
+  Q × 100 for surveyable posts with ≥ 5 answers, ≥ 3 of them from non-friends; Content quality
+  = min(175, average index × log2(1 + posts)). Consistency counts the last 12 ISO weeks (PKT);
+  content quality and citizenship are all-time; decay applies to the Momentum total.
+  Citizenship: +4 per join request answered within 72 h (up to 40) and +2 per teammate entry
+  confirmed (up to 40).
+- 2026-09-30 (Ahmed): Decay is linear: 2 points of every 100 of Momentum per full inactive week
+  after day 14, never below 40% of the peak. A post, a contribution logged or confirmed, a
+  verified PR or an answered join request resets the clock. Exam days don't count toward the
+  inactive weeks. Decay is computed from the data in the nightly run (reproducible), not
+  applied by a separate stateful job. Until university admins (phase 9), `accounts` staff enter
+  exam periods at `/ops/exam-periods` (≤ 45 days each, with a reason, audited). None are seeded
+  or imported; NUTECH's are entered by hand once the page ships.
+- 2026-09-30 (Ahmed): Tiers. A student drops a tier only after 14 straight days failing it
+  (points or any other requirement, percentile included), down to the highest tier still met;
+  rising is immediate; no points band; exam periods don't pause this clock. "Active in ≥ 2
+  ventures" = a peer-verified entry in each of 2 in-progress or completed ventures; "3
+  endorsements" = 3 that count (not hidden, weight above 0); "ranked" = at least one
+  peer-verified contribution. Luminary is out of reach until phase 7 or 8.
+- 2026-09-30 (Ahmed): Penalties. Remove and Warn in /ops gain a severity (low 50, medium 150,
+  high 300 points); a penalty lasts 12 months.
+- 2026-09-30 (Ahmed): Rapid gain. Gains from venture completions that pass every completion
+  rule and have no open ring flag are exempt. Still flagged: more than 2 completions in 7 days,
+  and any gain over 150 in 24 hours that doesn't come from a completion. The first computation
+  and formula changes are exempt. While a flag is open the published score and tier stay at the
+  day before; clear lets the gain count from the next nightly run; uphold records a negative
+  adjustment equal to the held gain.
+- 2026-09-30 (Ahmed): Nightly ranking is one SQL procedure run by pg_cron at 03:07 PKT in
+  committed batches of 500: rings → components → rapid-gain holds → percentiles and tiers →
+  Sunday snapshot. It replaces the PRD's Edge Function and separate 03:00/04:00/05:00 jobs,
+  because a gain has to be held before it counts.
+- 2026-09-30 (Ahmed): Leaderboard. University scope (default) with department and batch filters,
+  and Global with no filters (the Explore rule: department and batch reach only your own
+  university). Rows show name, username and university, the photo only where the profile is
+  visible, rank, tier and weekly rank change; points are never shown to others; blocked people
+  are hidden; ties share a rank (1, 2, 2, 4). Everyone is on the boards by default, with an
+  opt-out in Settings → Privacy. Tier badges on the profile, post cards, Explore rows, team cards
+  and the leaderboard, not in chat. Phase 4 notifications form a "Trust and ranking" category,
+  in-app only by default. The /ops evidence queue gains a GitHub flags tab for the phase 2
+  `resolve_review_flag`.
+- 2026-09-30 (phase 4, slice 1): Endorsements as built. `endorse(endorsee, venture, items,
+  note)` takes up to 5 skills in one call, each with an optional evidence entry (one of the
+  endorsee's original entries in that venture), and one note for the call; each endorser's
+  calls are serialised (advisory lock) so the limits hold under parallel requests. The limits
+  live in `platform_config` (`endorsements.limits`). The endorsee gets one "Trust and ranking"
+  notification per call naming the skills; completing a venture sends every member, the owner
+  included, an "Endorse your teammates" notification that opens the Team tab's sheet
+  (`?endorse=1`). The endorser reads what they gave from the table but never the hidden flag;
+  everyone else reads through `endorsements_for()`: whoever may see the full profile sees the
+  shown endorsements, with the endorser's name always (they are a teammate), their profile
+  link and photo only where that endorser's own profile is visible, and the venture's title
+  only where the venture is. Peer-verified (2+ different teammates, hidden ones not counted) is
+  kept on `user_skills.peer_verified` by triggers and shows as a check on the skill chip and a
+  line in the drawer. Endorsements show on the profile's Overview, grouped by skill; the owner
+  hides or shows each one there. Ring weights and the L4 rule come with slices 5 and 2.
