@@ -413,11 +413,19 @@ const contributionFields = z.object({
     .max(100, "At most 100 hours per entry.")
     .multipleOf(0.25, "Round to the nearest quarter hour.")
     .nullable(),
+  // PRD 5.5 L3: a teammate's confirmation corroborates the skills an entry is tagged with.
+  skillIds: skillIds.max(3, "Tag up to 3 skills.").optional(),
 });
 export type ContributionInput = z.input<typeof contributionFields>;
 
 function contributionArgs(v: z.output<typeof contributionFields>) {
-  return { p_kind: v.kind, p_description: v.description, p_evidence_url: v.evidenceUrl || null, p_hours: v.hours };
+  return {
+    p_kind: v.kind,
+    p_description: v.description,
+    p_evidence_url: v.evidenceUrl || null,
+    p_hours: v.hours,
+    p_skill_ids: v.skillIds ?? [],
+  };
 }
 
 export async function logContribution(ventureId: string, input: ContributionInput): Promise<ActionResult<string>> {

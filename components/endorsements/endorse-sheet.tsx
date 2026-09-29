@@ -215,35 +215,44 @@ function TeammateStep({
         </p>
       )}
 
-      {picked.length && teammate.evidence.length ? (
+      {picked.length ? (
         <fieldset className="flex flex-col gap-3">
           <legend className="mb-1 text-label text-text-secondary uppercase">Which work shows it? (optional)</legend>
           <p className="text-body-sm text-text-secondary">
-            Tying an endorsement to one of {firstName}&apos;s entries makes it stronger evidence.
+            Tying an endorsement to one of {firstName}&apos;s entries that shows the skill makes it evidence: two teammates doing
+            so raises the skill to L4.
           </p>
-          {picked.map((skillId) => (
-            <div key={skillId} className="flex flex-col gap-1.5">
-              <label htmlFor={`${idBase}-ev-${skillId}`} className="text-body-sm font-semibold">
-                {skillName(skillId)}
-              </label>
-              <select
-                id={`${idBase}-ev-${skillId}`}
-                value={evidence[skillId] ?? ""}
-                onChange={(e) => {
-                  const value = e.currentTarget.value;
-                  setEvidence((ev) => ({ ...ev, [skillId]: value }));
-                }}
-                className={cn(controlBase, "h-10")}
-              >
-                <option value="">No specific entry</option>
-                {teammate.evidence.map((e) => (
-                  <option key={e.id} value={e.id}>
-                    {e.description.length > 70 ? `${e.description.slice(0, 69)}…` : e.description}
-                  </option>
-                ))}
-              </select>
-            </div>
-          ))}
+          {picked.map((skillId) => {
+            const entries = teammate.evidence.filter((e) => e.skills.includes(skillId));
+            return entries.length ? (
+              <div key={skillId} className="flex flex-col gap-1.5">
+                <label htmlFor={`${idBase}-ev-${skillId}`} className="text-body-sm font-semibold">
+                  {skillName(skillId)}
+                </label>
+                <select
+                  id={`${idBase}-ev-${skillId}`}
+                  value={evidence[skillId] ?? ""}
+                  onChange={(e) => {
+                    const value = e.currentTarget.value;
+                    setEvidence((ev) => ({ ...ev, [skillId]: value }));
+                  }}
+                  className={cn(controlBase, "h-10")}
+                >
+                  <option value="">No specific entry</option>
+                  {entries.map((e) => (
+                    <option key={e.id} value={e.id}>
+                      {e.description.length > 70 ? `${e.description.slice(0, 69)}…` : e.description}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            ) : (
+              <p key={skillId} className="text-body-sm text-text-secondary">
+                <span className="font-semibold text-text-primary">{skillName(skillId)}:</span> none of {firstName}&apos;s entries here is
+                tagged with it yet.
+              </p>
+            );
+          })}
         </fieldset>
       ) : null}
 

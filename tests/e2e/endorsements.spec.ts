@@ -44,7 +44,7 @@ test.describe("Endorsements", () => {
     expect(createError).toBeNull();
     const { data: app } = await bApi.rpc("apply_to_venture", { p_venture: ventureId, p_message: "I can build the UI" });
     expect((await aApi.rpc("decide_application", { p_thread: app, p_accept: true })).error).toBeNull();
-    expect((await bApi.rpc("log_contribution", { p_venture: ventureId, p_kind: "code", p_description: `Built the fee table ${tag}` })).error).toBeNull();
+    expect((await bApi.rpc("log_contribution", { p_venture: ventureId, p_kind: "code", p_description: `Built the fee table ${tag}`, p_skill_ids: ["react"] })).error).toBeNull();
 
     // Recruiting: nothing to endorse yet, so no button.
     await signInWithPassword(page, a.email, a.password);

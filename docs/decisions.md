@@ -885,3 +885,27 @@ Append-only. One dated entry per product decision, with the reason. Carried over
   kept on `user_skills.peer_verified` by triggers and shows as a check on the skill chip and a
   line in the drawer. Endorsements show on the profile's Overview, grouped by skill; the owner
   hides or shows each one there. Ring weights and the L4 rule come with slices 5 and 2.
+- 2026-09-30 (phase 4, slice 2): L3 and L4 as built. Levels are now computed from all
+  current evidence, L3/L4 included: `recompute_user_skills` merges L1–L2 from commits with
+  L3 proofs (`l3_skills`: counted pull requests; manual entries tagged with the skill whose
+  current version a teammate confirmed; confirmed "before Skilient" commit entries, for the
+  skills found in that commit) and L4 proofs (`l4_skills`: evidence-tied endorsements from 2+
+  different teammates across any ventures, the evidence entry showing that skill). A skill
+  with only L3/L4 proofs gets a level without any GitHub evidence. A correction needs a fresh
+  confirmation; hiding an endorsement can lower L4 to L3. This replaces the phase 2 rule that
+  L3/L4 are "never lowered": nothing set by hand survives a recompute.
+- 2026-09-30 (phase 4, slice 2): Contribution entries take up to 3 of the venture's skill
+  tags (`contributions.skill_ids`; corrections carry their own). Endorsement evidence must
+  now show the skill it vouches for (tagged with it, or a GitHub entry whose commit shows it);
+  the endorse sheet offers only matching entries per skill.
+- 2026-09-30 (phase 4, slice 2): The GitHub `prs` stage runs after each discovery (outside the
+  sync's progress count): one search of the student's newest 100 merged pull requests
+  (`type:pr is:merged author:<login>`, user token), then one `pr` message per pull request not
+  recorded before. A pull request counts when its base repository's owner isn't the student
+  and the merger, or else an approving reviewer, is a person (not a bot) other than the author
+  whose GitHub account was at least 90 days old at merge time; its files (only for counted ones)
+  go through the commit detectors. `github_pull_requests` / `github_pr_skills` keep ids, paths
+  and flags only, owner-only, and survive a disconnect. Merged `pull_request` and approving
+  `pull_request_review` webhooks queue that pull request again. Search's own small rate limit
+  (30 a minute) no longer counts against a token's core budget. Private pull requests the
+  student's token can't read are skipped.

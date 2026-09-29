@@ -1,6 +1,8 @@
 "use client";
 
 import { ArrowSquareOut, CheckCircle, Circle, LockSimple } from "@phosphor-icons/react/dist/ssr";
+import type { Route } from "next";
+import Link from "next/link";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { FormAlert } from "@/components/auth/form-alert";
 import { Badge, Button, Dialog, LoadingState, SideSheetContent, SkillChip, SkillLevelIcon } from "@/components/ui";
@@ -19,8 +21,6 @@ import {
   type ShownLevel,
 } from "@/lib/skills/levels";
 
-const dateFormat = new Intl.DateTimeFormat("en-GB", { dateStyle: "medium", timeZone: "Asia/Karachi" });
-const when = (iso: string | null) => (iso ? dateFormat.format(new Date(iso)) : null);
 
 /**
  * Skill chips, grouped by category or as one row, each opening the skill drawer (PRD 5.5):
@@ -104,7 +104,7 @@ function SkillDrawer({
 }) {
   const meta = LEVELS[skill.level];
   const category = CATEGORY_NAMES[skill.category];
-  const lastUsed = when(skill.lastUsedAt);
+  const lastUsed = skill.lastUsedLabel;
   const step = isOwner && skill.stats ? nextStep(skill.level, skill.category, skill.stats) : null;
 
   return (
@@ -227,12 +227,23 @@ function EvidenceList({ skillId }: { skillId: string }) {
           </div>
         ) : !state.data ? (
           <LoadingState label="Loading your evidence" lines={4} />
-        ) : !state.data.items.length ? (
+        ) : !state.data.items.length && !state.data.proofs.length ? (
           <p className="text-body-sm text-text-secondary">
             Found in your repositories&apos; languages; none of your own commits touch it yet.
           </p>
         ) : (
           <>
+            {state.data.proofs.length ? (
+              <>
+                <h4 className="text-label text-text-secondary uppercase">Accepted and vouched for</h4>
+                <ul className="mb-4 divide-y divide-border-muted">
+                  {state.data.proofs.map((p, i) => (
+                    <ProofRow key={`${p.kind}-${i}`} item={p} />
+                  ))}
+                </ul>
+                {state.data.items.length ? <h4 className="text-label text-text-secondary uppercase">Your commits</h4> : null}
+              </>
+            ) : null}
             <ul className="divide-y divide-border-muted">
               {state.data.items.map((e) => (
                 <EvidenceRow key={`${e.repo}:${e.sha}`} item={e} />
@@ -250,6 +261,62 @@ function EvidenceList({ skillId }: { skillId: string }) {
   );
 }
 
+const PROOF_LABELS: Record<SkillEvidence["proofs"][number]["kind"], string> = {
+  pull_request: "Pull request",
+  contribution: "Confirmed contribution",
+  endorsement: "Endorsement tied to your work",
+};
+
+function ProofRow({ item }: { item: SkillEvidence["proofs"][number] }) {
+  return (
+    <li className="flex flex-col gap-1 py-3">
+      <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-body-sm">
+        <SkillLevelIcon level={item.level} />
+        <span className="font-semibold">{PROOF_LABELS[item.kind]}</span>
+        <span className="text-text-secondary">· {item.dateLabel}</span>
+      </div>
+      <p className="text-body-sm text-text-primary">
+        {item.url ? (
+          <a href={item.url} target="_blank" rel="noreferrer noopener" className="inline-flex items-center gap-1 font-mono text-code-sm text-accent underline underline-offset-4">
+            {item.title}
+            <ArrowSquareOut aria-hidden className="size-3.5" />
+            <span className="sr-only">{" (opens GitHub)"}</span>
+          </a>
+        ) : item.kind === "endorsement" ? (
+          <>
+            {item.title}
+            {item.detail ? (
+              <>
+                <span className="text-text-secondary"> on </span>
+                {item.ventureId ? (
+                  <Link href={`/ventures/${item.ventureId}/team` as Route} className="underline underline-offset-4">
+                    {item.detail}
+                  </Link>
+                ) : (
+                  item.detail
+                )}
+              </>
+            ) : null}
+          </>
+        ) : (
+          <>
+            {item.ventureId ? (
+              <Link href={`/ventures/${item.ventureId}/contributions` as Route} className="text-text-secondary underline underline-offset-4">
+                {item.title}
+              </Link>
+            ) : (
+              <span className="text-text-secondary">{item.title}</span>
+            )}
+            <span className="text-text-secondary">: </span>
+            {item.detail}
+          </>
+        )}
+      </p>
+      {item.kind === "pull_request" && item.detail ? <p className="text-body-sm text-text-secondary">{item.detail}</p> : null}
+    </li>
+  );
+}
+
 function EvidenceRow({ item }: { item: SkillEvidence["items"][number] }) {
   const what = item.detectors
     .map((d) => (d === "lines" ? `${item.lines} ${item.lines === 1 ? "line" : "lines"} of code` : DETECTOR_LABELS[d] ?? d))
@@ -257,7 +324,7 @@ function EvidenceRow({ item }: { item: SkillEvidence["items"][number] }) {
   return (
     <li className="flex flex-col gap-1 py-3">
       <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-body-sm">
-        <span className="text-text-secondary">{when(item.occurredAt)}</span>
+        <span className="text-text-secondary">{item.dateLabel}</span>
         {item.repo ? <span className="font-mono text-code-sm break-all text-text-primary">{item.repo}</span> : null}
         {item.url ? (
           <a

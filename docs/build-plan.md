@@ -108,6 +108,8 @@ Legend: 📖 = PRD files to read (in `docs/prd/`), ✅ = done-when checks.
 
 *Slice 1 (endorsements): teammates on an in-progress or completed venture endorse up to 5 skills each per venture (20 a month), from the venture's tags or the endorsee's skills, optionally tied to one of the endorsee's entries, with a note; the endorsee hides and shows but nobody edits; 2 different teammates make a skill peer-verified; completion prompts every member. Every limit is refused when `endorse()` is called directly (pgTAP `28_endorsements`, E2E `endorsements.spec.ts`). Ring weights come with slice 5, L4 with slice 2.*
 
+*Slice 2 (L3 and L4): the GitHub `prs` stage and webhooks record merged pull requests; one in someone else's repository, merged or approved by another person with a 90-day-old account, makes the skills its files show L3. Contribution entries take up to 3 of the venture's skills; a teammate's confirmation makes them L3. Evidence-tied endorsements from 2 different teammates (any ventures) make L4. Levels come from current evidence, survive a disconnect for L3/L4, and the owner's skill drawer lists the proofs (pgTAP `29_skill_levels`, worker `github-worker` with the fake GitHub's search, pulls, reviews, files and users endpoints, E2E `levels.spec.ts`). Code checks (the other L4 path) come with slice 4.*
+
 ## Phase 5 — Verified CV
 
 📖 `05-18-verified-cv.md`

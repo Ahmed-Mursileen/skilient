@@ -92,6 +92,14 @@ describe("GitHub client", () => {
     await expect(new GitHub(cfg, limited).request("t", "/user")).rejects.toMatchObject({ name: "RateLimited", seconds: 30 });
   });
 
+  it("keeps search's own small budget out of the core budget", async () => {
+    const fake = (async () =>
+      new Response("{}", { headers: { "x-ratelimit-resource": "search", "x-ratelimit-remaining": "29", "x-ratelimit-reset": reset } })) as typeof fetch;
+    const gh = new GitHub(cfg, fake);
+    await gh.request("t", "/search/issues?q=x");
+    expect(() => gh.ensureBudget("t")).not.toThrow();
+  });
+
   it("names the failing call without leaking query strings", async () => {
     const fake = (async () => new Response("{}", { status: 502 })) as typeof fetch;
     const error = await new GitHub(cfg, fake).request("t", "/repositories/5?secret=1").catch((e) => e);
@@ -191,5 +199,18 @@ describe("changedFiles (GitHub commit files → detector input)", () => {
       ]),
     ).toEqual([{ path: "src/app.ts", status: "added", additions: 3, deletions: 0, patch: "@@ -0,0 +1 @@\n+x", sha: "a".repeat(40) }]);
     expect(changedFiles(undefined)).toEqual([]);
+  });
+});
+
+describe("repoFromUrl (search results → owner/repo)", () => {
+  it("takes owner/repo from a search result's repository_url and refuses anything else", async () => {
+    const { repoFromUrl } = await import("@/supabase/functions/_shared/github/worker");
+    expect(repoFromUrl("https://api.github.com/repos/numpy/numpy")).toBe("numpy/numpy");
+    expect(repoFromUrl("https://api.github.com/repos/my-org/my.repo_1")).toBe("my-org/my.repo_1");
+    expect(repoFromUrl("https://api.github.com/repos/a/b/pulls")).toBeNull();
+    expect(repoFromUrl("https://api.github.com/repos/a/../b")).toBeNull();
+    expect(repoFromUrl("https://api.github.com/repos/../b")).toBeNull();
+    expect(repoFromUrl("https://api.github.com/repos/a/..")).toBeNull();
+    expect(repoFromUrl("")).toBeNull();
   });
 });

@@ -15,10 +15,13 @@ import { CONTRIBUTION_KINDS } from "@/lib/ventures/labels";
  */
 export function ContributionSheet({
   ventureId,
+  skills,
   correcting,
   trigger,
 }: {
   ventureId: string;
+  /** The venture's skills: an entry may be tagged with up to 3 of them. */
+  skills: { id: string; name: string }[];
   /** The entry being corrected; absent when logging a new one. */
   correcting?: Contribution;
   trigger: ReactNode;
@@ -26,6 +29,7 @@ export function ContributionSheet({
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [kind, setKind] = useState<ContributionKind>(correcting?.kind ?? "code");
+  const [tags, setTags] = useState<string[]>(correcting?.skillIds ?? []);
   const [error, setError] = useState<ActionError | null>(null);
   const [pending, startTransition] = useTransition();
   const fields = error?.fields ?? {};
@@ -40,6 +44,7 @@ export function ContributionSheet({
       description: String(form.get("description") ?? ""),
       evidenceUrl: String(form.get("evidenceUrl") ?? ""),
       hours: hoursText ? Number(hoursText) : null,
+      skillIds: tags,
     };
     setError(null);
     startTransition(async () => {
@@ -97,6 +102,35 @@ export function ContributionSheet({
               aria-describedby={describedBy("description")}
             />
           </Field>
+          {skills.length ? (
+            <fieldset className="flex flex-col gap-2">
+              <legend className="mb-1 text-label text-text-secondary uppercase">Skills it shows (optional, up to 3)</legend>
+              <p id={`${prefix}-skills-helper`} className="text-body-sm text-text-secondary">
+                When a teammate confirms the entry, these skills count as accepted by others (L3) on your profile.
+              </p>
+              <div className="flex flex-wrap gap-x-5 gap-y-2" aria-describedby={`${prefix}-skills-helper`}>
+                {skills.map((s) => {
+                  const checked = tags.includes(s.id);
+                  return (
+                    <label key={s.id} className="flex items-center gap-2 text-body">
+                      <input
+                        type="checkbox"
+                        className="size-4"
+                        checked={checked}
+                        disabled={!checked && tags.length >= 3}
+                        onChange={(e) => {
+                          const on = e.currentTarget.checked;
+                          setTags((t) => (on ? [...t, s.id] : t.filter((x) => x !== s.id)));
+                        }}
+                      />
+                      {s.name}
+                    </label>
+                  );
+                })}
+              </div>
+              {fields.skillIds ? <p className="text-body-sm text-text-error">{fields.skillIds}</p> : null}
+            </fieldset>
+          ) : null}
           <Field id={`${prefix}-evidenceUrl`} label="Evidence link (optional)" error={fields.evidenceUrl} helper="A commit, pull request, file or design link.">
             <Input
               id={`${prefix}-evidenceUrl`}

@@ -38,12 +38,19 @@ export interface WorkerDeps {
 export const MAX_COMMITS = 500;
 /** Commits per extract message: each is one API call, and a message should finish in ~30 s. */
 export const EXTRACT_BATCH = 10;
+/** The student's newest merged pull requests checked per sync (one search page). */
+export const MAX_PRS = 100;
+/** PRD 5.5 anti-gaming (decisions.md 2026-09-30): whoever corroborates a pull request must
+ * have had their GitHub account for at least this long when it was merged. */
+export const APPROVER_MIN_AGE_DAYS = 90;
 
 type Message =
   | { stage: "discover"; user_id: string; job_id: number }
   | { stage: "classify"; user_id: string; job_id: number; repo_id: number }
   | { stage: "harvest"; user_id: string; job_id?: number; repo_id: number }
   | { stage: "extract"; user_id: string; job_id?: number; repo_id: number; shas: string[]; pushed_at?: string }
+  | { stage: "prs"; user_id: string }
+  | { stage: "pr"; user_id: string; repo: string; number: number }
   | { stage: "webhook"; delivery_id: string }
   | { stage: "revoke"; revocation_id: number };
 
@@ -241,6 +248,45 @@ export function changedFiles(files: GitHubFile[] | undefined): ChangedFile[] {
   );
 }
 
+interface GitHubUser {
+  id: number;
+  login: string;
+  type?: string;
+}
+
+interface SearchIssues {
+  items: { number: number; user: GitHubUser | null; repository_url: string; pull_request?: { merged_at?: string | null } }[];
+}
+
+interface PullDetail {
+  id: number;
+  number: number;
+  user: GitHubUser | null;
+  merged_at: string | null;
+  merged_by: GitHubUser | null;
+  base: { repo: { id: number; full_name: string; private: boolean; owner: GitHubUser } };
+}
+
+interface Review {
+  user: GitHubUser | null;
+  state: string;
+}
+
+/** A person, not an App or bot account. */
+const isHuman = (u: GitHubUser | null | undefined): u is GitHubUser =>
+  !!u && (u.type ?? "User") === "User" && !u.login.toLowerCase().endsWith("[bot]");
+
+/** "owner/repo" with GitHub's name characters, never "." or ".." as a segment. */
+export function isRepoName(name: string): boolean {
+  return /^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(name) && !name.split("/").some((part) => /^\.+$/.test(part));
+}
+
+/** "owner/repo" from a search result's `repository_url`. */
+export function repoFromUrl(url: string): string | null {
+  const m = /\/repos\/([^/]+\/[^/]+)$/.exec(url);
+  return m && isRepoName(m[1]) ? m[1] : null;
+}
+
 interface RepoRow {
   installation_id: string;
   kind: string | null;
@@ -372,6 +418,8 @@ const STAGES: { [S in Message["stage"]]: (ctx: Ctx, msg: Extract<Message, { stag
       msg.job_id,
       toClassify.map((repoId) => ({ stage: "classify", user_id: msg.user_id, job_id: msg.job_id, repo_id: repoId })),
     );
+    // Merged pull requests (L3) are checked alongside; the sync's progress doesn't wait for them.
+    await advance(ctx, undefined, [{ stage: "prs", user_id: msg.user_id }]);
   },
 
   /** Owned, collaborator, fork or template, from the repository's own metadata. */
@@ -530,6 +578,108 @@ const STAGES: { [S in Message["stage"]]: (ctx: Ctx, msg: Extract<Message, { stag
     await advance(ctx, msg.job_id, [], recorded);
   },
 
+  /**
+   * The student's merged pull requests (PRD 5.5 "prs", for L3): one search for their newest,
+   * then one message per pull request not seen before. Runs after each discovery.
+   */
+  async prs(ctx, msg) {
+    const { db, github } = ctx;
+    const [account] = await db.query<{ github_id: string; login: string }>(
+      "select github_id, login from public.github_accounts where user_id = $1 and revoked_at is null",
+      [msg.user_id],
+    );
+    if (!account) return;
+    const token = await userToken(ctx, msg.user_id);
+    github.ensureBudget(token);
+    const q = encodeURIComponent(`type:pr is:merged author:${account.login}`);
+    const { data } = await github.request<SearchIssues>(token, `/search/issues?q=${q}&sort=updated&order=desc&per_page=${MAX_PRS}`);
+    const known = new Set(
+      (await db.query<{ repo_full_name: string; number: number }>("select * from private.known_pull_requests($1)", [msg.user_id])).map(
+        (r) => `${r.repo_full_name}#${r.number}`,
+      ),
+    );
+    const next: Message[] = [];
+    for (const item of data.items ?? []) {
+      const repo = repoFromUrl(item.repository_url);
+      if (!repo || !item.pull_request || item.user?.id !== Number(account.github_id)) continue;
+      if (known.has(`${repo.toLowerCase()}#${item.number}`)) continue;
+      next.push({ stage: "pr", user_id: msg.user_id, repo, number: item.number });
+    }
+    await advance(ctx, undefined, next);
+  },
+
+  /**
+   * One merged pull request: in someone else's repository, and merged or approved by another
+   * person whose account was at least 90 days old then. Its files go through the detectors.
+   */
+  async pr(ctx, msg) {
+    const { db, github } = ctx;
+    if (!isRepoName(msg.repo) || !Number.isInteger(msg.number) || msg.number < 1) return;
+    const [account] = await db.query<{ github_id: string }>(
+      "select github_id from public.github_accounts where user_id = $1 and revoked_at is null",
+      [msg.user_id],
+    );
+    if (!account) return;
+    const me = Number(account.github_id);
+    const token = await userToken(ctx, msg.user_id);
+    github.ensureBudget(token);
+    let pr: PullDetail;
+    try {
+      ({ data: pr } = await github.request<PullDetail>(token, `/repos/${msg.repo}/pulls/${msg.number}`));
+    } catch (error) {
+      // Gone, or a private repository the student's token can't read.
+      if (error instanceof GitHubError && (error.status === 404 || error.status === 403)) return;
+      throw error;
+    }
+    if (pr.user?.id !== me || !pr.merged_at) return;
+    const repo = pr.base.repo;
+    const record = {
+      repo_github_id: repo.id,
+      number: pr.number,
+      pr_github_id: pr.id,
+      repo_full_name: repo.full_name,
+      repo_private: repo.private,
+      merged_at: pr.merged_at,
+      approver_github_id: null as number | null,
+      exclusion: null as string | null,
+      files: 0,
+      skills: [] as { skill_id: string; path: string }[],
+    };
+
+    if (repo.owner.id === me) {
+      record.exclusion = "own_repo";
+    } else {
+      // The merger first, then approving reviewers: other people, never bots.
+      const candidates: GitHubUser[] = [];
+      if (isHuman(pr.merged_by) && pr.merged_by.id !== me) candidates.push(pr.merged_by);
+      const reviews = await github.paginate<Review[], Review>(token, `/repos/${msg.repo}/pulls/${msg.number}/reviews?per_page=100`, (p) => p, 3);
+      for (const r of reviews) {
+        if (r.state === "APPROVED" && isHuman(r.user) && r.user.id !== me && !candidates.some((c) => c.id === r.user!.id)) {
+          candidates.push(r.user);
+        }
+      }
+      const cutoff = Date.parse(pr.merged_at) - APPROVER_MIN_AGE_DAYS * 86_400_000;
+      for (const c of candidates) {
+        const { data: user } = await github.request<{ id: number; created_at: string }>(token, `/users/${encodeURIComponent(c.login)}`);
+        if (user.id === c.id && Date.parse(user.created_at) <= cutoff) {
+          record.approver_github_id = c.id;
+          break;
+        }
+      }
+      if (!record.approver_github_id) record.exclusion = candidates.length ? "young_account" : "no_other_human";
+    }
+
+    if (!record.exclusion) {
+      const files = await github.paginate<GitHubFile[], GitHubFile>(token, `/repos/${msg.repo}/pulls/${msg.number}/files?per_page=100`, (p) => p, 2);
+      const taxonomy = await loadTaxonomy(ctx);
+      const changed = changedFiles(files);
+      record.files = changed.length;
+      const analysis = analyseCommit(changed, taxonomy.compiled);
+      record.skills = analysis.detections.map((d) => ({ skill_id: d.skillId, path: d.path }));
+    }
+    await db.query("select private.record_pull_request($1, $2::text::jsonb)", [msg.user_id, JSON.stringify(record)]);
+  },
+
   /** Installation changes are applied in SQL; affected students get a fresh discovery. */
   async webhook(ctx, msg) {
     const [{ follow_up }] = await ctx.db.query<{ follow_up: { discover?: string[] } }>(
@@ -539,6 +689,9 @@ const STAGES: { [S in Message["stage"]]: (ctx: Ctx, msg: Extract<Message, { stag
     for (const userId of follow_up.discover ?? []) {
       await ctx.db.query("select private.start_github_sync($1, 'webhook')", [userId]);
     }
+    // A merged pull request, or an approval on one, rechecks it for its author (L3).
+    const [{ prs }] = await ctx.db.query<{ prs: Message[] }>("select private.github_webhook_pr($1) as prs", [msg.delivery_id]);
+    await advance(ctx, undefined, prs);
   },
 
   /** Revoke at GitHub, then forget the secrets. */

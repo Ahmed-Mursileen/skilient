@@ -1,6 +1,7 @@
 import "server-only";
 
 import { cache } from "react";
+import { dayLabel } from "@/lib/format/time";
 import { CATEGORY_ORDER, type SkillCategory, type SkillStats } from "@/lib/skills/levels";
 import { createClient } from "@/lib/supabase/server";
 
@@ -10,6 +11,8 @@ export interface ProfileSkill {
   category: SkillCategory;
   level: 1 | 2 | 3 | 4;
   lastUsedAt: string | null;
+  /** "12 Sep 2026", formatted on the server. */
+  lastUsedLabel: string | null;
   /** Endorsed by 2+ different teammates (PRD 5.16). */
   peerVerified: boolean;
   /** The owner's own counts; absent for everyone else (PRD 6: others see the level). */
@@ -47,6 +50,7 @@ export const getProfileSkills = cache(async (userId: string, isOwner: boolean): 
         category: meta.get(s.skill_id)!.category,
         level: s.level as ProfileSkill["level"],
         lastUsedAt: s.last_used_at,
+        lastUsedLabel: s.last_used_at ? dayLabel(s.last_used_at) : null,
         peerVerified: peerVerified.has(s.skill_id),
         stats: { activeDays: s.active_days, lines: s.lines, hits: s.hits, repos: s.repos },
       }))
@@ -66,6 +70,7 @@ export const getProfileSkills = cache(async (userId: string, isOwner: boolean): 
       category: s.skills.category,
       level: s.level as ProfileSkill["level"],
       lastUsedAt: s.last_used_at,
+      lastUsedLabel: s.last_used_at ? dayLabel(s.last_used_at) : null,
       peerVerified: s.peer_verified,
     }))
     .sort(byStrength);

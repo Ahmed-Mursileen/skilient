@@ -77,11 +77,11 @@ select is(pg_temp.commit('60000000-0000-0000-0000-00000000000a', 901, 'a1', '202
 select is((select count(*)::int from public.skill_evidence where user_id = '60000000-0000-0000-0000-00000000000a'), 9,
   'evidence is one row per commit and skill');
 
--- L3/L4 come from other sources (phase 4) and are never lowered by a recompute.
+-- Levels come from evidence only (phase 4 adds L3/L4 proofs): a level set by hand without
+-- any proof behind it is recomputed away.
 update public.user_skills set level = 3 where user_id = '60000000-0000-0000-0000-00000000000a' and skill_id = 'python';
 select private.recompute_user_skills('60000000-0000-0000-0000-00000000000a');
-select is(pg_temp.level('60000000-0000-0000-0000-00000000000a', 'python'), 3::smallint, 'a higher level is kept');
-update public.user_skills set level = 2 where user_id = '60000000-0000-0000-0000-00000000000a' and skill_id = 'python';
+select is(pg_temp.level('60000000-0000-0000-0000-00000000000a', 'python'), 2::smallint, 'a level without proof is recomputed from the evidence');
 
 -- ---------------------------------------------------------------------------
 -- Flags hold evidence
