@@ -1,8 +1,10 @@
 import "server-only";
 
+import type { Tier } from "@/components/ui/tier-badge";
 import { eventTime, futureTime, shortTime } from "@/lib/format/time";
 import { publicImageUrl } from "@/lib/storage";
 import { createClient } from "@/lib/supabase/server";
+import { getTiers } from "@/lib/data/tiers";
 import type { Database } from "@/types/database";
 
 /**
@@ -70,7 +72,8 @@ export interface PostCardData {
   pinnedUntil: string | null;
   /** An announcement pinned right now. */
   pinned: boolean;
-  author: { username: string | null; name: string; avatarUrl: string | null };
+  /** tier: the author's tier badge from the last nightly run (PRD 5.17), if ranked. */
+  author: { username: string | null; name: string; avatarUrl: string | null; tier?: Tier | null };
   isMine: boolean;
   canEdit: boolean;
   images: PostImage[];
@@ -183,6 +186,10 @@ export async function getPostCards(ids: string[]): Promise<PostCardData[]> {
   if (error) throw new Error(`post_cards failed: ${error.code}`);
   const now = Date.now();
   const cards = (data ?? []).map((r) => mapCard(r, now));
+  const tiers = await getTiers((data ?? []).map((r) => r.author_id));
+  (data ?? []).forEach((r, i) => {
+    cards[i].author.tier = r.author_id ? (tiers.get(r.author_id) ?? null) : null;
+  });
   // Assigns each reader's question the first time a post is shown (PRD 5.28), so the
   // strip renders with the post and never pops in.
   const { data: surveys, error: surveyError } = await supabase.rpc("survey_for_posts", { p_ids: cards.map((c) => c.id) });

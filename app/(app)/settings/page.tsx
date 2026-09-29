@@ -1,4 +1,4 @@
-import { Bell, CaretRight, Certificate, ChatsCircle, GithubLogo, ShieldCheck, UserCircle } from "@phosphor-icons/react/dist/ssr";
+import { Bell, CaretRight, Certificate, ChatsCircle, EyeSlash, GithubLogo, ShieldCheck, UserCircle } from "@phosphor-icons/react/dist/ssr";
 import type { Metadata, Route } from "next";
 import Link from "next/link";
 
@@ -10,6 +10,7 @@ const sections = [
   { href: "/me/credentials", title: "Credentials", description: "Certificates you've added and their review status.", icon: Certificate },
   { href: "/settings/notifications", title: "Notifications", description: "Which notifications also reach your email, and how often.", icon: Bell },
   { href: "/settings/chat", title: "Chat", description: "Read receipts in direct messages.", icon: ChatsCircle },
+  { href: "/settings/privacy", title: "Privacy", description: "Whether you appear on leaderboards.", icon: EyeSlash },
   { href: "/settings/security", title: "Security", description: "Two-factor, signed-in devices and recent account activity.", icon: ShieldCheck },
 ] as const;
 

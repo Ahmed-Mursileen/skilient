@@ -5,7 +5,7 @@ import { Suspense } from "react";
 import { AddFriendButton } from "@/components/explore/add-friend-button";
 import { ExploreControls } from "@/components/explore/explore-controls";
 import { VentureCard } from "@/components/ventures/venture-card";
-import { Avatar, EmptyState, Skeleton, SkillChip } from "@/components/ui";
+import { Avatar, EmptyState, Skeleton, SkillChip, TierBadge } from "@/components/ui";
 import { cn } from "@/lib/cn";
 import { EXPLORE_PAGE, listUniversities, searchPeople, searchVentures, type ExploreFilters, type PersonResult } from "@/lib/data/explore";
 import { listTaxonomy } from "@/lib/data/skills";
@@ -141,9 +141,12 @@ function PersonRow({ person: p }: { person: PersonResult }) {
     <li className="flex items-center gap-3 px-4 py-3" data-testid="person-result">
       <Avatar name={p.name} src={p.avatarUrl} size="md" />
       <div className="min-w-0 flex-1">
-        <Link href={`/profile/${p.username}` as Route} className="text-body font-semibold underline-offset-4 hover:underline">
-          {p.name}
-        </Link>
+        <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
+          <Link href={`/profile/${p.username}` as Route} className="text-body font-semibold underline-offset-4 hover:underline">
+            {p.name}
+          </Link>
+          {p.tier ? <TierBadge tier={p.tier} /> : null}
+        </span>
         <p className="truncate text-caption text-text-secondary">
           @{p.username}
           {meta ? ` · ${meta}` : ""}

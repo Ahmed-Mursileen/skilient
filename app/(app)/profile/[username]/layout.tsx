@@ -8,6 +8,7 @@ import { ProfileTabs } from "@/components/profile/profile-tabs";
 import { EmptyState } from "@/components/ui";
 import { getFriendshipState } from "@/lib/data/friends";
 import { getProfile } from "@/lib/data/profiles";
+import { getTiers } from "@/lib/data/tiers";
 import { getGithubLogin } from "@/lib/data/skills";
 
 export async function generateMetadata({ params }: LayoutProps<"/profile/[username]">): Promise<Metadata> {
@@ -38,7 +39,7 @@ export default async function ProfileLayout({ params, children }: LayoutProps<"/
   }
   if (lookup.kind === "card") {
     const { card } = lookup;
-    const relation = await getFriendshipState(card.username);
+    const [relation, tiers] = await Promise.all([getFriendshipState(card.username), getTiers([card.userId])]);
     return (
       <main className="mx-auto flex max-w-[680px] flex-col gap-6 px-[var(--page-gutter)] py-8">
         <ProfileHeader
@@ -46,6 +47,7 @@ export default async function ProfileLayout({ params, children }: LayoutProps<"/
           username={card.username}
           department={card.department}
           graduationYear={card.graduationYear}
+          tier={tiers.get(card.userId) ?? null}
           actions={relationActions(card.userId, card.username, card.fullName, relation)}
           note={
             <p className="flex items-start gap-2 rounded-md border border-border-default bg-bg-surface px-3 py-2.5 text-body-sm text-text-secondary" data-testid="restricted-card">
@@ -59,9 +61,10 @@ export default async function ProfileLayout({ params, children }: LayoutProps<"/
   }
 
   const { profile } = lookup;
-  const [githubLogin, relation] = await Promise.all([
+  const [githubLogin, relation, tiers] = await Promise.all([
     getGithubLogin(profile.userId),
     profile.isOwner ? null : getFriendshipState(profile.username),
+    getTiers([profile.userId]),
   ]);
   return (
     <main className="mx-auto flex max-w-[680px] flex-col gap-6 px-[var(--page-gutter)] py-8">
@@ -75,6 +78,7 @@ export default async function ProfileLayout({ params, children }: LayoutProps<"/
         coverUrl={profile.coverUrl}
         isOwner={profile.isOwner}
         githubLogin={githubLogin}
+        tier={tiers.get(profile.userId) ?? null}
         actions={relationActions(profile.userId, profile.username, profile.fullName, relation)}
       />
       <ProfileTabs username={profile.username} />

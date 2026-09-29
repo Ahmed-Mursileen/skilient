@@ -1,7 +1,7 @@
 import { GithubLogo, PencilSimple } from "@phosphor-icons/react/dist/ssr";
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { Avatar, Button } from "@/components/ui";
+import { Avatar, Button, TierBadge, type Tier } from "@/components/ui";
 
 /** Cover + identity header for /profile/[username] (screen spec 3.3). */
 export function ProfileHeader({
@@ -16,6 +16,7 @@ export function ProfileHeader({
   githubLogin,
   actions,
   note,
+  tier,
 }: {
   fullName: string;
   username: string;
@@ -30,6 +31,8 @@ export function ProfileHeader({
   /** Friend and block controls on someone else's profile. */
   actions?: ReactNode;
   note?: ReactNode;
+  /** The tier badge from the last nightly run (PRD 5.17); shown even when opted out of boards. */
+  tier?: Tier | null;
 }) {
   const meta = [department, graduationYear ? `Class of ${graduationYear}` : null].filter(Boolean).join(" · ");
   return (
@@ -52,7 +55,10 @@ export function ProfileHeader({
         ) : null}
       </div>
       <div className="mt-3 px-2 sm:px-4">
-        <h1 className="font-display text-h1 break-words">{fullName}</h1>
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+          <h1 className="font-display text-h1 break-words">{fullName}</h1>
+          {tier ? <TierBadge tier={tier} /> : null}
+        </div>
         <p className="text-body text-text-secondary">@{username}</p>
         {universityName ? <p className="mt-2 text-body font-semibold">{universityName}</p> : null}
         {meta ? <p className="text-body text-text-secondary">{meta}</p> : null}

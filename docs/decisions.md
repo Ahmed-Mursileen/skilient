@@ -1022,3 +1022,22 @@ Append-only. One dated entry per product decision, with the reason. Carried over
   university's periods (for the score page's pause notice). None are seeded.
 - 2026-09-30 (phase 4, slice 5): Snapshots keep points per component only, not the evidence
   lists, so a year of weekly history stays small on the Free plan's 500 MB database.
+- 2026-09-30 (phase 4, slice 6): Leaderboards as built. A board is every ranked student with
+  onboarding done who hasn't opted out: the viewer's university (optionally one department and
+  one batch) or global. Ranks come from the published totals (ties share a rank, then name
+  order), so they only move with the nightly run. Ranks are computed before hiding people
+  blocked with the viewer, so everyone sees the same rank for the same student (blocked rows
+  just don't show). Weekly change is the rank change on the same board since the last Sunday
+  snapshot before today, "New" for anyone not on it then. Pages of 50. The viewer's own place
+  is pinned above the board with their points (the only place, with /me/score, where points
+  show). The opt-out lives in Settings → Privacy (`profiles.leaderboard_opt_out`).
+- 2026-09-30 (phase 4, slice 6): Tier badges come from one `tiers_for(ids)` call per page (none
+  for people blocked with the viewer) and show on the profile header (restricted card
+  included), post cards, Explore people rows, venture team cards and the leaderboard; not in
+  chat. The header gets a "Leaderboard" link until the phase 6 shell.
+- 2026-09-30 (phase 4, slice 6): /me/score shows the published score: total, tier and this
+  week's change; each component with its points, its cap, the change since Sunday and the
+  evidence behind it (ventures with role, complexity and share; skills; endorsers with weight,
+  mutual and ring marks; credentials; scored posts; active weeks; citizenship; penalties
+  linking to the moderation notice); notices for a held gain, an exam pause, decay and a
+  pending tier drop (with its date); and what the next tier needs (`next_tier_requirements`).

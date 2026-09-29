@@ -57,6 +57,7 @@ Claude Code can't create these accounts or keys. Do them before (or alongside) p
   Roles count only on a two-factor session: sign out and back in with your code afterwards.
 - [ ] **NUTECH exam periods**: enter them by hand at `/ops/exam-periods` once slice 5 ships
   (nothing is seeded or imported).
+- [ ] **Production end-to-end check** (after slice 6): follow `docs/phase-4-production-check.md`.
 - [ ] **Review** the recognised-issuer list (slice 3) and the code-check change requests
   (slice 4) when they are sent.
 

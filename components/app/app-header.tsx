@@ -44,6 +44,9 @@ export function AppHeader() {
             <Link href="/explore" className="rounded-md px-2 py-1 text-body-sm text-text-secondary hover:bg-bg-subtle hover:text-text-primary">
               Explore
             </Link>
+            <Link href="/leaderboard" className="rounded-md px-2 py-1 text-body-sm text-text-secondary hover:bg-bg-subtle hover:text-text-primary">
+              Leaderboard
+            </Link>
             <ChatNavLink userId={user.id} />
             <FriendsNavLink userId={user.id} />
             <Link href="/requests" className="rounded-md px-2 py-1 text-body-sm text-text-secondary hover:bg-bg-subtle hover:text-text-primary">

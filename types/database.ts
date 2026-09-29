@@ -1155,13 +1155,13 @@ isOneToOne: false
                   ]
                 },"profiles": {
                   Row: {
-                    "avatar_path": string | null,"bio": string | null,"campus": string | null,"chat_read_receipts": boolean,"cover_path": string | null,"created_at": string,"department": string | null,"full_name": string,"graduation_year": number | null,"looking_for": (Database["public"]['Enums']["looking_for_option"])[],"onboarding_complete": boolean,"programme": string | null,"recruiter_visible": boolean,"role": Database["public"]['Enums']["account_role"],"university_id": string | null,"updated_at": string,"user_id": string,"username": string | null,"visibility": Database["public"]['Enums']["profile_visibility"]
+                    "avatar_path": string | null,"bio": string | null,"campus": string | null,"chat_read_receipts": boolean,"cover_path": string | null,"created_at": string,"department": string | null,"full_name": string,"graduation_year": number | null,"leaderboard_opt_out": boolean,"looking_for": (Database["public"]['Enums']["looking_for_option"])[],"onboarding_complete": boolean,"programme": string | null,"recruiter_visible": boolean,"role": Database["public"]['Enums']["account_role"],"university_id": string | null,"updated_at": string,"user_id": string,"username": string | null,"visibility": Database["public"]['Enums']["profile_visibility"]
                   }
                   Insert: {
-                    "avatar_path"?: string | null,"bio"?: string | null,"campus"?: string | null,"chat_read_receipts"?: boolean,"cover_path"?: string | null,"created_at"?: string,"department"?: string | null,"full_name": string,"graduation_year"?: number | null,"looking_for"?: (Database["public"]['Enums']["looking_for_option"])[],"onboarding_complete"?: boolean,"programme"?: string | null,"recruiter_visible"?: boolean,"role"?: Database["public"]['Enums']["account_role"],"university_id"?: string | null,"updated_at"?: string,"user_id": string,"username"?: string | null,"visibility"?: Database["public"]['Enums']["profile_visibility"]
+                    "avatar_path"?: string | null,"bio"?: string | null,"campus"?: string | null,"chat_read_receipts"?: boolean,"cover_path"?: string | null,"created_at"?: string,"department"?: string | null,"full_name": string,"graduation_year"?: number | null,"leaderboard_opt_out"?: boolean,"looking_for"?: (Database["public"]['Enums']["looking_for_option"])[],"onboarding_complete"?: boolean,"programme"?: string | null,"recruiter_visible"?: boolean,"role"?: Database["public"]['Enums']["account_role"],"university_id"?: string | null,"updated_at"?: string,"user_id": string,"username"?: string | null,"visibility"?: Database["public"]['Enums']["profile_visibility"]
                   }
                   Update: {
-                    "avatar_path"?: string | null,"bio"?: string | null,"campus"?: string | null,"chat_read_receipts"?: boolean,"cover_path"?: string | null,"created_at"?: string,"department"?: string | null,"full_name"?: string,"graduation_year"?: number | null,"looking_for"?: (Database["public"]['Enums']["looking_for_option"])[],"onboarding_complete"?: boolean,"programme"?: string | null,"recruiter_visible"?: boolean,"role"?: Database["public"]['Enums']["account_role"],"university_id"?: string | null,"updated_at"?: string,"user_id"?: string,"username"?: string | null,"visibility"?: Database["public"]['Enums']["profile_visibility"]
+                    "avatar_path"?: string | null,"bio"?: string | null,"campus"?: string | null,"chat_read_receipts"?: boolean,"cover_path"?: string | null,"created_at"?: string,"department"?: string | null,"full_name"?: string,"graduation_year"?: number | null,"leaderboard_opt_out"?: boolean,"looking_for"?: (Database["public"]['Enums']["looking_for_option"])[],"onboarding_complete"?: boolean,"programme"?: string | null,"recruiter_visible"?: boolean,"role"?: Database["public"]['Enums']["account_role"],"university_id"?: string | null,"updated_at"?: string,"user_id"?: string,"username"?: string | null,"visibility"?: Database["public"]['Enums']["profile_visibility"]
                   }
                   Relationships: [
                     {
@@ -1949,6 +1949,17 @@ isOneToOne: false
 "job_run_start":
 { Args: { "p_job": string,"p_meta"?: Json }; Returns: string
                            },
+"leaderboard":
+{ Args: { "p_after"?: number,"p_batch"?: number,"p_department"?: string,"p_scope"?: string }; Returns: {
+              "avatar_path": string,"full_name": string,"is_me": boolean,"place": number,"rank": number,"tier": Database["public"]['Enums']["ranking_tier"],"university_name": string,"username": string,"weekly_change": number
+            }[]
+                           },
+"leaderboard_filters":
+{ Args: Record<PropertyKey, never>; Returns: Json
+                           },
+"leaderboard_me":
+{ Args: { "p_batch"?: number,"p_department"?: string,"p_scope"?: string }; Returns: Json
+                           },
 "leave_venture":
 { Args: { "p_venture": string }; Returns: undefined
                            },
@@ -2031,6 +2042,9 @@ isOneToOne: false
 { Args: { "p_before"?: string,"p_limit"?: number }; Returns: {
               "actor_avatar_path": string,"actor_name": string,"actor_username": string,"category": string,"created_at": string,"data": Json,"entity_id": string,"entity_type": string,"id": string,"read_at": string,"type": string
             }[]
+                           },
+"my_score":
+{ Args: Record<PropertyKey, never>; Returns: Json
                            },
 "my_skill_proofs":
 { Args: { "p_skill": string }; Returns: {
@@ -2204,6 +2218,9 @@ isOneToOne: false
 "send_message":
 { Args: { "p_body": string,"p_media"?: Json,"p_reply_to"?: string,"p_thread": string }; Returns: string
                            },
+"set_leaderboard_opt_out":
+{ Args: { "p_out": boolean }; Returns: boolean
+                           },
 "set_member_role":
 { Args: { "p_member": string,"p_role": Database["public"]['Enums']["venture_team_role"],"p_venture": string }; Returns: undefined
                            },
@@ -2260,6 +2277,11 @@ isOneToOne: false
 "thread_pins":
 { Args: { "p_thread": string }; Returns: {
               "excerpt": string,"message_id": string,"pinned_at": string,"sender_id": string
+            }[]
+                           },
+"tiers_for":
+{ Args: { "p_users": (string)[] }; Returns: {
+              "tier": Database["public"]['Enums']["ranking_tier"],"user_id": string
             }[]
                            },
 "toggle_reaction":
