@@ -735,3 +735,41 @@ Append-only. One dated entry per product decision, with the reason. Carried over
   owner gets an in-app notification (category "Account and safety", in-app by default
   per the 2026-09-28 email rules) linking to `/moderation/[id]`, which shows the content
   excerpt and the moderator's reason, never who reported or decided. Appeals: phase 11.
+- 2026-09-30 (phase 3 answers): Email budget. Supabase Auth's emails (verification codes,
+  magic links) go through the same Resend account (custom SMTP), so the free plan's ~100
+  a day is shared by auth, security and notification emails. The notify-worker now stops
+  notification emails at 60 in a UTC day (`DAILY_CAP`) and parks the rest until the next
+  day; instant ones older than 12 hours by then fall back to in-app only. Auth and
+  security emails never pass through that queue, so they are never counted or held.
+  Replaces the 80-a-day warning (2026-09-28). Upgrade Resend to a paid plan before the
+  closed beta (setup checklist).
+- 2026-09-30 (phase 3 answers): Digest stays at 18:07 PKT; staff announcements and
+  Shipped posts stay as built in slice 3; link previews stay without images.
+- 2026-09-30 (phase 3 answers): Post images stay in the public bucket, and files are now
+  always deleted when no longer used: triggers queue the path (pgmq `storage_cleanup`)
+  when a post's images go (post deleted, or removed by moderation, which also drops its
+  image rows), when a chat image's message is deleted or removed, and when a profile photo
+  is replaced or cleared. The `storage-cleanup` Edge Function (woken each minute by
+  pg_cron, service role, Storage API) deletes them in batches per bucket; a failure is
+  retried a minute later, up to 5 times.
+- 2026-09-30 (phase 3 answers): Explore people search. Names and usernames are found at
+  every university (card fields only; the 2-character minimum, 20-a-page, 200-deep and
+  60-a-minute guards stay). Department and batch, whether as filters or as words in the
+  query, only reach the searcher's own university plus profiles set to Global. Explore
+  gains a batch filter.
+- 2026-09-30 (phase 3 answers): Chat reactions are one per person per message: choosing a
+  different emoji replaces yours, the same one takes it back (primary key
+  `(message_id, user_id)`; duplicates from before were collapsed to the latest).
+- 2026-09-30 (phase 3 answers): Moderation notices ("Account and safety": removals,
+  clears, unlisting, warnings) are instant email by default.
+- 2026-09-30 (phase 3 answers): Moderators may also clear a profile's bio and photo
+  (`clear_profile`; the photo file is deleted) and unlist a venture (`unlist`), each with a
+  reason, the before/after in `ops_audit_log`, and an instant-email notice to the owner
+  saying which action was taken. Suspend and ban stay in phase 11 (emergency procedure
+  until then).
+- 2026-09-30 (phase 3): Production end-to-end check done by Ahmed (signup → GitHub →
+  venture → post → survey → chat on production with real accounts); Phase 3 complete.
+  Phase 4 starts in a new session.
+- 2026-09-30 (tests): `01_job_runs` uses its own job name (`pgtap-probe`) instead of
+  `feed-stage`, which the real every-5-minutes cron job also writes; the old name made
+  the test fail whenever that job had run on the database first.

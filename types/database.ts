@@ -1640,7 +1640,7 @@ isOneToOne: false
                            },
 "my_moderation_notice":
 { Args: { "p_case": string }; Returns: {
-              "excerpt": string,"reason": string,"status": Database["public"]['Enums']["report_case_status"],"target_type": Database["public"]['Enums']["report_target"]
+              "action": string,"excerpt": string,"reason": string,"status": Database["public"]['Enums']["report_case_status"],"target_type": Database["public"]['Enums']["report_target"]
             }[]
                            },
 "my_mutes":
@@ -1772,7 +1772,7 @@ isOneToOne: false
             }[]
                            },
 "search_people":
-{ Args: { "p_department"?: string,"p_offset"?: number,"p_q": string,"p_skill"?: string,"p_university"?: string }; Returns: {
+{ Args: { "p_batch"?: number,"p_department"?: string,"p_offset"?: number,"p_q": string,"p_skill"?: string,"p_university"?: string }; Returns: {
               "avatar_path": string,"department": string,"friendship": string,"full_name": string,"graduation_year": number,"skills": (string)[],"university": string,"user_id": string,"username": string
             }[]
                            },

@@ -128,6 +128,8 @@ export interface ModerationNotice {
   excerpt: string;
   status: CaseStatus;
   reason: string | null;
+  /** dismiss/remove/clear_profile/unlist/warn */
+  action: string | null;
 }
 
 /** For the person whose content was moderated: what and why (never who). */
@@ -136,5 +138,5 @@ export async function getMyModerationNotice(id: string): Promise<ModerationNotic
   const supabase = await createClient();
   const { data } = await supabase.rpc("my_moderation_notice", { p_case: id });
   const row = data?.[0];
-  return row ? { targetType: row.target_type, excerpt: row.excerpt, status: row.status, reason: row.reason } : null;
+  return row ? { targetType: row.target_type, excerpt: row.excerpt, status: row.status, reason: row.reason, action: row.action } : null;
 }

@@ -30,6 +30,7 @@ export default async function ExplorePage({ searchParams }: PageProps<"/explore"
     q: one("q").slice(0, 100),
     tab,
     department: tab === "people" ? one("department").slice(0, 80) : "",
+    batch: tab === "people" && /^(19|20)\d\d$/.test(one("batch")) ? one("batch") : "",
     skill: /^[a-z0-9][a-z0-9-]{0,39}$/.test(one("skill")) ? one("skill") : "",
     university: /^[a-z0-9]+(-[a-z0-9]+)*$/.test(one("university")) ? one("university") : "",
   };
@@ -62,7 +63,7 @@ export default async function ExplorePage({ searchParams }: PageProps<"/explore"
         </ul>
       </nav>
       <Suspense key={JSON.stringify({ ...state, from })} fallback={<ResultsSkeleton />}>
-        <Results state={state} filters={{ q: state.q, department: state.department || null, skill: state.skill || null, university: state.university || null, from }} />
+        <Results state={state} filters={{ q: state.q, department: state.department || null, batch: state.batch ? Number(state.batch) : null, skill: state.skill || null, university: state.university || null, from }} />
       </Suspense>
     </main>
   );
@@ -89,7 +90,7 @@ async function Results({ state, filters }: { state: ExploreState; filters: Explo
       </p>
     );
   }
-  const filtered = Boolean(state.department || state.skill || state.university);
+  const filtered = Boolean(state.department || state.batch || state.skill || state.university);
   if (!outcome.rows.length) {
     return (
       <EmptyState
@@ -98,7 +99,7 @@ async function Results({ state, filters }: { state: ExploreState; filters: Explo
         description={filtered ? "Try clearing the filters." : "Try other words, or part of a name."}
         action={
           filtered ? (
-            <Link href={exploreHref(state, { department: "", skill: "", university: "" })} className="text-body-sm font-semibold underline underline-offset-4">
+            <Link href={exploreHref(state, { department: "", batch: "", skill: "", university: "" })} className="text-body-sm font-semibold underline underline-offset-4">
               Clear filters
             </Link>
           ) : undefined

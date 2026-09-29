@@ -9,9 +9,14 @@ import { exploreHref, type ExploreState } from "@/lib/explore/href";
 const selectClass =
   "h-11 w-full rounded-md border border-border-default bg-bg-surface px-3 text-body-sm text-text-primary focus-visible:outline-2 focus-visible:outline-focus-ring";
 
+const THIS_YEAR = new Date().getFullYear();
+const BATCHES = Array.from({ length: 13 }, (_, i) => String(THIS_YEAR + 6 - i));
+
 /**
  * Search box and filters (PRD 5.10): typing waits 250 ms, then replaces the URL, so the
  * results are shareable and Back works; a newer search supersedes an in-flight one.
+ * Department and batch reach your own university and Global profiles only
+ * (decisions.md 2026-09-30).
  */
 export function ExploreControls({
   state,
@@ -24,7 +29,7 @@ export function ExploreControls({
 }) {
   const router = useRouter();
   const pathname = usePathname();
-  const ids = { q: useId(), dept: useId(), skill: useId(), uni: useId() };
+  const ids = { q: useId(), dept: useId(), batch: useId(), scope: useId(), skill: useId(), uni: useId() };
   const [q, setQ] = useState(state.q);
   const [department, setDepartment] = useState(state.department);
   const [pending, startTransition] = useTransition();
@@ -74,14 +79,29 @@ export function ExploreControls({
           autoComplete="off"
         />
       </div>
-      <div className="grid gap-3 sm:grid-cols-3">
+      <div className={state.tab === "people" ? "grid gap-3 sm:grid-cols-2 lg:grid-cols-4" : "grid gap-3 sm:grid-cols-2"}>
         {state.tab === "people" ? (
-          <div className="flex flex-col gap-1">
-            <label htmlFor={ids.dept} className="text-caption font-semibold text-text-secondary">
-              Department
-            </label>
-            <Input id={ids.dept} value={department} onChange={(e) => setDepartment(e.target.value)} placeholder="Any department" />
-          </div>
+          <>
+            <div className="flex flex-col gap-1">
+              <label htmlFor={ids.dept} className="text-caption font-semibold text-text-secondary">
+                Department
+              </label>
+              <Input id={ids.dept} aria-describedby={ids.scope} value={department} onChange={(e) => setDepartment(e.target.value)} placeholder="Any department" />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label htmlFor={ids.batch} className="text-caption font-semibold text-text-secondary">
+                Batch
+              </label>
+              <select id={ids.batch} aria-describedby={ids.scope} className={selectClass} value={state.batch} onChange={(e) => go({ batch: e.target.value })}>
+                <option value="">Any batch</option>
+                {BATCHES.map((y) => (
+                  <option key={y} value={y}>
+                    {y}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </>
         ) : null}
         <div className="flex flex-col gap-1">
           <label htmlFor={ids.skill} className="text-caption font-semibold text-text-secondary">
@@ -110,6 +130,11 @@ export function ExploreControls({
           </select>
         </div>
       </div>
+      {state.tab === "people" ? (
+        <p id={ids.scope} className="text-caption text-text-secondary">
+          Names and usernames are found at every university. Department and batch show people at your university, plus anyone whose profile is Global.
+        </p>
+      ) : null}
     </div>
   );
 }

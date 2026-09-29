@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import postgres from "postgres";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { dbFrom } from "../../supabase/functions/_shared/github/types.ts";
-import { DAILY_WARNING, runNotifyWorker, type NotifyConfig } from "../../supabase/functions/_shared/notify/worker.ts";
+import { DAILY_CAP, runNotifyWorker, type NotifyConfig } from "../../supabase/functions/_shared/notify/worker.ts";
 
 /**
  * The notify-worker's shared code against the real local database, with Resend faked.
@@ -153,16 +153,25 @@ describe("notify-worker", () => {
     expect(await queueSize()).toBe(1);
   });
 
-  it("logs a warning once the day's sends pass 80", async () => {
+  it("stops notification emails for the day at 60 and parks the rest until tomorrow", async () => {
     await sql`delete from public.friend_requests where receiver_id = ${users.c}`;
     await sql`delete from private.email_sends where sent_at >= date_trunc('day', now() at time zone 'utc') at time zone 'utc'`;
-    await sql`insert into private.email_sends (kind, user_id) select 'instant', ${users.a} from generate_series(1, ${DAILY_WARNING})`;
+    await sql`insert into private.email_sends (kind, user_id) select 'instant', ${users.a} from generate_series(1, ${DAILY_CAP - 1})`;
+    await sql`delete from private.rate_limit_events`;
+    await as(users.a, "select * from public.send_friend_request($1)", [`nw_c_${users.c.slice(0, 6)}`]);
     await sql`delete from private.rate_limit_events`;
     await as(users.b, "select * from public.send_friend_request($1)", [`nw_c_${users.c.slice(0, 6)}`]);
+    expect(await queueSize()).toBe(2);
     const resend = fakeResend();
-    await runNotifyWorker({ db, cfg, fetch: resend.impl, log });
-    const warning = logs.find((l) => l.event === "notify.daily_threshold");
-    expect(warning?.fields).toMatchObject({ level: "warn", daily_count: DAILY_WARNING + 1 });
+    const result = await runNotifyWorker({ db, cfg, fetch: resend.impl, log });
+    // The 60th goes out; the 61st waits for the next UTC day without calling Resend.
+    expect(result).toEqual({ sent: 1, skipped: 0, deferred: 1, failed: 0 });
+    expect(resend.sent).toHaveLength(1);
+    const [{ hidden }] = await sql<{ hidden: number }[]>`select count(*)::int as hidden from pgmq.q_notification_emails where vt > now() + interval '1 minute'`;
+    expect(hidden).toBe(1);
+    expect(logs.find((l) => l.event === "notify.daily_cap")?.fields).toMatchObject({ level: "warn", daily_count: DAILY_CAP, cap: DAILY_CAP });
+    await sql`select pgmq.purge_queue('notification_emails')`;
+    await sql`delete from private.email_sends where sent_at >= date_trunc('day', now() at time zone 'utc') at time zone 'utc'`;
   });
 
   it("sends a digest only to inactive people with unread digest items, never empty, once a day", async () => {

@@ -29,6 +29,7 @@ export interface PersonResult {
 export interface ExploreFilters {
   q: string;
   department: string | null;
+  batch: number | null;
   skill: string | null;
   university: string | null;
   from: number;
@@ -44,6 +45,7 @@ export async function searchPeople(f: ExploreFilters): Promise<SearchOutcome<Per
     p_skill: f.skill ?? undefined,
     p_university: f.university ?? undefined,
     p_offset: f.from,
+    p_batch: f.batch ?? undefined,
   });
   if (error?.code === "54000") return { ok: false, reason: "rate_limited" };
   if (error) throw new Error(`search_people failed: ${error.code}`);

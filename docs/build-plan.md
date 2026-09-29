@@ -86,11 +86,11 @@ Legend: 📖 = PRD files to read (in `docs/prd/`), ✅ = done-when checks.
 
 *Slice 9 (reports and minimal /ops): Report on posts, comments, messages, profiles (the restricted card too) and ventures, one per person and target, 60 s apart, a snapshot at report time and, for a message, up to 10 earlier messages the reporter ticks (copied; staff read nothing else of a chat); 3 post reports hold the post; 3 Appropriate crosses from non-friends open a soft-signal case. `/ops` for moderators with two-factor: one case per target, oldest first, claim before acting, dismiss (releases a held post), remove (hidden from everyone, the owner included) or warn, each with a reason in `ops_audit_log`; the owner is notified and reads the reason at `/moderation/[id]`. Suspend and ban are phase 11 (`docs/emergency-ban.md` until then). pgTAP `26_reports`, E2E `reports.spec.ts`.*
 
-*Phase 3 wrap-up 2026-09-29: every box above is ticked and the done-when checks pass in CI (cross-account E2E, fixed survey question and refused second answer, paging without duplicates, thread membership enforced through the raw API, unfriend/block only the pair). Still open: the production run of the end-to-end student journey (below, deferred until production is live), the Resend secrets (setup checklist), and the questions in `docs/phase-3-questions.md`.*
+*Phase 3 wrap-up 2026-09-29: every box above is ticked and the done-when checks pass in CI (cross-account E2E, fixed survey question and refused second answer, paging without duplicates, thread membership enforced through the raw API, unfriend/block only the pair). Follow-up 2026-09-30: Ahmed's answers applied (decisions.md), the Resend secrets set, and the production end-to-end check done. Phase 3 is complete.*
 
 ## ★ Slice checkpoint
 
-- [ ] Signup → GitHub → venture → post → survey → chat works end to end on staging — *staging deferred until a production build exists (decisions.md 2026-09-28): run this check on production with test accounts*
+- [x] Signup → GitHub → venture → post → survey → chat works end to end on staging — *run on production with real accounts instead of staging (decisions.md 2026-09-28); done by Ahmed 2026-09-30*
 - [ ] 10 internal testers use it for a week; no Sev 1/Sev 2 open
 
 ## Phase 4 — Trust and ranking

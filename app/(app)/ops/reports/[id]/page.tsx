@@ -118,7 +118,7 @@ export default async function OpsCasePage({ params }: PageProps<"/ops/reports/[i
             </p>
           ) : c.claimedByMe ? (
             <div className="mt-2 flex flex-col gap-3">
-              <ResolveForm caseId={c.id} canRemove={["post", "comment", "message"].includes(c.targetType)} />
+              <ResolveForm caseId={c.id} targetType={c.targetType} />
               <ClaimButton caseId={c.id} claimed />
             </div>
           ) : c.claimedBy ? (

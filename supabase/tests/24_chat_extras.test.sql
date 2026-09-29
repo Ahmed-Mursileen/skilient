@@ -4,7 +4,7 @@
 -- search finds only the caller's own threads; the typing channel admits members only;
 -- links in messages are queued for previews. A, B, C, D study at NUTECH.
 begin;
-select plan(41);
+select plan(42);
 
 insert into auth.users (id, email) values
   ('24000000-0000-0000-0000-00000000000a', 'a@nutech.edu.pk'),
@@ -55,17 +55,16 @@ select is_empty($$ select 1 from public.message_reactions where thread_id = pg_t
 select pg_temp.as_user('b');
 select throws_ok($$ select public.toggle_reaction(pg_temp.v('m1'), '💩') $$, '22023', null, 'only the six reactions');
 select is(public.toggle_reaction(pg_temp.v('m1'), '👍'), true, 'a member reacts');
-select is(public.toggle_reaction(pg_temp.v('m1'), '🎉'), true, 'and adds another');
+select is(public.toggle_reaction(pg_temp.v('m1'), '🎉'), true, 'another emoji replaces it (one per person)');
+select results_eq($$ select emoji from public.message_reactions where message_id = pg_temp.v('m1') $$, $$ values ('🎉'::text) $$,
+  'so B has one reaction');
 select pg_temp.as_user('a');
-select is(public.toggle_reaction(pg_temp.v('m1'), '👍'), true, 'the other side adds the same one');
+select is(public.toggle_reaction(pg_temp.v('m1'), '👍'), true, 'the other side reacts');
 select results_eq($$ select reactions from public.reaction_summary(array[pg_temp.v('m1')]) $$,
-  $$ values ('[{"emoji":"👍","count":2,"mine":true},{"emoji":"🎉","count":1,"mine":false}]'::jsonb) $$, 'counts, in the fixed order');
+  $$ values ('[{"emoji":"👍","count":1,"mine":true},{"emoji":"🎉","count":1,"mine":false}]'::jsonb) $$, 'counts, in the fixed order');
 select is(public.toggle_reaction(pg_temp.v('m1'), '👍'), false, 'reacting again takes it back');
 select results_eq($$ select reactions from public.thread_messages(pg_temp.v('dm')) where id = pg_temp.v('m1') $$,
-  $$ values ('[{"emoji":"👍","count":1,"mine":false},{"emoji":"🎉","count":1,"mine":false}]'::jsonb) $$, 'the page carries them too');
-reset role;
-delete from public.message_reactions where user_id = pg_temp.uid('b') and emoji = '🎉';
-set local role authenticated;
+  $$ values ('[{"emoji":"🎉","count":1,"mine":false}]'::jsonb) $$, 'the page carries them too');
 select throws_ok($$ select public.toggle_reaction(pg_temp.v('r1'), '📌') $$, '22023', null, 'no custom emoji');
 
 -- ---------------------------------------------------------------------------
