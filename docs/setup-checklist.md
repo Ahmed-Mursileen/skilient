@@ -61,6 +61,34 @@ Claude Code can't create these accounts or keys. Do them before (or alongside) p
 - [ ] **Review** the recognised-issuer list (slice 3) and the code-check change requests
   (slice 4) when they are sent.
 
+## Phase 5
+
+- [x] **`NEXT_PUBLIC_SITE_URL`** in Vercel (Production and Preview): `https://skilient.vercel.app` until
+  skilient.com serves the app, then `https://skilient.com`. It is the origin printed in CV verify links
+  and QR codes (decisions.md 2026-10-01). *Done by Ahmed.*
+- [ ] **First CV signing key** (after the slice 1 PR is merged and CI has deployed the migration and
+  the `cv-sign` Edge Function): in the Supabase SQL editor run
+
+  ```sql
+  select private.cv_rotate_key();
+  ```
+
+  It should answer `rotation requested: …`. (If it says `not sent`, the Vault secret `project_url`
+  from phase 2 is missing.) A few seconds later open
+  `https://skilient.vercel.app/.well-known/skilient-cv-keys.json`: `keys` should list exactly one
+  key with `retired_at: null`. Nobody types or sees the private key; `cv-sign` generates it straight
+  into Vault. Then do the backup step below.
+- [ ] **After every key rotation** (the first key included): save the key file into the repo so the
+  public keys survive without database backups:
+
+  ```bash
+  curl -s https://skilient.vercel.app/.well-known/skilient-cv-keys.json > docs/signing-keys/$(date +%F).json
+  git add docs/signing-keys && git commit -m "Back up CV signing keys" && git push
+  ```
+
+  (Use `https://skilient.com/...` once the domain serves the app.) Rotate only for an emergency
+  (leaked key) or a test: there is no automatic rotation.
+
 ## Before phase 10 ⏳
 
 - [ ] **Company registration** (needed by payment gateways).
@@ -79,6 +107,9 @@ Claude Code can't create these accounts or keys. Do them before (or alongside) p
 
 - [ ] **Resend paid plan**: the free plan's ~100 emails a day is shared by Supabase Auth (verification codes, magic links), security and notification emails; notification emails stop at 60 a day until then (decisions.md 2026-09-30).
 
+- [ ] **Move skilient.com to the app project** (Vercel → the Skilient project → Domains; DNS at your
+  provider), then set `NEXT_PUBLIC_SITE_URL=https://skilient.com` in Vercel and redeploy. CV PDFs
+  exported before this point print skilient.vercel.app links and are test-only (decisions.md 2026-10-01).
 - [ ] Final **user agreement** and **privacy notice** text (the app ships headings-only templates).
 - [ ] **NUTECH** partnership (beta university), plus 2 more partner universities; 10+ teachers per partner.
 - [ ] At least **1 paying recruiter** signed.
