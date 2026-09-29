@@ -29,6 +29,16 @@ either kept or changed in a follow-up PR. Answered items move to `docs/decisions
 7. **Human step** (slice 2): set the Edge Function secrets `RESEND_API_KEY`, `EMAIL_FROM`
    and `APP_URL` on the Supabase project (setup checklist, "Phase 3"). Until then,
    notifications are in-app only.
+8. **Who Explore lists** (slice 8). PRD 5.10 says everyone is discoverable through the
+   restricted card; the phase 1 decision said the card "can't be listed or scraped".
+   *Assumed (PRD 5.10):* any signed-in student finds anyone by name, username or
+   department, including other universities, with card fields only (name, username,
+   department, batch, university); photo and skills only where the profile is visible
+   to them. Guards against scraping: at least 2 characters, 20 a page and at most 200
+   deep, 60 searches a minute. *Option:* same-university only unless the profile is
+   Global.
+9. **Chat reactions** (slice 8). *Assumed:* 👍 ❤️ 😂 🎉 😮 🙏; a person may add several
+   different ones to a message. Change the set, or one per person?
 
 ## Answered
 

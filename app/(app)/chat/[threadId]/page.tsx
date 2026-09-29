@@ -34,6 +34,10 @@ export default async function ThreadPage({ params }: PageProps<"/chat/[threadId]
       initial={view.messages}
       hasOlder={view.hasOlder}
       meId={user.id}
+      initialPins={view.pins}
+      initialReceipt={view.receipt}
+      readReceipts={view.readReceipts}
+      canPin={view.canPin}
     />
   );
 }
