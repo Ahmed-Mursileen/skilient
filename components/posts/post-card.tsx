@@ -11,7 +11,7 @@ import { PostMenu } from "@/components/posts/post-menu";
 import { SurveyStrip } from "@/components/posts/survey-strip";
 import { useQualifiedView } from "@/components/posts/view-tracker";
 import { FoldedPost, ViewerActions } from "@/components/posts/viewer-actions";
-import { Avatar, Badge, Button } from "@/components/ui";
+import { Avatar, Badge, Button, TierBadge } from "@/components/ui";
 import type { PostCardData } from "@/lib/data/posts";
 import { SURVEYED_TYPES } from "@/lib/posts/constants";
 import { linkify } from "@/lib/format/linkify";
@@ -54,15 +54,18 @@ export function PostCard({ post, headingLevel = 2, showCommentsLink = true }: { 
       <header className="flex items-start gap-3">
         <Avatar name={post.author.name} src={post.author.avatarUrl} size="md" />
         <div className="min-w-0 flex-1">
-          <Heading id={`post-${post.id}-by`} className="text-body font-semibold">
-            {post.author.username ? (
-              <Link href={`/profile/${post.author.username}` as Route} className="underline-offset-4 hover:underline">
-                {post.author.name}
-              </Link>
-            ) : (
-              post.author.name
-            )}
-          </Heading>
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+            <Heading id={`post-${post.id}-by`} className="text-body font-semibold">
+              {post.author.username ? (
+                <Link href={`/profile/${post.author.username}` as Route} className="underline-offset-4 hover:underline">
+                  {post.author.name}
+                </Link>
+              ) : (
+                post.author.name
+              )}
+            </Heading>
+            {post.author.tier ? <TierBadge tier={post.author.tier} /> : null}
+          </div>
           <p className="flex flex-wrap items-center gap-x-2 text-caption text-text-secondary">
             <Link href={`/post/${post.id}` as Route} className="inline-flex min-h-6 items-center hover:underline">
               <time dateTime={post.createdAt}>

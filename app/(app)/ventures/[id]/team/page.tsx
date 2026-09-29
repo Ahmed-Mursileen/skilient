@@ -2,8 +2,9 @@ import type { Route } from "next";
 import Link from "next/link";
 import { EndorseSheet } from "@/components/endorsements/endorse-sheet";
 import { TeamControls } from "@/components/ventures/team-controls";
-import { Avatar } from "@/components/ui";
+import { Avatar, TierBadge } from "@/components/ui";
 import { getEndorseOptions } from "@/lib/data/endorsements";
+import { getTiers } from "@/lib/data/tiers";
 import { getVenture } from "@/lib/data/ventures";
 import { TEAM_ROLE_LABELS } from "@/lib/ventures/labels";
 
@@ -19,7 +20,10 @@ export default async function VentureTeamPage({ params, searchParams }: PageProp
   if (!v || v.viewer.byLinkOnly) return null;
   const manage = v.viewer.isOwner && v.status !== "completed";
   const canEndorse = v.viewer.isMember && (v.status === "in_progress" || v.status === "completed");
-  const endorseOptions = canEndorse ? await getEndorseOptions(v.id) : null;
+  const [endorseOptions, tiers] = await Promise.all([
+    canEndorse ? getEndorseOptions(v.id) : Promise.resolve(null),
+    getTiers(v.team.map((m) => m.userId)),
+  ]);
 
   return (
     <div className="flex flex-col gap-4">
@@ -44,6 +48,7 @@ export default async function VentureTeamPage({ params, searchParams }: PageProp
                 )}
                 {m.userId === v.viewer.userId ? <span className="font-normal text-text-secondary"> (you)</span> : null}
               </p>
+              {tiers.get(m.userId) ? <TierBadge tier={tiers.get(m.userId)!} className="mt-1" /> : null}
               <p className="text-body-sm text-text-secondary">
                 {m.isOwner ? "Owner · " : ""}
                 {TEAM_ROLE_LABELS[m.teamRole]}

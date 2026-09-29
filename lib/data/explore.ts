@@ -1,8 +1,10 @@
 import "server-only";
 
 import { cache } from "react";
+import type { Tier } from "@/components/ui/tier-badge";
 import { publicImageUrl } from "@/lib/storage";
 import { createClient } from "@/lib/supabase/server";
+import { getTiers } from "@/lib/data/tiers";
 import { skillNames, type VentureRow, type VentureType } from "@/lib/data/ventures";
 
 /**
@@ -24,6 +26,8 @@ export interface PersonResult {
   avatarUrl: string | null;
   skills: string[];
   friendship: Friendship;
+  /** Tier badge from the last nightly run (PRD 5.17), if ranked. */
+  tier: Tier | null;
 }
 
 export interface ExploreFilters {
@@ -49,6 +53,7 @@ export async function searchPeople(f: ExploreFilters): Promise<SearchOutcome<Per
   });
   if (error?.code === "54000") return { ok: false, reason: "rate_limited" };
   if (error) throw new Error(`search_people failed: ${error.code}`);
+  const tiers = await getTiers((data ?? []).map((p) => p.user_id));
   return {
     ok: true,
     rows: (data ?? []).map((p) => ({
@@ -61,6 +66,7 @@ export async function searchPeople(f: ExploreFilters): Promise<SearchOutcome<Per
       avatarUrl: publicImageUrl("avatars", p.avatar_path),
       skills: p.skills ?? [],
       friendship: p.friendship as Friendship,
+      tier: tiers.get(p.user_id) ?? null,
     })),
   };
 }

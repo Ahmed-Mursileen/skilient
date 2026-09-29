@@ -100,7 +100,7 @@ Legend: 📖 = PRD files to read (in `docs/prd/`), ✅ = done-when checks.
 - [x] Endorsements with limits and ring detection; L3 from PRs/confirmations; L4 from evidence-tied endorsements and code checks (Skilient reviewers grade until teachers exist) — *slices 1, 2, 4, 5*
 - [x] Credentials upload + staff review — *slice 3*
 - [x] Ranking SQL functions per component, nightly compute, decay with exam pauses, tiers with hysteresis, snapshots — *slice 5*
-- [ ] Leaderboard (scopes, opt-out) and `/me/score`
+- [x] Leaderboard (scopes, opt-out) and `/me/score` — *slice 6*
 
 ✅ pgTAP fixtures reproduce hand-calculated scores for 10 reference students · tiers correct on 1,000 synthetic students · decay pauses during an exam period
 
@@ -115,6 +115,10 @@ Legend: 📖 = PRD files to read (in `docs/prd/`), ✅ = done-when checks.
 *Slice 4 (code checks): request from the skill drawer at L2 (own commits), the worker picks 20–40 of the student's own added lines, the `code-check` Edge Function shows them from GitHub (never stored) to the student for 10 minutes from first view, or to the claiming reviewer; three fixed questions and one change request from the bank; trust reviewers grade in /ops with the 4-part rubric (3 of 4 passes) and a pass makes the skill L4; one attempt per skill per 30 days. pgTAP `31_code_checks`, worker `code-check` (fake GitHub commit and contents APIs), unit `code-check`, E2E `code-checks.spec.ts`. With slices 1–2 this completes the first box except ring detection (slice 5).*
 
 *Slice 5 (ranking engine): formula v1 with every weight in `platform_config` `ranking.formula`; one SQL function per component with its evidence; a nightly run at 03:07 PKT in committed steps (rings, students in batches of 500, percentiles and tiers, Sunday snapshot); decay computed from the data with exam days paused; cumulative tiers with the 14-day drop rule; ring and rapid-gain flags held until a trust reviewer clears or upholds them in /ops (Evidence → Ranking flags); report severities become 12-month penalties; accounts staff enter exam periods at `/ops/exam-periods`. pgTAP `32_ranking_reference` (the 10 hand-worked students in `docs/ranking-reference.md`), `33_ranking_tiers` (1,000 synthetic students, hysteresis), `34_ranking_nightly` (batches, holds, completions, formula change, rings, snapshots, penalties, exam periods pausing decay, RLS); E2E `ranking-ops.spec.ts`, `reports.spec.ts` (severity). This ticks the first and third boxes; the leaderboard and /me/score come with slice 6.*
+
+*Slice 6 (leaderboard, /me/score, tier badges): `/leaderboard` (university with department and batch filters, or global; rank, tier and weekly change, never points; ties share a rank; blocked people hidden; your place pinned), `/me/score` (every component with its evidence, weekly change, held-gain, exam-pause, decay and tier-drop notices, what the next tier needs), tier badges on profiles, post cards, Explore, team cards and the board, and the opt-out in Settings → Privacy. pgTAP `35_leaderboard`, E2E `leaderboard.spec.ts`. With slices 1–5 this completes Phase 4's boxes and its done-when checks (reference students, 1,000-student tiers, decay paused by exams).*
+
+*Phase 4 wrap-up 2026-09-30: every box above is ticked and the done-when checks pass in CI (pgTAP `32_ranking_reference` for the 10 hand-worked students, `33_ranking_tiers` for 1,000 synthetic students, `34_ranking_nightly` for decay paused by an exam period). Open points are in `docs/phase-4-questions.md`; the production end-to-end check (Ahmed) is `docs/phase-4-production-check.md`.*
 
 ## Phase 5 — Verified CV
 
