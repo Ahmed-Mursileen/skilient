@@ -22,3 +22,10 @@ export const STATUS_LABELS: Record<string, string> = {
   removed: "Removed",
   warned: "Owner warned",
 };
+
+/** GitHub review flags (PRD 5.5 anti-gaming), as trust reviewers see them. */
+export const FLAG_LABELS: Record<string, string> = {
+  burst: "Burst of commits",
+  backdating: "Backdated commits",
+  cross_account_duplicate: "Same files as another student",
+};

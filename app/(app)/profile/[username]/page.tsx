@@ -1,8 +1,10 @@
 import type { Route } from "next";
 import Link from "next/link";
+import { ProfileCredentials } from "@/components/credentials/profile-credentials";
 import { EndorsementList } from "@/components/endorsements/endorsement-list";
 import { SkillList } from "@/components/skills/skill-list";
 import { EmptyState } from "@/components/ui";
+import { getProfileCredentials } from "@/lib/data/credentials";
 import { getEndorsements } from "@/lib/data/endorsements";
 import { getProfile } from "@/lib/data/profiles";
 import { getProfileSkills } from "@/lib/data/skills";
@@ -11,20 +13,24 @@ import { LOOKING_FOR, VISIBILITY } from "@/lib/profile/options";
 /** Top skills on the overview; the Skills tab lists them all. */
 const TOP_SKILLS = 8;
 
-/** Overview tab: about, top skills, endorsements, studies and what they're open to. */
+/** Overview tab: about, top skills, endorsements, credentials, studies and what they're open to. */
 export default async function ProfileOverviewPage({ params }: PageProps<"/profile/[username]">) {
   const { username } = await params;
   const lookup = await getProfile(username);
   if (lookup.kind !== "full") return null;
   const p = lookup.profile;
-  const [skills, endorsements] = await Promise.all([getProfileSkills(p.userId, p.isOwner), getEndorsements(p.userId)]);
+  const [skills, endorsements, credentials] = await Promise.all([
+    getProfileSkills(p.userId, p.isOwner),
+    getEndorsements(p.userId),
+    getProfileCredentials(p.userId),
+  ]);
   const openTo = LOOKING_FOR.filter((o) => p.lookingFor.includes(o.value)).map((o) => o.label);
   const details = [
     { label: "Programme", value: p.programme },
     { label: "Campus", value: p.campus },
   ].filter((d) => d.value);
 
-  if (!p.bio && !details.length && !openTo.length && !skills.length && !endorsements.length) {
+  if (!p.bio && !details.length && !openTo.length && !skills.length && !endorsements.length && !credentials.length) {
     return (
       <EmptyState
         title={p.isOwner ? "Tell people about yourself" : "Nothing here yet"}
@@ -82,6 +88,27 @@ export default async function ProfileOverviewPage({ params }: PageProps<"/profil
             None yet. Teammates endorse you from a venture&apos;s Team tab once it&apos;s in progress; two different teammates on a
             skill make it peer-verified.
           </p>
+        </section>
+      ) : null}
+      {credentials.length || p.isOwner ? (
+        <section aria-labelledby="credentials">
+          <div className="mb-3 flex items-baseline justify-between gap-3">
+            <h2 id="credentials" className="text-h4">
+              Credentials
+            </h2>
+            {p.isOwner ? (
+              <Link href="/me/credentials" className="text-body-sm font-semibold text-text-primary underline underline-offset-4">
+                {credentials.length ? "Manage" : "Add a credential"}
+              </Link>
+            ) : null}
+          </div>
+          {credentials.length ? (
+            <ProfileCredentials items={credentials} />
+          ) : (
+            <p className="text-body-sm text-text-secondary">
+              None approved yet. Certificates you add are checked by a Skilient reviewer before they show here.
+            </p>
+          )}
         </section>
       ) : null}
       {details.length ? (

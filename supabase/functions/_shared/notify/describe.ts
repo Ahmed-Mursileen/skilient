@@ -156,6 +156,16 @@ export function describeNotification(n: NotificationInput): NotificationText {
         href: ventureId ? `${venturePath}/team?endorse=1` : "/ventures",
         subject: `Endorse your teammates on ${venture}`,
       };
+    case "credential_reviewed": {
+      const title = str(n.data.title) ?? "your credential";
+      return n.data.approved === true
+        ? { text: `${title} was approved and now shows on your profile.`, href: "/me/credentials", subject: "Your credential was approved" }
+        : { text: `${title} wasn't approved. See why on your credentials page.`, href: "/me/credentials", subject: "An update on your credential" };
+    }
+    case "credential_expired": {
+      const title = str(n.data.title) ?? "A credential";
+      return { text: `${title} has expired, so it no longer counts.`, href: "/me/credentials", subject: "A credential expired" };
+    }
     case "venture_abandoned":
       return { text: `${venture} was closed without finishing.`, href: venturePath, subject: `${venture} was closed` };
     default:

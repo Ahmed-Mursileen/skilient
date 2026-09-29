@@ -1,14 +1,22 @@
 import type { Metadata, Route } from "next";
 import Link from "next/link";
+import { notFound, redirect } from "next/navigation";
 import { EmptyState } from "@/components/ui";
 import { cn } from "@/lib/cn";
 import { getQueue } from "@/lib/data/ops";
+import { staffRoles } from "@/lib/data/ops-trust";
 import { REASON_LABELS, STATUS_LABELS, TARGET_LABELS } from "@/lib/ops/labels";
 
 export const metadata: Metadata = { title: "Reports" };
 
 /** /ops (screen spec 3.11 "Queues"): reports grouped by target, oldest first, with claims. */
 export default async function OpsQueuePage({ searchParams }: PageProps<"/ops">) {
+  // Reports are for moderators; other staff start at their own area.
+  const roles = await staffRoles();
+  if (!roles.has("moderator")) {
+    if (roles.has("trust_reviewer")) redirect("/ops/evidence");
+    notFound();
+  }
   const sp = await searchParams;
   const status = sp.status === "resolved" ? "resolved" : "open";
   const rows = await getQueue(status);

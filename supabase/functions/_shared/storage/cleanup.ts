@@ -12,8 +12,10 @@ interface QueueRow {
   message: { bucket?: string; path?: string };
 }
 
-const BUCKETS = new Set(["post-media", "chat-media", "avatars"]);
+const BUCKETS = new Set(["post-media", "chat-media", "avatars", "credentials"]);
+// Every bucket stores WebP re-encodes, except credentials, which also keeps PDFs as uploaded.
 const PATH = /^[0-9a-f-]{36}\/[0-9a-f-]{36}\.webp$/;
+const PDF_PATH = /^[0-9a-f-]{36}\/[0-9a-f-]{36}\.pdf$/;
 const MAX_TRIES = 5;
 
 export type Remove = (bucket: string, paths: string[]) => Promise<void>;
@@ -39,7 +41,7 @@ export async function runStorageCleanup(opts: { db: Db; remove: Remove; log: Log
   for (const row of rows) {
     const bucket = row.message?.bucket ?? "";
     const path = row.message?.path ?? "";
-    if (!BUCKETS.has(bucket) || !PATH.test(path)) {
+    if (!BUCKETS.has(bucket) || !(PATH.test(path) || (bucket === "credentials" && PDF_PATH.test(path)))) {
       await db.query("select pgmq.archive('storage_cleanup', $1::bigint)", [row.msg_id]);
       out.dropped++;
       log("storage.cleanup", { outcome: "refused", reason: "bad_message" });

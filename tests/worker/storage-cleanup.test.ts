@@ -60,6 +60,14 @@ describe("storage-cleanup worker", () => {
     expect(await queued()).toBe(0);
   });
 
+  it("deletes credential files (phase 4) like the other buckets", async () => {
+    const path = `${randomUUID()}/${randomUUID()}.pdf`;
+    await queue("credentials", path);
+    const storage = fakeStorage();
+    expect(await runStorageCleanup({ db, remove: storage.remove, log })).toEqual({ deleted: 1, failed: 0, dropped: 0 });
+    expect(storage.calls[0]).toMatchObject({ url: "http://storage.test/storage/v1/object/credentials", prefixes: [path] });
+  });
+
   it("leaves files queued when the Storage API fails", async () => {
     await queue("chat-media", pathFor());
     const out = await runStorageCleanup({ db, remove: fakeStorage(500).remove, log });

@@ -909,3 +909,32 @@ Append-only. One dated entry per product decision, with the reason. Carried over
   `pull_request_review` webhooks queue that pull request again. Search's own small rate limit
   (30 a minute) no longer counts against a token's core budget. Private pull requests the
   student's token can't read are skipped.
+- 2026-09-30 (phase 4, slice 3): Credentials as built. A PDF (up to 5 MB) goes from the browser
+  straight into the student's own folder of the private `credentials` bucket (storage policy:
+  own folder, a fresh uuid name, a cap on files); the server action then downloads it, checks
+  it starts with `%PDF-`, and only then attaches it; anything else is deleted. An image is
+  shrunk in the browser (2,000 px) and re-encoded to WebP on the server with sharp (EXIF and
+  GPS stripped) before it is stored. `submit_credential` takes the type and size from storage,
+  not the browser, and refuses a future issue date, an expiry before the issue date, a file
+  already attached, more than 5 waiting or 20 kept (`credentials.limits`), and more than 10
+  submissions a day. Profiles show approved, unexpired credentials (title, issuer, dates,
+  "Recognised issuer", the student's optional verification link) wherever the full profile is
+  visible; files are readable only by their owner and trust reviewers on two-factor (60-second
+  signed URLs). `/me/credentials` is reached from Settings until the phase 6 "Me" area.
+- 2026-09-30 (phase 4, slice 3): /ops is open to every staff role on two-factor; each area
+  checks its own role (moderators: Reports; trust reviewers: Evidence). `/ops/evidence` has
+  Credentials (oldest first, with a suggested recognised issuer), Reviewed credentials (30
+  days) and GitHub flags. Credentials and GitHub review flags are claimed before they're
+  decided (`claim_credential`, `claim_review_flag`; a reviewer can't take their own), and every
+  claim, release and decision writes `ops_audit_log` with its reason; `resolve_review_flag`
+  now requires the claim and writes the audit row too. The student is notified of each
+  decision (Trust and ranking, in-app) and reads the reason on `/me/credentials`; the
+  reviewer's name is never shown to them. A daily job (00:13 PKT) expires approved
+  credentials past their date, deletes rejected files after 30 days and uploads never attached
+  after a day, through the storage-cleanup queue (which now accepts the credentials bucket and
+  its PDFs). Staff see storage use against the Free plan's 1 GB on every /ops page, marked
+  "Nearly full" from 80% (`storage_usage()`, `storage.quota_bytes`).
+- 2026-09-30 (tests): Two E2E races seen under `--workers=2` fixed in the tests: the chat test now
+  waits for the optimistic "sending" mark to clear before the other person opens the thread,
+  and the credentials test waits for the delete dialog to close (an open dialog hides the page
+  from the accessibility tree, so "gone" checks passed early).
