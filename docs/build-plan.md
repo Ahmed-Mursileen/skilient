@@ -98,7 +98,7 @@ Legend: 📖 = PRD files to read (in `docs/prd/`), ✅ = done-when checks.
 📖 `05-13-ranking-system-formula-v1.md`, `05-16-peer-endorsements.md`, `05-17-live-leaderboard-and-tiers.md`, `05-19-credentials.md`, `05-05-…` (L3–L4, code check)
 
 - [ ] Endorsements with limits and ring detection; L3 from PRs/confirmations; L4 from evidence-tied endorsements and code checks (Skilient reviewers grade until teachers exist)
-- [ ] Credentials upload + staff review
+- [x] Credentials upload + staff review — *slice 3*
 - [ ] Ranking SQL functions per component, nightly compute, decay with exam pauses, tiers with hysteresis, snapshots
 - [ ] Leaderboard (scopes, opt-out) and `/me/score`
 
@@ -109,6 +109,8 @@ Legend: 📖 = PRD files to read (in `docs/prd/`), ✅ = done-when checks.
 *Slice 1 (endorsements): teammates on an in-progress or completed venture endorse up to 5 skills each per venture (20 a month), from the venture's tags or the endorsee's skills, optionally tied to one of the endorsee's entries, with a note; the endorsee hides and shows but nobody edits; 2 different teammates make a skill peer-verified; completion prompts every member. Every limit is refused when `endorse()` is called directly (pgTAP `28_endorsements`, E2E `endorsements.spec.ts`). Ring weights come with slice 5, L4 with slice 2.*
 
 *Slice 2 (L3 and L4): the GitHub `prs` stage and webhooks record merged pull requests; one in someone else's repository, merged or approved by another person with a 90-day-old account, makes the skills its files show L3. Contribution entries take up to 3 of the venture's skills; a teammate's confirmation makes them L3. Evidence-tied endorsements from 2 different teammates (any ventures) make L4. Levels come from current evidence, survive a disconnect for L3/L4, and the owner's skill drawer lists the proofs (pgTAP `29_skill_levels`, worker `github-worker` with the fake GitHub's search, pulls, reviews, files and users endpoints, E2E `levels.spec.ts`). Code checks (the other L4 path) come with slice 4.*
+
+*Slice 3 (credentials and the /ops trust queue): PDFs up to 5 MB stored as-is after a `%PDF-` check, images re-encoded without EXIF/GPS, both in a private bucket; `/me/credentials` with status and reasons; trust reviewers on two-factor claim and approve (with a recognised issuer) or reject with a reason in `/ops/evidence`, every step in `ops_audit_log`; GitHub review flags get the same claim-and-audit tab; daily expiry and file clean-up; storage use against 1 GB on /ops. Unapproved credentials never reach the profile and other users can't read the files (pgTAP `30_credentials`, E2E `credentials.spec.ts`, worker `storage-cleanup`).*
 
 ## Phase 5 — Verified CV
 

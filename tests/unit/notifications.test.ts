@@ -52,6 +52,15 @@ describe("describeNotification", () => {
     expect(prompt.href).toMatch(/\/ventures\/[^/]+\/team\?endorse=1$/);
   });
 
+  it("tells the student a credential decision and links to their credentials", () => {
+    const yes = describeNotification({ ...base, type: "credential_reviewed", actorName: null, data: { title: "AWS Cloud Practitioner", approved: true } });
+    expect(yes.text).toBe("AWS Cloud Practitioner was approved and now shows on your profile.");
+    const no = describeNotification({ ...base, type: "credential_reviewed", actorName: null, data: { title: "Oracle Java", approved: false } });
+    expect(no.href).toBe("/me/credentials");
+    expect(no.text).not.toContain("Amna"); // never who reviewed it
+    expect(describeNotification({ ...base, type: "credential_expired", actorName: null, data: { title: "CCNA" } }).text).toContain("expired");
+  });
+
   it("falls back to 'Someone' and 'a venture' when details are missing", () => {
     const d = describeNotification({ type: "application_received", actorName: null, entityType: "application", entityId: "x", data: {} });
     expect(d.text).toBe("Someone applied to join a venture.");

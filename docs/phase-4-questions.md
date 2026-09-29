@@ -6,13 +6,18 @@ kept or changed in a follow-up PR. Answered items move to `docs/decisions.md`.
 
 ## Open
 
-None yet.
+- **/me/credentials link** (slice 3): reached from Settings (a "Credentials" row) and the owner's
+  profile until the phase 6 "Me" area. Assumed fine as a stopgap.
+- **Reviewer name** (slice 3): the student never sees who reviewed a credential (like
+  moderation). Assumed.
 
 ## Waiting on Ahmed's review
 
-- **Recognised issuers** (slice 3): the seed list, sent for review when drafted.
-- **Code-check change requests** (slice 4): the generic prompts per skill category, sent for
-  review when drafted.
+- **Recognised issuers** (slice 3, sent 2026-09-30): HEC, NAVTTC, PSEB, PIAIC, NFTP, DigiSkills.pk,
+  Google, Microsoft, AWS, Cisco, Oracle, Meta, IBM, CompTIA, The Linux Foundation, Red Hat, Huawei,
+  each with a few aliases for the reviewer's suggestion. Add or remove any?
+- **Code-check change requests** (slice 4, sent 2026-09-30): 8 fixed prompts for each of the six
+  skill categories (48), plus the two fixed questions. Change or add any?
 
 ## Answered
 

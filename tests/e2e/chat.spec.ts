@@ -119,6 +119,10 @@ test.describe("Chat", () => {
     await expect(bPage).toHaveURL(/\/chat\/[0-9a-f-]{36}$/);
     await bPage.getByLabel("Message", { exact: true }).fill("Hello team");
     await bPage.keyboard.press("Enter");
+    // Wait until it's stored (the optimistic "sending" mark clears) before A opens the thread.
+    const sent = bPage.getByTestId("message").filter({ hasText: "Hello team" });
+    await expect(sent).toBeVisible();
+    await expect(sent.getByText("· sending")).toHaveCount(0);
     await page.goto(new URL(bPage.url()).pathname);
     await expect(page.getByTestId("message").filter({ hasText: "Hello team" })).toBeVisible();
     await cPage.goto(`/ventures/${ventureId}/chat`);

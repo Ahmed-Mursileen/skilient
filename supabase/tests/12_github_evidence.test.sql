@@ -162,6 +162,9 @@ select is((select kind::text from public.review_flag_details(current_setting('te
   'cross_account_duplicate', 'a trust reviewer reads the flag');
 select throws_ok($$ select public.resolve_review_flag(current_setting('test.flag_b')::bigint, false, '') $$,
   '22023', null, 'resolving needs a note');
+-- Phase 4 slice 3: a flag is claimed in /ops before it's resolved.
+select public.claim_review_flag(current_setting('test.flag_b')::bigint, true);
+select public.claim_review_flag(current_setting('test.flag_burst')::bigint, true);
 select is(public.resolve_review_flag(current_setting('test.flag_b')::bigint, false, 'Shared starter file from a course'), true,
   'the reviewer clears B''s flag');
 select is(public.resolve_review_flag(current_setting('test.flag_burst')::bigint, true, 'Generated commits'), true,

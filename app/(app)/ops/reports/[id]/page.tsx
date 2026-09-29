@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { ClaimButton } from "@/components/ops/claim-button";
 import { ResolveForm } from "@/components/ops/resolve-form";
 import { getCase } from "@/lib/data/ops";
+import { staffRoles } from "@/lib/data/ops-trust";
 import { REASON_LABELS, STATUS_LABELS, TARGET_LABELS } from "@/lib/ops/labels";
 import { cn } from "@/lib/cn";
 
@@ -16,6 +17,7 @@ function text(value: unknown): string | null {
 /** /ops/reports/[id] (screen spec 3.11): content, attached messages only, history, action with a reason. */
 export default async function OpsCasePage({ params }: PageProps<"/ops/reports/[id]">) {
   const { id } = await params;
+  if (!(await staffRoles()).has("moderator")) notFound();
   const c = await getCase(id);
   if (!c) notFound();
   const s = c.snapshot;
