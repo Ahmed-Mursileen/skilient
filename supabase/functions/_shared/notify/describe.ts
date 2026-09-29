@@ -86,6 +86,15 @@ export function describeNotification(n: NotificationInput): NotificationText {
       return { text: `${who} replied to your comment: "${excerpt(n.data)}"`, href: postPath(n.data), subject: `${who} replied to your comment` };
     case "comment_mention":
       return { text: `${who} mentioned you in a comment: "${excerpt(n.data)}"`, href: postPath(n.data), subject: `${who} mentioned you on Skilient` };
+    case "chat_message": {
+      const thread = str(n.data.thread_id);
+      const where = str(n.data.venture_title);
+      return {
+        text: where ? `${who} in ${where}: "${excerpt(n.data)}"` : `${who} sent you a message: "${excerpt(n.data)}"`,
+        href: thread ? `/chat/${thread}` : "/chat",
+        subject: where ? `New messages in ${where}` : `${who} sent you a message`,
+      };
+    }
     case "venture_abandoned":
       return { text: `${venture} was closed without finishing.`, href: venturePath, subject: `${venture} was closed` };
     default:

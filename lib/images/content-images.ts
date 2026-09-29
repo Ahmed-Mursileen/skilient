@@ -18,33 +18,39 @@ export type StoreResult =
 
 /**
  * Re-encodes up to `max` uploaded images (EXIF and GPS always stripped, decisions.md
- * 2026-09-28) and stores them in the author's own folder of `post-media` with the user's
- * session. Anything stored is removed again if a later image fails.
+ * 2026-09-28) and stores them under `folder` (the author's id in `post-media`, the thread's
+ * id in `chat-media`) with the user's session, so storage policies apply. Anything stored is removed again if a later image fails.
  */
-export async function storeContentImages(supabase: Supabase, userId: string, files: File[], max = 4): Promise<StoreResult> {
+export async function storeContentImages(
+  supabase: Supabase,
+  folder: string,
+  files: File[],
+  max = 4,
+  bucket: "post-media" | "chat-media" = "post-media",
+): Promise<StoreResult> {
   if (files.length > max) return { ok: false, code: "too_many", message: `Add up to ${max} images.` };
   const stored: StoredImage[] = [];
   for (const file of files) {
     if (file.size === 0 || file.size > CONTENT_IMAGE.maxBytes) {
-      await removeContentImages(supabase, stored.map((s) => s.path));
+      await removeContentImages(supabase, stored.map((s) => s.path), bucket);
       return { ok: false, code: "too_large", message: "Each image must be under 5 MB." };
     }
     let out: Awaited<ReturnType<typeof reencodeToFit>>;
     try {
       out = await reencodeToFit(Buffer.from(await file.arrayBuffer()));
     } catch (err) {
-      await removeContentImages(supabase, stored.map((s) => s.path));
+      await removeContentImages(supabase, stored.map((s) => s.path), bucket);
       const reason = err instanceof ImageRejected ? err.reason : "not_an_image";
       return reason === "too_large"
         ? { ok: false, code: "too_large", message: "That image is too big (max 6,000 × 6,000 pixels)." }
         : { ok: false, code: "not_an_image", message: "One of those files isn't an image we can read. Use JPEG, PNG or WebP." };
     }
-    const path = `${userId}/${randomUUID()}.webp`;
+    const path = `${folder}/${randomUUID()}.webp`;
     const upload = await supabase.storage
-      .from("post-media")
+      .from(bucket)
       .upload(path, out.data, { contentType: "image/webp", upsert: false, cacheControl: "31536000" });
     if (upload.error) {
-      await removeContentImages(supabase, stored.map((s) => s.path));
+      await removeContentImages(supabase, stored.map((s) => s.path), bucket);
       return { ok: false, code: "upload_failed", message: "Couldn't upload your images. Try again." };
     }
     stored.push({ path, width: out.width, height: out.height });
@@ -53,8 +59,12 @@ export async function storeContentImages(supabase: Supabase, userId: string, fil
 }
 
 /** Best effort; returns whether anything was left behind (for the log line). */
-export async function removeContentImages(supabase: Supabase, paths: string[]): Promise<boolean> {
+export async function removeContentImages(
+  supabase: Supabase,
+  paths: string[],
+  bucket: "post-media" | "chat-media" = "post-media",
+): Promise<boolean> {
   if (!paths.length) return false;
-  const { error } = await supabase.storage.from("post-media").remove(paths);
+  const { error } = await supabase.storage.from(bucket).remove(paths);
   return Boolean(error);
 }

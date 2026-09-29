@@ -94,7 +94,7 @@ export default async function VentureLayout({ params, children }: LayoutProps<"/
         </p>
       ) : (
         <>
-          <VentureTabs id={v.id} isOwner={v.viewer.isOwner} />
+          <VentureTabs id={v.id} isOwner={v.viewer.isOwner} isMember={v.viewer.isMember} />
           <div>{children}</div>
         </>
       )}
