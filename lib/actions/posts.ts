@@ -4,7 +4,7 @@ import { z } from "zod";
 import { actionContext } from "@/lib/actions/context";
 import { fail, fieldErrors, ok, type ActionResult } from "@/lib/actions/result";
 import { call, NO_SESSION, REFUSALS, sentence, signedIn } from "@/lib/actions/rpc";
-import { listPosts, FEED_FILTERS, type PostPage } from "@/lib/data/posts";
+import { getFeed, listPosts, FEED_FILTERS, type PostPage } from "@/lib/data/posts";
 import { removeContentImages, storeContentImages } from "@/lib/images/content-images";
 
 /**
@@ -163,7 +163,8 @@ export async function loadMorePosts(scope: string, filter: string, cursor: strin
   const session = await signedIn(ctx);
   if (!session) return NO_SESSION;
   try {
-    const page = await listPosts(parsed.data);
+    const { scope, filter, cursor, authorId } = parsed.data;
+    const page = scope === "author" ? await listPosts({ scope, filter, cursor, authorId }) : await getFeed(scope, filter, cursor);
     ctx.done("ok", { user_id: session.userId, count: page.posts.length });
     return ok(page);
   } catch {

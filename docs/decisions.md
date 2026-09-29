@@ -650,3 +650,25 @@ Append-only. One dated entry per product decision, with the reason. Carried over
   is refused (`private.has_entitlement()` returns false until phase 10's registry).
   Appropriate crosses from non-friends are counted in `post_stats.appropriate_flags` for
   the /ops soft signal (slice 9).
+- 2026-09-29 (phase 3, slice 6): Ranked feed as built. `feed-stage` runs every 5 minutes
+  (`private.compute_stage`): Seed → Full on 5+ answers at 40%+ positive or 3+ non-friend
+  commenters; Seed → Limited after 2 hours or 30 views; Global boost for Global posts at
+  10+ answers and 50%+ positive or 5+ commenters from 2+ universities; Demoted at 10+
+  Credible answers with 30%+ negative, or 30%+ hides once a post has 10+ views; Held at 3
+  reports (at once, by trigger). Full is sticky. `private.feed_score` is the PRD formula
+  (Q, E, R, D, gravity 1.5) plus placement (Limited outside the seed audience × 0.4, Global
+  boost × 1.5, Demoted × 0.3, Shipped × 1.5 for 24 hours); relevance "same program" means
+  same department, graduation year and university, "same batch" same graduation year,
+  and skills overlap adds 0.1 per shared L1+ skill up to 1.3. Seed posts reach only their
+  seed audience plus 1 exploration slot in every 5. `feed_page` stores each ordered list
+  in `feed_sessions` keyed by its own session id (each tab keeps its own; up to 10 per
+  reader); a session older than 10 minutes is re-ranked without the posts already
+  served. The pinned announcement sits above and venture updates for followers below the
+  ranked list. Every weight is in `platform_config` (`feed.*`).
+- 2026-09-29 (phase 3, slice 6): Dates on cards (post times, event times, poll closing,
+  comment and notification times) are formatted on the server and passed as text: Node's
+  and browsers' ICU format en-GB dates differently, which broke hydration. Three older
+  client components (skill list, GitHub sync status, two-factor panel) still format
+  dates in the browser; they move to server-formatted labels when next touched.
+- 2026-09-29 (phase 3): E2E axe checks wait for the streamed `<title>` first (Next 16
+  streams metadata, so `<title>` can land after the body).

@@ -1,5 +1,6 @@
 import "server-only";
 
+import { eventTime, futureTime, shortTime } from "@/lib/format/time";
 import { publicImageUrl } from "@/lib/storage";
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/types/database";
@@ -24,6 +25,8 @@ export interface PostImage {
 
 export interface PostEvent {
   startsAt: string;
+  /** Formatted on the server (ICU differs between Node and browsers). */
+  startsLabel: string;
   /** More than 6 hours after the start: RSVPs are closed. */
   past: boolean;
   place: string | null;
@@ -35,6 +38,7 @@ export interface PostEvent {
 
 export interface PostPoll {
   closesAt: string;
+  closesLabel: string;
   closed: boolean;
   myVote: number | null;
   total: number;
@@ -60,6 +64,8 @@ export interface PostCardData {
   audience: PostAudience;
   body: string;
   createdAt: string;
+  /** "5m", "3h", "12 Sep, 14:30": formatted on the server. */
+  timeLabel: string;
   editedAt: string | null;
   pinnedUntil: string | null;
   /** An announcement pinned right now. */
@@ -109,6 +115,7 @@ function mapCard(r: CardRow, now: number): PostCardData {
     audience: r.audience,
     body: r.body,
     createdAt: r.created_at,
+    timeLabel: shortTime(r.created_at, new Date(now)),
     editedAt: r.edited_at,
     pinnedUntil: r.pinned_until,
     pinned: r.pinned_until !== null && new Date(r.pinned_until).getTime() > now,
@@ -119,6 +126,7 @@ function mapCard(r: CardRow, now: number): PostCardData {
     event: e
       ? {
           startsAt: String(e.starts_at),
+          startsLabel: eventTime(String(e.starts_at)),
           past: new Date(String(e.starts_at)).getTime() < now - 6 * 3600 * 1000,
           place: (e.place as string | null) ?? null,
           url: (e.url as string | null) ?? null,
@@ -130,6 +138,7 @@ function mapCard(r: CardRow, now: number): PostCardData {
     poll: p
       ? {
           closesAt: String(p.closes_at),
+          closesLabel: futureTime(String(p.closes_at)),
           closed: Boolean(p.closed),
           myVote: p.my_vote == null ? null : Number(p.my_vote),
           total: Number(p.total ?? 0),
@@ -256,6 +265,7 @@ export interface CommentItem {
   pinned: boolean;
   deleted: boolean;
   createdAt: string;
+  timeLabel: string;
   author: { username: string | null; name: string | null; avatarUrl: string | null };
   isMine: boolean;
   canDelete: boolean;
@@ -273,6 +283,7 @@ export async function getComments(postId: string): Promise<CommentItem[]> {
     pinned: c.pinned,
     deleted: c.deleted,
     createdAt: c.created_at,
+    timeLabel: shortTime(c.created_at),
     author: { username: c.author_username, name: c.author_name, avatarUrl: publicImageUrl("avatars", c.author_avatar_path) },
     isMine: c.is_mine,
     canDelete: c.can_delete,
@@ -283,4 +294,59 @@ export async function getMutes(): Promise<{ username: string; fullName: string }
   const supabase = await createClient();
   const { data } = await supabase.rpc("my_mutes");
   return (data ?? []).map((m) => ({ username: m.username, fullName: m.full_name }));
+}
+
+/** A page of the ranked feed (feed_page, slice 6). Cursor "<session>:<offset>"; null = fresh ranking. */
+export async function getFeed(scope: FeedScope, filter: FeedFilter, cursor: string | null = null): Promise<PostPage> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("feed_page", {
+    p_audience: scope,
+    p_filter: filter,
+    p_cursor: cursor ?? undefined,
+    p_limit: PAGE_SIZE,
+  });
+  if (error) throw new Error(`feed_page failed: ${error.code}`);
+  const rows = data ?? [];
+  const posts = await getPostCards(rows.map((r) => r.post_id));
+  return { posts, cursor: rows[0]?.next_cursor ?? null };
+}
+
+export async function getPinnedAnnouncement(): Promise<PostCardData | null> {
+  const supabase = await createClient();
+  const { data } = await supabase.rpc("pinned_announcement");
+  if (!data) return null;
+  const [card] = await getPostCards([data]);
+  return card ?? null;
+}
+
+export interface FollowedUpdate {
+  id: string;
+  ventureId: string;
+  ventureTitle: string;
+  body: string;
+  createdAt: string;
+  authorName: string;
+  authorUsername: string | null;
+  images: PostImage[];
+}
+
+/** Updates from ventures you follow (last 7 days), shown unscored after the ranked posts. */
+export async function getFollowedUpdates(): Promise<FollowedUpdate[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase.rpc("followed_venture_updates", { p_limit: 10 });
+  if (error) throw new Error(`followed_venture_updates failed: ${error.code}`);
+  return (data ?? []).map((u) => ({
+    id: u.id,
+    ventureId: u.venture_id,
+    ventureTitle: u.venture_title,
+    body: u.body,
+    createdAt: u.created_at,
+    authorName: u.author_name,
+    authorUsername: u.author_username,
+    images: ((u.images ?? []) as { path: string; width: number; height: number }[]).map((m) => ({
+      url: publicImageUrl("post-media", m.path) ?? "",
+      width: m.width,
+      height: m.height,
+    })),
+  }));
 }

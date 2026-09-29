@@ -4,9 +4,12 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Composer } from "@/components/posts/composer";
 import { FeedList } from "@/components/posts/feed-list";
+import { FollowedUpdates } from "@/components/posts/followed-updates";
+import { NewPostsPill } from "@/components/posts/new-posts-pill";
+import { PostCard } from "@/components/posts/post-card";
 import { Button, EmptyState } from "@/components/ui";
 import { getCurrentUser } from "@/lib/auth/current-user";
-import { FEED_FILTERS, getInvitableVentures, listPosts, type FeedFilter, type FeedScope } from "@/lib/data/posts";
+import { FEED_FILTERS, getFeed, getFollowedUpdates, getInvitableVentures, getPinnedAnnouncement, type FeedFilter, type FeedScope } from "@/lib/data/posts";
 import { createClient } from "@/lib/supabase/server";
 import { cn } from "@/lib/cn";
 
@@ -33,8 +36,8 @@ function href(tab: FeedScope, filter: FeedFilter): Route {
 }
 
 /**
- * Home (screen spec 3.13): University Feed / Global Feed, filter chips, composer, posts.
- * Newest first until the ranked feed (slice 6) replaces the order.
+ * Home (screen spec 3.13): University Feed / Global Feed, filter chips, composer, the pinned
+ * announcement, the ranked feed (PRD 5.28), then updates from ventures you follow.
  */
 export default async function FeedPage({ searchParams }: PageProps<"/feed">) {
   const user = await getCurrentUser();
@@ -44,8 +47,10 @@ export default async function FeedPage({ searchParams }: PageProps<"/feed">) {
   const filter: FeedFilter = FEED_FILTERS.includes(sp.filter as FeedFilter) ? (sp.filter as FeedFilter) : "all";
 
   const supabase = await createClient();
-  const [page, ventures, staff] = await Promise.all([
-    listPosts({ scope: tab, filter }),
+  const [page, pinned, updates, ventures, staff] = await Promise.all([
+    getFeed(tab, filter),
+    filter === "all" || filter === "announcements" ? getPinnedAnnouncement() : Promise.resolve(null),
+    filter === "all" ? getFollowedUpdates() : Promise.resolve([]),
     getInvitableVentures(user.id),
     supabase.rpc("is_staff").then((r) => r.data === true),
   ]);
@@ -93,12 +98,17 @@ export default async function FeedPage({ searchParams }: PageProps<"/feed">) {
         </ul>
       </nav>
 
+      <NewPostsPill userId={user.id} scope={tab} universityId={user.universityId} />
+
+      {pinned ? <PostCard post={pinned} /> : null}
+
       <FeedList
         key={`${tab}-${filter}`}
         initial={page.posts}
         cursor={page.cursor}
         scope={tab}
         filter={filter}
+        footer={<FollowedUpdates updates={updates} />}
         empty={
           <EmptyState
             icon={<Newspaper aria-hidden className="size-8" />}

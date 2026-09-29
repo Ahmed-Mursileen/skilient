@@ -18,7 +18,14 @@ export interface NotificationItem {
   actorAvatarUrl: string | null;
   read: boolean;
   createdAt: string;
+  /** "14:30" today, "12 Sep" before; formatted on the server. */
+  timeLabel: string;
+  today: boolean;
 }
+
+const timeFormat = new Intl.DateTimeFormat("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Karachi" });
+const dateFormat = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", timeZone: "Asia/Karachi" });
+const dayKey = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Karachi" });
 
 export const PAGE_SIZE = 50;
 
@@ -26,6 +33,7 @@ export async function getNotifications(before: string | null = null): Promise<No
   const supabase = await createClient();
   const { data, error } = await supabase.rpc("my_notifications", { p_before: before ?? undefined, p_limit: PAGE_SIZE });
   if (error) throw new Error(`my_notifications failed: ${error.code}`);
+  const todayKey = dayKey.format(new Date());
   return (data ?? []).map((n) => {
     const d = describeNotification({
       type: n.type,
@@ -43,6 +51,9 @@ export async function getNotifications(before: string | null = null): Promise<No
       actorAvatarUrl: publicImageUrl("avatars", n.actor_avatar_path),
       read: n.read_at !== null,
       createdAt: n.created_at,
+      today: dayKey.format(new Date(n.created_at)) === todayKey,
+      timeLabel:
+        dayKey.format(new Date(n.created_at)) === todayKey ? timeFormat.format(new Date(n.created_at)) : dateFormat.format(new Date(n.created_at)),
     };
   });
 }
