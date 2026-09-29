@@ -4,11 +4,12 @@ import { useId, useState, useTransition } from "react";
 import { FormAlert } from "@/components/auth/form-alert";
 import { Button, FieldError, Textarea } from "@/components/ui";
 import { controlBase } from "@/components/ui/field";
+import { claimRankingFlag } from "@/lib/actions/ops/ranking";
 import { claimCodeCheck, claimCredential, claimReviewFlag, resolveReviewFlag, reviewCredential } from "@/lib/actions/ops/trust";
 import { cn } from "@/lib/cn";
 
 /** Claim before deciding, so two reviewers never work the same item (PRD 5.26). */
-export function TrustClaimButton({ kind, id, claimed }: { kind: "credential" | "flag" | "code_check"; id: string; claimed: boolean }) {
+export function TrustClaimButton({ kind, id, claimed }: { kind: "credential" | "flag" | "code_check" | "ranking_flag"; id: string; claimed: boolean }) {
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   return (
@@ -24,7 +25,9 @@ export function TrustClaimButton({ kind, id, claimed }: { kind: "credential" | "
                 ? await claimCredential(id, !claimed)
                 : kind === "code_check"
                   ? await claimCodeCheck(id, !claimed)
-                  : await claimReviewFlag(Number(id), !claimed);
+                  : kind === "ranking_flag"
+                    ? await claimRankingFlag(id, !claimed)
+                    : await claimReviewFlag(Number(id), !claimed);
             if (!result.ok) setError(result.message);
           })
         }

@@ -97,9 +97,9 @@ Legend: 📖 = PRD files to read (in `docs/prd/`), ✅ = done-when checks.
 
 📖 `05-13-ranking-system-formula-v1.md`, `05-16-peer-endorsements.md`, `05-17-live-leaderboard-and-tiers.md`, `05-19-credentials.md`, `05-05-…` (L3–L4, code check)
 
-- [ ] Endorsements with limits and ring detection; L3 from PRs/confirmations; L4 from evidence-tied endorsements and code checks (Skilient reviewers grade until teachers exist)
+- [x] Endorsements with limits and ring detection; L3 from PRs/confirmations; L4 from evidence-tied endorsements and code checks (Skilient reviewers grade until teachers exist) — *slices 1, 2, 4, 5*
 - [x] Credentials upload + staff review — *slice 3*
-- [ ] Ranking SQL functions per component, nightly compute, decay with exam pauses, tiers with hysteresis, snapshots
+- [x] Ranking SQL functions per component, nightly compute, decay with exam pauses, tiers with hysteresis, snapshots — *slice 5*
 - [ ] Leaderboard (scopes, opt-out) and `/me/score`
 
 ✅ pgTAP fixtures reproduce hand-calculated scores for 10 reference students · tiers correct on 1,000 synthetic students · decay pauses during an exam period
@@ -113,6 +113,8 @@ Legend: 📖 = PRD files to read (in `docs/prd/`), ✅ = done-when checks.
 *Slice 3 (credentials and the /ops trust queue): PDFs up to 5 MB stored as-is after a `%PDF-` check, images re-encoded without EXIF/GPS, both in a private bucket; `/me/credentials` with status and reasons; trust reviewers on two-factor claim and approve (with a recognised issuer) or reject with a reason in `/ops/evidence`, every step in `ops_audit_log`; GitHub review flags get the same claim-and-audit tab; daily expiry and file clean-up; storage use against 1 GB on /ops. Unapproved credentials never reach the profile and other users can't read the files (pgTAP `30_credentials`, E2E `credentials.spec.ts`, worker `storage-cleanup`).*
 
 *Slice 4 (code checks): request from the skill drawer at L2 (own commits), the worker picks 20–40 of the student's own added lines, the `code-check` Edge Function shows them from GitHub (never stored) to the student for 10 minutes from first view, or to the claiming reviewer; three fixed questions and one change request from the bank; trust reviewers grade in /ops with the 4-part rubric (3 of 4 passes) and a pass makes the skill L4; one attempt per skill per 30 days. pgTAP `31_code_checks`, worker `code-check` (fake GitHub commit and contents APIs), unit `code-check`, E2E `code-checks.spec.ts`. With slices 1–2 this completes the first box except ring detection (slice 5).*
+
+*Slice 5 (ranking engine): formula v1 with every weight in `platform_config` `ranking.formula`; one SQL function per component with its evidence; a nightly run at 03:07 PKT in committed steps (rings, students in batches of 500, percentiles and tiers, Sunday snapshot); decay computed from the data with exam days paused; cumulative tiers with the 14-day drop rule; ring and rapid-gain flags held until a trust reviewer clears or upholds them in /ops (Evidence → Ranking flags); report severities become 12-month penalties; accounts staff enter exam periods at `/ops/exam-periods`. pgTAP `32_ranking_reference` (the 10 hand-worked students in `docs/ranking-reference.md`), `33_ranking_tiers` (1,000 synthetic students, hysteresis), `34_ranking_nightly` (batches, holds, completions, formula change, rings, snapshots, penalties, exam periods pausing decay, RLS); E2E `ranking-ops.spec.ts`, `reports.spec.ts` (severity). This ticks the first and third boxes; the leaderboard and /me/score come with slice 6.*
 
 ## Phase 5 — Verified CV
 

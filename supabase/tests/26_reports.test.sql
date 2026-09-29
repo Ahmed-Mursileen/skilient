@@ -141,7 +141,7 @@ select lives_ok($$ select public.claim_case(pg_temp.v('pc'), true) $$, 'the mode
 select throws_ok($$ select public.resolve_case(pg_temp.v('pc'), 'remove', 'no') $$, '23514', null, 'a reason is required');
 select throws_ok($$ select public.resolve_case(pg_temp.v('pc'), 'suspend', 'Selling answers') $$, '22023', null,
   'no suspensions until phase 11');
-select lives_ok($$ select public.resolve_case(pg_temp.v('pc'), 'remove', 'Selling exam answers') $$, 'removes the post');
+select lives_ok($$ select public.resolve_case(pg_temp.v('pc'), 'remove', 'Selling exam answers', 'medium') $$, 'removes the post');
 select throws_ok($$ select public.resolve_case(pg_temp.v('pc'), 'dismiss', 'changed my mind') $$, '55000', null, 'a closed case stays closed');
 select pg_temp.as_user('a');
 select is_empty($$ select * from public.post_cards(array[pg_temp.v('post')]) $$, 'a removed post is gone, even for its author');
@@ -151,15 +151,15 @@ select results_eq($$ select status::text, reason from public.my_moderation_notic
 
 -- Message: remove; profile: warn; soft signal: dismiss.
 select pg_temp.as_user('e');
-select public.claim_case(pg_temp.v('mc'), true), public.resolve_case(pg_temp.v('mc'), 'remove', 'Harassment');
+select public.claim_case(pg_temp.v('mc'), true), public.resolve_case(pg_temp.v('mc'), 'remove', 'Harassment', 'high');
 select pg_temp.as_user('b');
 select results_eq($$ select deleted, body from public.thread_messages(pg_temp.v('dm')) where id = pg_temp.v('m3') $$,
   $$ values (true, ''::text) $$, 'a removed message is blanked in the chat');
 select pg_temp.as_user('e');
 select public.claim_case(pg_temp.v('fc'), true);
-select throws_ok($$ select public.resolve_case(pg_temp.v('fc'), 'remove', 'Fake profile') $$,
+select throws_ok($$ select public.resolve_case(pg_temp.v('fc'), 'remove', 'Fake profile', 'low') $$,
   '22023', null, 'a profile can''t be removed here');
-select lives_ok($$ select public.resolve_case(pg_temp.v('fc'), 'warn', 'Pretending to be someone else') $$, 'but its owner can be warned');
+select lives_ok($$ select public.resolve_case(pg_temp.v('fc'), 'warn', 'Pretending to be someone else', 'low') $$, 'but its owner can be warned');
 select pg_temp.as_user('a');
 select results_eq($$ select kind::text from public.sanctions $$, $$ values ('warn'::text) $$, 'A sees the warning on their record');
 select is(pg_temp.notes('a', 'moderation_warning'), 1, 'and was notified');

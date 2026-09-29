@@ -29,12 +29,23 @@ export async function claimCase(caseId: string, claim: boolean): Promise<ActionR
 }
 
 export type CaseAction = "dismiss" | "remove" | "clear_profile" | "unlist" | "warn";
+export type Severity = "low" | "medium" | "high";
 
-export async function resolveCase(caseId: string, action: CaseAction, reason: string): Promise<ActionResult> {
+/**
+ * Anything but a dismissal upholds the report and needs a severity: the owner loses 50, 150
+ * or 300 ranking points for 12 months (PRD 5.13 penalties, decisions.md 2026-09-30).
+ */
+export async function resolveCase(caseId: string, action: CaseAction, reason: string, severity: Severity | null): Promise<ActionResult> {
   const ctx = await actionContext("ops.resolve");
   const parsed = z
-    .object({ id: uuid, action: z.enum(["dismiss", "remove", "clear_profile", "unlist", "warn"]), reason: z.string().trim().min(3, "Give a reason.").max(2000) })
-    .safeParse({ id: caseId, action, reason });
+    .object({
+      id: uuid,
+      action: z.enum(["dismiss", "remove", "clear_profile", "unlist", "warn"]),
+      reason: z.string().trim().min(3, "Give a reason.").max(2000),
+      severity: z.enum(["low", "medium", "high"]).nullable(),
+    })
+    .refine((v) => v.action === "dismiss" || v.severity !== null, { message: "Choose a severity.", path: ["severity"] })
+    .safeParse({ id: caseId, action, reason, severity });
   if (!parsed.success) {
     ctx.done("refused", { error_code: "invalid_input" });
     return fail("invalid_input", parsed.error.issues[0]?.message ?? "Choose an action and give a reason.");
@@ -46,7 +57,12 @@ export async function resolveCase(caseId: string, action: CaseAction, reason: st
     session.supabase,
     session.userId,
     "resolve_case",
-    { p_case: parsed.data.id, p_action: parsed.data.action, p_reason: parsed.data.reason },
+    {
+      p_case: parsed.data.id,
+      p_action: parsed.data.action,
+      p_reason: parsed.data.reason,
+      p_severity: parsed.data.action === "dismiss" ? null : parsed.data.severity,
+    },
     [`/ops/reports/${parsed.data.id}`, "/ops"],
   );
 }

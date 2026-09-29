@@ -3,7 +3,7 @@
 import { useId, useState, useTransition } from "react";
 import { FormAlert } from "@/components/auth/form-alert";
 import { Button, Textarea } from "@/components/ui";
-import { resolveCase, type CaseAction } from "@/lib/actions/ops/moderation";
+import { resolveCase, type CaseAction, type Severity } from "@/lib/actions/ops/moderation";
 
 type Target = "post" | "comment" | "message" | "profile" | "venture";
 
@@ -15,13 +15,21 @@ const ACTIONS: { value: CaseAction; label: string; hint: string; targets: Target
   { value: "warn", label: "Warn the owner", hint: "The content stays. The owner gets a warning with your reason.", targets: ["post", "comment", "message", "profile", "venture"] },
 ];
 
+const SEVERITIES: { value: Severity; label: string; hint: string }[] = [
+  { value: "low", label: "Low", hint: "Minus 50 ranking points for 12 months." },
+  { value: "medium", label: "Medium", hint: "Minus 150 ranking points for 12 months." },
+  { value: "high", label: "High", hint: "Minus 300 ranking points for 12 months." },
+];
+
 /**
  * The decisions a moderator can take on this kind of target, always with a reason
- * (PRD 5.26, decisions.md 2026-09-30). Suspend and ban come in phase 11.
+ * (PRD 5.26, decisions.md 2026-09-30). Anything but a dismissal also takes a severity, which
+ * costs the owner ranking points (PRD 5.13 penalties). Suspend and ban come in phase 11.
  */
 export function ResolveForm({ caseId, targetType }: { caseId: string; targetType: Target }) {
   const id = useId();
   const [action, setAction] = useState<CaseAction | null>(null);
+  const [severity, setSeverity] = useState<Severity | null>(null);
   const [reason, setReason] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
@@ -34,9 +42,13 @@ export function ResolveForm({ caseId, targetType }: { caseId: string; targetType
           setError("Choose an action.");
           return;
         }
+        if (action !== "dismiss" && !severity) {
+          setError("Choose a severity.");
+          return;
+        }
         startTransition(async () => {
           setError(null);
-          const result = await resolveCase(caseId, action, reason);
+          const result = await resolveCase(caseId, action, reason, action === "dismiss" ? null : severity);
           if (!result.ok) setError(result.message);
         });
       }}
@@ -54,6 +66,20 @@ export function ResolveForm({ caseId, targetType }: { caseId: string; targetType
           </label>
         ))}
       </fieldset>
+      {action && action !== "dismiss" ? (
+        <fieldset className="flex flex-col gap-2">
+          <legend className="mb-1 text-body-sm font-semibold">Severity</legend>
+          {SEVERITIES.map((s) => (
+            <label key={s.value} className="flex items-start gap-2 text-body-sm">
+              <input type="radio" name={`${id}-severity`} value={s.value} checked={severity === s.value} onChange={() => setSeverity(s.value)} className="mt-1 size-4" />
+              <span>
+                <span className="font-semibold">{s.label}</span>
+                <span className="block text-caption text-text-secondary">{s.hint}</span>
+              </span>
+            </label>
+          ))}
+        </fieldset>
+      ) : null}
       <div className="flex flex-col gap-1">
         <label htmlFor={`${id}-reason`} className="text-body-sm font-semibold">
           Reason

@@ -6,11 +6,12 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/cn";
 
 /** The /ops areas this staff member's roles open. */
-export function OpsNav({ moderator, trust }: { moderator: boolean; trust: boolean }) {
+export function OpsNav({ moderator, trust, accounts }: { moderator: boolean; trust: boolean; accounts: boolean }) {
   const pathname = usePathname();
   const items = [
     moderator && { href: "/ops", label: "Reports", active: pathname === "/ops" || pathname.startsWith("/ops/reports") },
     trust && { href: "/ops/evidence", label: "Evidence", active: pathname.startsWith("/ops/evidence") },
+    accounts && { href: "/ops/exam-periods", label: "Exam periods", active: pathname.startsWith("/ops/exam-periods") },
   ].filter((i): i is { href: string; label: string; active: boolean } => Boolean(i));
   return (
     <nav aria-label="Ops areas">
