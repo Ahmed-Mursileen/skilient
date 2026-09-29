@@ -61,6 +61,13 @@ describe("describeNotification", () => {
     expect(describeNotification({ ...base, type: "credential_expired", actorName: null, data: { title: "CCNA" } }).text).toContain("expired");
   });
 
+  it("links code-check notifications to the check", () => {
+    const ready = describeNotification({ ...base, type: "code_check_ready", actorName: null, entityId: "cc1", data: { skill: "Python" } });
+    expect(ready).toMatchObject({ href: "/me/code-checks/cc1", subject: "Your Python code check is ready" });
+    const pass = describeNotification({ ...base, type: "code_check_graded", actorName: null, entityId: "cc1", data: { skill: "Python", passed: true } });
+    expect(pass.text).toBe("You passed your Python code check. Python is now L4.");
+  });
+
   it("falls back to 'Someone' and 'a venture' when details are missing", () => {
     const d = describeNotification({ type: "application_received", actorName: null, entityType: "application", entityId: "x", data: {} });
     expect(d.text).toBe("Someone applied to join a venture.");

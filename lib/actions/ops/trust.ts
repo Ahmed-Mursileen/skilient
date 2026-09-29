@@ -83,3 +83,48 @@ export async function resolveReviewFlag(id: number, upheld: boolean, why: string
   // Write check: false means it was already resolved.
   return result.data ? { ok: true, data: null } : fail("not_now", "This flag was already resolved.");
 }
+
+export async function claimCodeCheck(id: string, claim: boolean): Promise<ActionResult> {
+  const ctx = await actionContext("ops.code_check_claim");
+  const parsed = z.object({ id: uuid, claim: z.boolean() }).safeParse({ id, claim });
+  if (!parsed.success) {
+    ctx.done("refused", { error_code: "invalid_input" });
+    return fail("invalid_input", "That code check doesn't exist.");
+  }
+  const session = await signedIn(ctx);
+  if (!session) return NO_SESSION;
+  return call(ctx, session.supabase, session.userId, "claim_code_check", { p_id: id, p_claim: claim }, [
+    `/ops/evidence/code-checks/${id}`,
+    "/ops/evidence",
+  ]);
+}
+
+const part = z.object({ pass: z.boolean(), comment: z.string().trim().max(500).optional() });
+
+/** 3 of the 4 rubric parts pass (PRD 5.21); the feedback goes to the student. */
+export async function gradeCodeCheck(
+  id: string,
+  rubric: { behaviour: z.input<typeof part>; design: z.input<typeof part>; change: z.input<typeof part>; accuracy: z.input<typeof part> },
+  feedback: string,
+): Promise<ActionResult<{ passed: boolean }>> {
+  const ctx = await actionContext("ops.code_check_grade");
+  const parsed = z
+    .object({ id: uuid, rubric: z.object({ behaviour: part, design: part, change: part, accuracy: part }), feedback: reason })
+    .safeParse({ id, rubric, feedback });
+  if (!parsed.success) {
+    ctx.done("refused", { error_code: "invalid_input" });
+    return fail("invalid_input", parsed.error.issues[0]?.message ?? "Mark all four parts and give feedback.");
+  }
+  const session = await signedIn(ctx);
+  if (!session) return NO_SESSION;
+  const result = await call<boolean>(
+    ctx,
+    session.supabase,
+    session.userId,
+    "grade_code_check",
+    { p_id: id, p_rubric: parsed.data.rubric, p_feedback: parsed.data.feedback },
+    [`/ops/evidence/code-checks/${id}`, "/ops/evidence"],
+  );
+  return result.ok ? { ok: true, data: { passed: result.data } } : result;
+}
+

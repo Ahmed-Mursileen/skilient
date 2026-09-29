@@ -112,6 +112,8 @@ Legend: 📖 = PRD files to read (in `docs/prd/`), ✅ = done-when checks.
 
 *Slice 3 (credentials and the /ops trust queue): PDFs up to 5 MB stored as-is after a `%PDF-` check, images re-encoded without EXIF/GPS, both in a private bucket; `/me/credentials` with status and reasons; trust reviewers on two-factor claim and approve (with a recognised issuer) or reject with a reason in `/ops/evidence`, every step in `ops_audit_log`; GitHub review flags get the same claim-and-audit tab; daily expiry and file clean-up; storage use against 1 GB on /ops. Unapproved credentials never reach the profile and other users can't read the files (pgTAP `30_credentials`, E2E `credentials.spec.ts`, worker `storage-cleanup`).*
 
+*Slice 4 (code checks): request from the skill drawer at L2 (own commits), the worker picks 20–40 of the student's own added lines, the `code-check` Edge Function shows them from GitHub (never stored) to the student for 10 minutes from first view, or to the claiming reviewer; three fixed questions and one change request from the bank; trust reviewers grade in /ops with the 4-part rubric (3 of 4 passes) and a pass makes the skill L4; one attempt per skill per 30 days. pgTAP `31_code_checks`, worker `code-check` (fake GitHub commit and contents APIs), unit `code-check`, E2E `code-checks.spec.ts`. With slices 1–2 this completes the first box except ring detection (slice 5).*
+
 ## Phase 5 — Verified CV
 
 📖 `05-18-verified-cv.md`

@@ -4,6 +4,8 @@ import { notFound } from "next/navigation";
 import { EmptyState } from "@/components/ui";
 import { cn } from "@/lib/cn";
 import { CREDENTIAL_STATUS_LABELS } from "@/lib/credentials/constants";
+import { STATUS_LABELS as CHECK_LABELS } from "@/lib/code-checks/constants";
+import { getCodeCheckQueue } from "@/lib/data/code-checks";
 import { getCredentialQueue, getFlagQueue, staffRoles } from "@/lib/data/ops-trust";
 import { FLAG_LABELS } from "@/lib/ops/labels";
 
@@ -12,6 +14,8 @@ export const metadata: Metadata = { title: "Evidence" };
 const TABS = [
   { key: "credentials", label: "Credentials" },
   { key: "reviewed", label: "Reviewed credentials" },
+  { key: "checks", label: "Code checks" },
+  { key: "graded", label: "Graded checks" },
   { key: "flags", label: "GitHub flags" },
 ] as const;
 type Tab = (typeof TABS)[number]["key"];
@@ -46,7 +50,13 @@ export default async function OpsEvidencePage({ searchParams }: PageProps<"/ops/
           ))}
         </ul>
       </nav>
-      {tab === "flags" ? <FlagTable /> : <CredentialTable status={tab === "reviewed" ? "reviewed" : "pending"} />}
+      {tab === "flags" ? (
+        <FlagTable />
+      ) : tab === "checks" || tab === "graded" ? (
+        <CodeCheckTable status={tab === "graded" ? "graded" : "submitted"} />
+      ) : (
+        <CredentialTable status={tab === "reviewed" ? "reviewed" : "pending"} />
+      )}
     </main>
   );
 }
@@ -132,6 +142,52 @@ async function FlagTable() {
               <td className="px-3 py-2 align-top tabular-nums">{r.commits}</td>
               <td className="px-3 py-2 align-top tabular-nums">{r.age}</td>
               <td className="px-3 py-2 align-top">{r.claimedByMe ? "You" : (r.claimedBy ?? "Nobody yet")}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+async function CodeCheckTable({ status }: { status: "submitted" | "graded" }) {
+  const rows = await getCodeCheckQueue(status);
+  if (!rows.length) {
+    return (
+      <EmptyState
+        title={status === "submitted" ? "No code checks to grade" : "Nothing graded in the last 30 days"}
+        description="Students' answers appear here once they hand them in, oldest first. Teachers take these over in phase 7."
+      />
+    );
+  }
+  return (
+    <div className="overflow-x-auto rounded-lg border border-border-default bg-bg-surface">
+      <table className="w-full min-w-[720px] text-left text-body-sm" data-testid="code-check-queue">
+        <thead className="border-b border-border-default bg-bg-subtle text-caption text-text-secondary">
+          <tr>
+            <th scope="col" className="px-3 py-2 font-semibold">Skill</th>
+            <th scope="col" className="px-3 py-2 font-semibold">Student</th>
+            <th scope="col" className="px-3 py-2 font-semibold">{status === "submitted" ? "Waiting" : "Graded"}</th>
+            <th scope="col" className="px-3 py-2 font-semibold">{status === "submitted" ? "Claimed by" : "Outcome"}</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-border-muted">
+          {rows.map((r) => (
+            <tr key={r.id} data-testid="code-check-row">
+              <td className="px-3 py-2 align-top">
+                <Link href={`/ops/evidence/code-checks/${r.id}` as Route} className="font-semibold underline underline-offset-4">
+                  {r.skill}
+                </Link>
+                {r.conflict ? <span className="block text-caption text-text-secondary">You know this student: someone else grades it</span> : null}
+              </td>
+              <td className="px-3 py-2 align-top">{r.student}</td>
+              <td className="px-3 py-2 align-top tabular-nums">
+                {status === "submitted" ? r.age : r.gradedLabel}
+                {r.overdue ? <strong className="block text-caption text-text-error">Overdue (72 h)</strong> : null}
+              </td>
+              <td className="px-3 py-2 align-top">
+                {status === "submitted" ? (r.claimedByMe ? "You" : (r.claimedBy ?? "Nobody yet")) : CHECK_LABELS[r.status]}
+              </td>
             </tr>
           ))}
         </tbody>

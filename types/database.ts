@@ -212,6 +212,50 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"code_check_prompts": {
+                  Row: {
+                    "active": boolean,"author_id": string | null,"category": Database["public"]['Enums']["skill_category"] | null,"created_at": string,"id": string,"prompt": string,"skill_id": string | null
+                  }
+                  Insert: {
+                    "active"?: boolean,"author_id"?: string | null,"category"?: Database["public"]['Enums']["skill_category"] | null,"created_at"?: string,"id"?: string,"prompt": string,"skill_id"?: string | null
+                  }
+                  Update: {
+                    "active"?: boolean,"author_id"?: string | null,"category"?: Database["public"]['Enums']["skill_category"] | null,"created_at"?: string,"id"?: string,"prompt"?: string,"skill_id"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "code_check_prompts_skill_id_fkey"
+      columns: ["skill_id"]
+isOneToOne: false
+      referencedRelation: "skills"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"code_checks": {
+                  Row: {
+                    "answers": NonNullable<Json>,"claimed_at": string | null,"claimed_by": string | null,"deadline_at": string | null,"end_line": number | null,"feedback": string | null,"graded_at": string | null,"grader_id": string | null,"id": string,"path": string | null,"prompt_id": string | null,"ready_at": string | null,"repo_id": number | null,"requested_at": string,"rubric": Json | null,"sha": string | null,"skill_id": string,"snippet_served_at": string | null,"start_line": number | null,"started_at": string | null,"status": Database["public"]['Enums']["code_check_status"],"submitted_at": string | null,"unavailable_reason": string | null,"user_id": string
+                  }
+                  Insert: {
+                    "answers"?: NonNullable<Json>,"claimed_at"?: string | null,"claimed_by"?: string | null,"deadline_at"?: string | null,"end_line"?: number | null,"feedback"?: string | null,"graded_at"?: string | null,"grader_id"?: string | null,"id"?: string,"path"?: string | null,"prompt_id"?: string | null,"ready_at"?: string | null,"repo_id"?: number | null,"requested_at"?: string,"rubric"?: Json | null,"sha"?: string | null,"skill_id": string,"snippet_served_at"?: string | null,"start_line"?: number | null,"started_at"?: string | null,"status"?: Database["public"]['Enums']["code_check_status"],"submitted_at"?: string | null,"unavailable_reason"?: string | null,"user_id": string
+                  }
+                  Update: {
+                    "answers"?: NonNullable<Json>,"claimed_at"?: string | null,"claimed_by"?: string | null,"deadline_at"?: string | null,"end_line"?: number | null,"feedback"?: string | null,"graded_at"?: string | null,"grader_id"?: string | null,"id"?: string,"path"?: string | null,"prompt_id"?: string | null,"ready_at"?: string | null,"repo_id"?: number | null,"requested_at"?: string,"rubric"?: Json | null,"sha"?: string | null,"skill_id"?: string,"snippet_served_at"?: string | null,"start_line"?: number | null,"started_at"?: string | null,"status"?: Database["public"]['Enums']["code_check_status"],"submitted_at"?: string | null,"unavailable_reason"?: string | null,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "code_checks_prompt_id_fkey"
+      columns: ["prompt_id"]
+isOneToOne: false
+      referencedRelation: "code_check_prompts"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "code_checks_skill_id_fkey"
+      columns: ["skill_id"]
+isOneToOne: false
+      referencedRelation: "skills"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"contribution_confirmations": {
                   Row: {
                     "confirmer_id": string,"contribution_id": string,"created_at": string
@@ -1595,11 +1639,29 @@ isOneToOne: false
 "claim_case":
 { Args: { "p_case": string,"p_claim": boolean }; Returns: undefined
                            },
+"claim_code_check":
+{ Args: { "p_claim": boolean,"p_id": string }; Returns: undefined
+                           },
 "claim_credential":
 { Args: { "p_claim": boolean,"p_id": string }; Returns: undefined
                            },
 "claim_review_flag":
 { Args: { "p_claim": boolean,"p_flag": number }; Returns: undefined
+                           },
+"code_check_case":
+{ Args: { "p_id": string }; Returns: {
+              "answers": Json,"category": Database["public"]['Enums']["skill_category"],"claimed_by_me": boolean,"claimed_by_name": string,"conflict": boolean,"end_line": number,"feedback": string,"id": string,"overdue": boolean,"path": string,"prompt": string,"rubric": Json,"skill_name": string,"start_line": number,"status": Database["public"]['Enums']["code_check_status"],"student_name": string,"submitted_at": string
+            }[]
+                           },
+"code_check_queue":
+{ Args: { "p_status"?: string }; Returns: {
+              "claimed_by_me": boolean,"claimed_by_name": string,"conflict": boolean,"graded_at": string,"id": string,"overdue": boolean,"skill_name": string,"status": Database["public"]['Enums']["code_check_status"],"student_name": string,"submitted_at": string
+            }[]
+                           },
+"code_check_state":
+{ Args: { "p_skill": string }; Returns: {
+              "blocker": string,"check_id": string,"status": Database["public"]['Enums']["code_check_status"]
+            }[]
                            },
 "complete_onboarding":
 { Args: Record<PropertyKey, never>; Returns: boolean
@@ -1709,6 +1771,9 @@ isOneToOne: false
               "department": string,"full_name": string,"graduation_year": number,"user_id": string,"username": string
             }[]
                            },
+"grade_code_check":
+{ Args: { "p_feedback": string,"p_id": string,"p_rubric": Json }; Returns: boolean
+                           },
 "health_check":
 { Args: Record<PropertyKey, never>; Returns: boolean
                            },
@@ -1776,6 +1841,11 @@ isOneToOne: false
 "my_chat_settings":
 { Args: Record<PropertyKey, never>; Returns: {
               "read_receipts": boolean
+            }[]
+                           },
+"my_code_check":
+{ Args: { "p_id": string }; Returns: {
+              "answers": Json,"category": Database["public"]['Enums']["skill_category"],"deadline_at": string,"end_line": number,"feedback": string,"graded_at": string,"id": string,"path": string,"prompt": string,"requested_at": string,"rubric": Json,"skill_id": string,"skill_name": string,"snippet_served": boolean,"start_line": number,"started_at": string,"status": Database["public"]['Enums']["code_check_status"],"submitted_at": string,"unavailable_reason": string
             }[]
                            },
 "my_friend_requests":
@@ -1895,6 +1965,9 @@ isOneToOne: false
 "remove_venture_member":
 { Args: { "p_member": string,"p_venture": string }; Returns: undefined
                            },
+"request_code_check":
+{ Args: { "p_skill": string }; Returns: string
+                           },
 "request_github_resync":
 { Args: Record<PropertyKey, never>; Returns: boolean
                            },
@@ -1933,6 +2006,9 @@ isOneToOne: false
                            },
 "rsvp_event":
 { Args: { "p_post": string,"p_status": Database["public"]['Enums']["rsvp_status"] }; Returns: undefined
+                           },
+"save_code_check":
+{ Args: { "p_answers": Json,"p_id": string,"p_submit"?: boolean }; Returns: Database["public"]['Enums']["code_check_status"]
                            },
 "save_venture_role":
 { Args: { "p_role"?: string,"p_skill_ids": (string)[],"p_slots": number,"p_title": string,"p_venture": string }; Returns: string
@@ -1983,6 +2059,9 @@ isOneToOne: false
                            },
 "signin_status":
 { Args: { "p_email": string,"p_ip_hash": string }; Returns: Json
+                           },
+"start_code_check":
+{ Args: { "p_id": string }; Returns: string
                            },
 "start_github_link":
 { Args: { "p_code": string,"p_installation_id"?: number }; Returns: string
@@ -2080,7 +2159,7 @@ isOneToOne: false
                            }
           }
           Enums: {
-            "account_role": "student"|"faculty"|"recruiter"|"university_admin","application_status": "pending"|"accepted"|"declined"|"withdrawn"|"closed","chat_thread_type": "dm"|"group","contribution_kind": "code"|"design"|"research"|"docs"|"management"|"other","contribution_source": "manual"|"github","credential_status": "pending"|"approved"|"rejected"|"expired","domain_kind": "student"|"faculty"|"both","email_channel": "instant_email"|"digest"|"off","friend_request_status": "pending"|"accepted"|"declined","github_commit_status": "pending"|"counted"|"held"|"excluded","github_repo_kind": "owned"|"collaborator"|"fork"|"template","job_run_status": "running"|"succeeded"|"failed","looking_for_option": "internship"|"job"|"teammates"|"project"|"mentorship","post_audience": "university"|"global","post_stage": "seed"|"limited"|"full"|"global_boost"|"demoted"|"held","post_type": "general"|"invite"|"announcement"|"event"|"poll"|"shipped","profile_visibility": "friends"|"university"|"global","report_case_status": "open"|"dismissed"|"removed"|"warned","report_reason": "spam"|"harassment"|"inappropriate"|"misinformation"|"impersonation"|"other","report_target": "post"|"comment"|"message"|"profile"|"venture","review_flag_kind": "burst"|"backdating"|"cross_account_duplicate","review_flag_status": "open"|"cleared"|"upheld","rsvp_status": "going"|"interested","sanction_kind": "warn"|"suspend"|"ban"|"throttle","skill_category": "language"|"framework"|"library"|"tool"|"platform"|"practice","staff_role": "moderator"|"trust_reviewer"|"accounts"|"super_admin","sync_status": "queued"|"running"|"done"|"failed"|"cancelled","venture_invite_status": "pending"|"accepted"|"declined"|"revoked","venture_stage": "idea"|"prototype"|"launched"|"revenue","venture_status": "recruiting"|"in_progress"|"completed"|"abandoned","venture_team_role": "lead"|"developer"|"designer"|"researcher"|"other","venture_type": "project"|"startup","venture_visibility": "public"|"university"|"unlisted"
+            "account_role": "student"|"faculty"|"recruiter"|"university_admin","application_status": "pending"|"accepted"|"declined"|"withdrawn"|"closed","chat_thread_type": "dm"|"group","code_check_status": "preparing"|"ready"|"in_progress"|"submitted"|"passed"|"failed"|"unavailable"|"expired","contribution_kind": "code"|"design"|"research"|"docs"|"management"|"other","contribution_source": "manual"|"github","credential_status": "pending"|"approved"|"rejected"|"expired","domain_kind": "student"|"faculty"|"both","email_channel": "instant_email"|"digest"|"off","friend_request_status": "pending"|"accepted"|"declined","github_commit_status": "pending"|"counted"|"held"|"excluded","github_repo_kind": "owned"|"collaborator"|"fork"|"template","job_run_status": "running"|"succeeded"|"failed","looking_for_option": "internship"|"job"|"teammates"|"project"|"mentorship","post_audience": "university"|"global","post_stage": "seed"|"limited"|"full"|"global_boost"|"demoted"|"held","post_type": "general"|"invite"|"announcement"|"event"|"poll"|"shipped","profile_visibility": "friends"|"university"|"global","report_case_status": "open"|"dismissed"|"removed"|"warned","report_reason": "spam"|"harassment"|"inappropriate"|"misinformation"|"impersonation"|"other","report_target": "post"|"comment"|"message"|"profile"|"venture","review_flag_kind": "burst"|"backdating"|"cross_account_duplicate","review_flag_status": "open"|"cleared"|"upheld","rsvp_status": "going"|"interested","sanction_kind": "warn"|"suspend"|"ban"|"throttle","skill_category": "language"|"framework"|"library"|"tool"|"platform"|"practice","staff_role": "moderator"|"trust_reviewer"|"accounts"|"super_admin","sync_status": "queued"|"running"|"done"|"failed"|"cancelled","venture_invite_status": "pending"|"accepted"|"declined"|"revoked","venture_stage": "idea"|"prototype"|"launched"|"revenue","venture_status": "recruiting"|"in_progress"|"completed"|"abandoned","venture_team_role": "lead"|"developer"|"designer"|"researcher"|"other","venture_type": "project"|"startup","venture_visibility": "public"|"university"|"unlisted"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -2200,7 +2279,7 @@ export const Constants = {
           }
         },"public": {
           Enums: {
-            "account_role": ["student", "faculty", "recruiter", "university_admin"],"application_status": ["pending", "accepted", "declined", "withdrawn", "closed"],"chat_thread_type": ["dm", "group"],"contribution_kind": ["code", "design", "research", "docs", "management", "other"],"contribution_source": ["manual", "github"],"credential_status": ["pending", "approved", "rejected", "expired"],"domain_kind": ["student", "faculty", "both"],"email_channel": ["instant_email", "digest", "off"],"friend_request_status": ["pending", "accepted", "declined"],"github_commit_status": ["pending", "counted", "held", "excluded"],"github_repo_kind": ["owned", "collaborator", "fork", "template"],"job_run_status": ["running", "succeeded", "failed"],"looking_for_option": ["internship", "job", "teammates", "project", "mentorship"],"post_audience": ["university", "global"],"post_stage": ["seed", "limited", "full", "global_boost", "demoted", "held"],"post_type": ["general", "invite", "announcement", "event", "poll", "shipped"],"profile_visibility": ["friends", "university", "global"],"report_case_status": ["open", "dismissed", "removed", "warned"],"report_reason": ["spam", "harassment", "inappropriate", "misinformation", "impersonation", "other"],"report_target": ["post", "comment", "message", "profile", "venture"],"review_flag_kind": ["burst", "backdating", "cross_account_duplicate"],"review_flag_status": ["open", "cleared", "upheld"],"rsvp_status": ["going", "interested"],"sanction_kind": ["warn", "suspend", "ban", "throttle"],"skill_category": ["language", "framework", "library", "tool", "platform", "practice"],"staff_role": ["moderator", "trust_reviewer", "accounts", "super_admin"],"sync_status": ["queued", "running", "done", "failed", "cancelled"],"venture_invite_status": ["pending", "accepted", "declined", "revoked"],"venture_stage": ["idea", "prototype", "launched", "revenue"],"venture_status": ["recruiting", "in_progress", "completed", "abandoned"],"venture_team_role": ["lead", "developer", "designer", "researcher", "other"],"venture_type": ["project", "startup"],"venture_visibility": ["public", "university", "unlisted"]
+            "account_role": ["student", "faculty", "recruiter", "university_admin"],"application_status": ["pending", "accepted", "declined", "withdrawn", "closed"],"chat_thread_type": ["dm", "group"],"code_check_status": ["preparing", "ready", "in_progress", "submitted", "passed", "failed", "unavailable", "expired"],"contribution_kind": ["code", "design", "research", "docs", "management", "other"],"contribution_source": ["manual", "github"],"credential_status": ["pending", "approved", "rejected", "expired"],"domain_kind": ["student", "faculty", "both"],"email_channel": ["instant_email", "digest", "off"],"friend_request_status": ["pending", "accepted", "declined"],"github_commit_status": ["pending", "counted", "held", "excluded"],"github_repo_kind": ["owned", "collaborator", "fork", "template"],"job_run_status": ["running", "succeeded", "failed"],"looking_for_option": ["internship", "job", "teammates", "project", "mentorship"],"post_audience": ["university", "global"],"post_stage": ["seed", "limited", "full", "global_boost", "demoted", "held"],"post_type": ["general", "invite", "announcement", "event", "poll", "shipped"],"profile_visibility": ["friends", "university", "global"],"report_case_status": ["open", "dismissed", "removed", "warned"],"report_reason": ["spam", "harassment", "inappropriate", "misinformation", "impersonation", "other"],"report_target": ["post", "comment", "message", "profile", "venture"],"review_flag_kind": ["burst", "backdating", "cross_account_duplicate"],"review_flag_status": ["open", "cleared", "upheld"],"rsvp_status": ["going", "interested"],"sanction_kind": ["warn", "suspend", "ban", "throttle"],"skill_category": ["language", "framework", "library", "tool", "platform", "practice"],"staff_role": ["moderator", "trust_reviewer", "accounts", "super_admin"],"sync_status": ["queued", "running", "done", "failed", "cancelled"],"venture_invite_status": ["pending", "accepted", "declined", "revoked"],"venture_stage": ["idea", "prototype", "launched", "revenue"],"venture_status": ["recruiting", "in_progress", "completed", "abandoned"],"venture_team_role": ["lead", "developer", "designer", "researcher", "other"],"venture_type": ["project", "startup"],"venture_visibility": ["public", "university", "unlisted"]
           }
         }
 } as const

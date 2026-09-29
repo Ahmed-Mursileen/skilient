@@ -30,7 +30,7 @@ export interface EvidenceItem {
 
 /** What L3 and L4 rest on (PRD 5.5): merged pull requests, confirmed entries, endorsements. */
 export interface ProofItem {
-  kind: "pull_request" | "contribution" | "endorsement";
+  kind: "pull_request" | "contribution" | "endorsement" | "code_check";
   level: 3 | 4;
   title: string;
   detail: string | null;
@@ -45,6 +45,8 @@ export interface SkillEvidence {
   items: EvidenceItem[];
   total: number;
   proofs: ProofItem[];
+  /** The latest code check on this skill, and why a new one can't be requested (null: it can). */
+  codeCheck: { id: string | null; status: string | null; blocker: string | null };
 }
 
 const input = z.object({ skillId: z.string().regex(/^[a-z0-9][a-z0-9-]{0,39}$/) });
@@ -67,7 +69,7 @@ export async function loadSkillEvidence(skillId: string): Promise<ActionResult<S
   }
 
   // Ownership: only the signed-in student's own rows (RLS and my_skill_proofs enforce the same).
-  const [{ data: rows, count, error }, proofs] = await Promise.all([
+  const [{ data: rows, count, error }, proofs, check] = await Promise.all([
     supabase
       .from("skill_evidence")
       .select("repo_id, sha, detectors, paths, lines, occurred_at", { count: "exact" })
@@ -76,6 +78,7 @@ export async function loadSkillEvidence(skillId: string): Promise<ActionResult<S
       .order("occurred_at", { ascending: false })
       .limit(LIMIT),
     supabase.rpc("my_skill_proofs", { p_skill: parsed.data.skillId }),
+    supabase.rpc("code_check_state", { p_skill: parsed.data.skillId }),
   ]);
   if (error || proofs.error) {
     ctx.done("error", { error_code: (error ?? proofs.error)?.code, user_id: user.id });
@@ -126,5 +129,11 @@ export async function loadSkillEvidence(skillId: string): Promise<ActionResult<S
     dateLabel: dayLabel(p.occurred_at),
   }));
   ctx.done("ok", { user_id: user.id, items: items.length, proofs: proofItems.length });
-  return ok({ items, total: count ?? items.length, proofs: proofItems });
+  const state = check.data?.[0];
+  return ok({
+    items,
+    total: count ?? items.length,
+    proofs: proofItems,
+    codeCheck: { id: state?.check_id ?? null, status: state?.status ?? null, blocker: state?.blocker ?? null },
+  });
 }
