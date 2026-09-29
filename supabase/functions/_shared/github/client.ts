@@ -108,6 +108,9 @@ export class GitHub {
   }
 
   private track(token: string, headers: Headers) {
+    // Search has its own small budget (30 a minute); only the core budget gates stages.
+    const resource = headers.get("x-ratelimit-resource");
+    if (resource && resource !== "core") return;
     const remaining = headers.get("x-ratelimit-remaining");
     const reset = headers.get("x-ratelimit-reset");
     if (remaining !== null && reset !== null) {

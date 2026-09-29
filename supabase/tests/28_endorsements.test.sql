@@ -31,8 +31,12 @@ reset role;
 insert into public.venture_members (venture_id, user_id) values
   (current_setting('test.v1')::uuid, '92800000-0000-0000-0000-00000000000b'),
   (current_setting('test.v1')::uuid, '92800000-0000-0000-0000-00000000000c');
--- B has Python from GitHub (not a venture tag).
-insert into public.user_skills (user_id, skill_id, level) values ('92800000-0000-0000-0000-00000000000b', 'python', 2);
+-- B has Python from their own work (a merged pull request), not a venture tag.
+insert into public.github_accounts (user_id, github_id, login) values ('92800000-0000-0000-0000-00000000000b', 928001, 'bee');
+select private.record_pull_request('92800000-0000-0000-0000-00000000000b', jsonb_build_object(
+  'repo_github_id', 1, 'number', 1, 'pr_github_id', 1, 'repo_full_name', 'numpy/numpy', 'repo_private', false,
+  'merged_at', '2026-08-01T10:00:00Z', 'approver_github_id', 42,
+  'skills', jsonb_build_array(jsonb_build_object('skill_id', 'python', 'path', 'a.py'))));
 set local role authenticated;
 
 -- ---------------------------------------------------------------------------
@@ -57,7 +61,7 @@ select throws_ok($$ select public.endorse('92800000-0000-0000-0000-00000000000b'
 -- A endorses B
 -- ---------------------------------------------------------------------------
 select pg_temp.as_user('92800000-0000-0000-0000-00000000000b');
-select pg_temp.remember('b_entry', public.log_contribution(pg_temp.v('v1'), 'code', 'Built the timetable grid'));
+select pg_temp.remember('b_entry', public.log_contribution(pg_temp.v('v1'), 'code', 'Built the timetable grid', null, null, array['react']));
 select pg_temp.as_user('92800000-0000-0000-0000-00000000000c');
 select pg_temp.remember('c_entry', public.log_contribution(pg_temp.v('v1'), 'design', 'Drew the screens'));
 

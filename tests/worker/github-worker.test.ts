@@ -83,6 +83,44 @@ const gitCommit = (c: Fixture) => ({
 /** Commits pushed to 801's default branch after connecting (listed from then on too). */
 const EXTRA: Fixture[] = [];
 
+// --- Pull request fixtures (L3), in GitHub's REST shapes ---------------------------------
+
+const STUDENT = { login: "student", id: STUDENT_GITHUB_ID, type: "User" };
+const MAINTAINER = { login: "maintainer", id: 60, type: "User" };
+const NEWBIE = { login: "newbie", id: 61, type: "User" };
+const BOT = { login: "mergify[bot]", id: 62, type: "Bot" };
+const ACCOUNTS: Record<string, { login: string; id: number; type: string; created_at: string }> = {
+  maintainer: { ...MAINTAINER, created_at: "2015-01-01T00:00:00Z" },
+  newbie: { ...NEWBIE, created_at: "2026-07-25T00:00:00Z" }, // 16 days before its approval counted
+};
+interface PrFixture {
+  repo: string;
+  repoId: number;
+  owner: { login: string; id: number; type: string };
+  number: number;
+  mergedAt: string | null;
+  mergedBy: { login: string; id: number; type: string } | null;
+  reviews: { user: { login: string; id: number; type: string }; state: string }[];
+  files: ReturnType<typeof file>[];
+}
+const ORG = { login: "org", id: 55, type: "Organization" };
+/** Search results; tests add to it. */
+const PRS: PrFixture[] = [];
+const PR_FIXTURES: PrFixture[] = [
+  // Merged by a long-standing maintainer in someone else's repository: counts.
+  { repo: "org/lib", repoId: 901, owner: ORG, number: 11, mergedAt: "2026-08-10T10:00:00Z", mergedBy: MAINTAINER, reviews: [], files: [file("lib/util.py", lines(30))] },
+  // The student's own repository: never counts.
+  { repo: "student/robot", repoId: 801, owner: STUDENT, number: 3, mergedAt: "2026-08-11T10:00:00Z", mergedBy: STUDENT, reviews: [], files: [file("app/x.py", lines(5))] },
+  // Self-merged, approved only by a brand-new account: doesn't count.
+  { repo: "org/lib", repoId: 901, owner: ORG, number: 12, mergedAt: "2026-08-10T10:00:00Z", mergedBy: STUDENT,
+    reviews: [{ user: NEWBIE, state: "APPROVED" }], files: [file("lib/x.go", lines(20))] },
+  // Merged by a bot after a maintainer approved: counts.
+  { repo: "org/lib", repoId: 901, owner: ORG, number: 13, mergedAt: "2026-08-12T10:00:00Z", mergedBy: BOT,
+    reviews: [{ user: MAINTAINER, state: "COMMENTED" }, { user: MAINTAINER, state: "APPROVED" }],
+    files: [file("lib/api.py", lines(10, "from fastapi import FastAPI"))] },
+];
+const prById = (repo: string, number: number) => [...PRS, ...PR_FIXTURES].find((p) => p.repo === repo && p.number === number);
+
 /** A scriptable GitHub: records calls; `repositoryStatus` breaks /repositories/:id on demand. */
 function fakeGithub() {
   const calls: string[] = [];
@@ -156,6 +194,55 @@ function fakeGithub() {
       expect(url.searchParams.get("author")).toBe("student");
       return reply([...visible, ...(id === 801 ? EXTRA : [])].map(gitCommit));
     }
+    if (method === "GET" && url.pathname === "/search/issues") {
+      const q = url.searchParams.get("q") ?? "";
+      expect(q).toContain("type:pr");
+      expect(q).toContain("is:merged");
+      expect(q).toContain("author:student");
+      const pr = (p: PrFixture, author = STUDENT) => ({
+        id: 50_000 + p.number, // the issue id, not the pull request's
+        number: p.number,
+        title: `PR ${p.number}`,
+        state: "closed",
+        user: author,
+        repository_url: `${cfg.apiUrl}/repos/${p.repo}`,
+        pull_request: { url: `${cfg.apiUrl}/repos/${p.repo}/pulls/${p.number}`, html_url: `${cfg.webUrl}/${p.repo}/pull/${p.number}`, merged_at: p.mergedAt },
+      });
+      const items = [
+        ...PRS.map((p) => pr(p)),
+        // Someone else's pull request, and a plain issue: both ignored.
+        ...(PRS.length ? [pr(PRS[0], { login: "other", id: 999, type: "User" }), { ...pr(PRS[0]), number: 77, pull_request: undefined }] : []),
+      ];
+      return reply({ total_count: items.length, incomplete_results: false, items }, 200, {
+        "x-ratelimit-resource": "search",
+        "x-ratelimit-remaining": "29",
+      });
+    }
+    const pull = /^\/repos\/([^/]+\/[^/]+)\/pulls\/(\d+)(?:\/(reviews|files))?$/.exec(url.pathname);
+    if (method === "GET" && pull) {
+      const p = prById(pull[1], Number(pull[2]));
+      if (!p) return reply({ message: "Not Found" }, 404);
+      if (pull[3] === "reviews") {
+        return reply(p.reviews.map((r, i) => ({ id: 70_000 + i, user: r.user, state: r.state, submitted_at: p.mergedAt, commit_id: "c".repeat(40) })));
+      }
+      if (pull[3] === "files") return reply(p.files);
+      return reply({
+        id: 100_000 + p.number,
+        number: p.number,
+        state: "closed",
+        user: STUDENT,
+        merged: p.mergedAt !== null,
+        merged_at: p.mergedAt,
+        merged_by: p.mergedBy,
+        base: { ref: "main", repo: { id: p.repoId, full_name: p.repo, private: false, owner: p.owner } },
+        head: { ref: "feature", repo: { id: 4242, full_name: "student/lib", private: false, owner: STUDENT } },
+      });
+    }
+    const account = /^\/users\/([^/]+)$/.exec(url.pathname);
+    if (method === "GET" && account) {
+      const a = ACCOUNTS[decodeURIComponent(account[1])];
+      return a ? reply(a) : reply({ message: "Not Found" }, 404);
+    }
     if (method === "GET" && url.pathname === "/repos/org/starter/git/trees/HEAD") {
       return reply({ tree: [{ type: "blob", sha: TEMPLATE_BLOB }, { type: "tree", sha: "t".repeat(40) }] });
     }
@@ -220,8 +307,8 @@ describe("github-link and github-worker", () => {
     expect(installs).toEqual([{ installation_id: INSTALLATION }]); // the other App's installation is ignored
 
     const result = await runWorker({ db, cfg, fetch: gh.fetch, log, visibilitySeconds: 0 });
-    // discover, 3 classify, 3 harvest, 3 extract batches
-    expect(result).toEqual({ processed: 10, deferred: 0, failed: 0 });
+    // discover, 3 classify, 3 harvest, 3 extract batches, and the pull request search
+    expect(result).toEqual({ processed: 11, deferred: 0, failed: 0 });
     expect(await job()).toMatchObject({ status: "done", repos_total: 3, repos_done: 3 });
     const kinds = await sql`select repo_id::int, kind::text from public.github_user_repos where user_id = ${userId} order by repo_id`;
     expect(kinds).toEqual([
@@ -299,7 +386,7 @@ describe("github-link and github-worker", () => {
     gh.state.repositoryStatus = 500;
     await sql`select private.start_github_sync(${userId}, 'resync')`;
     const result = await runWorker({ db, cfg, fetch: gh.fetch, log, visibilitySeconds: 0 });
-    expect(result.processed).toBe(1); // discover
+    expect(result.processed).toBe(2); // discover, and the pull request search
     const [queued] = await sql`select count(*)::int as n from pgmq.q_github_jobs`;
     expect(queued.n).toBe(0);
     const failed = await job();
@@ -380,6 +467,54 @@ describe("github-link and github-worker", () => {
     expect(python.level).toBe(2);
   });
 
+  it("counts merged pull requests in others' repositories that another person corroborated (L3)", async () => {
+    const gh = fakeGithub();
+    PRS.push(...PR_FIXTURES);
+    await sql`select private.enqueue_github(${JSON.stringify({ stage: "prs", user_id: userId })}::text::jsonb)`;
+    const result = await runWorker({ db, cfg, fetch: gh.fetch, log, visibilitySeconds: 0 });
+    // The search, then one message per pull request; search's small budget never defers them.
+    expect(result).toEqual({ processed: 5, deferred: 0, failed: 0 });
+
+    const prs = await sql`select repo_full_name, number, counted, exclusion, approver_github_id::int as approver
+                          from public.github_pull_requests where user_id = ${userId} order by repo_full_name, number`;
+    expect(prs).toEqual([
+      { repo_full_name: "org/lib", number: 11, counted: true, exclusion: null, approver: 60 },
+      { repo_full_name: "org/lib", number: 12, counted: false, exclusion: "young_account", approver: null },
+      { repo_full_name: "org/lib", number: 13, counted: true, exclusion: null, approver: 60 },
+      { repo_full_name: "student/robot", number: 3, counted: false, exclusion: "own_repo", approver: null },
+    ]);
+    const skills = await sql`select skill_id, level from public.user_skills where user_id = ${userId} and skill_id in ('python', 'fastapi', 'go') order by skill_id`;
+    expect(skills).toEqual([
+      { skill_id: "fastapi", level: 3 }, // L1 from commits, L3 from the approved pull request
+      { skill_id: "python", level: 3 },
+    ]);
+    // Files are read only for pull requests that count.
+    expect(gh.calls).not.toContain("GET /repos/org/lib/pulls/12/files");
+    expect(gh.calls).not.toContain("GET /repos/student/robot/pulls/3/reviews");
+
+    // A second search skips pull requests already recorded.
+    await sql`select private.enqueue_github(${JSON.stringify({ stage: "prs", user_id: userId })}::text::jsonb)`;
+    expect(await runWorker({ db, cfg, fetch: gh.fetch, log, visibilitySeconds: 0 })).toEqual({ processed: 1, deferred: 0, failed: 0 });
+  });
+
+  it("a merged pull_request webhook checks that pull request for its author", async () => {
+    const gh = fakeGithub();
+    PR_FIXTURES.push({ repo: "club/site", repoId: 802, owner: { login: "club", id: 55, type: "Organization" }, number: 14,
+      mergedAt: "2026-08-20T10:00:00Z", mergedBy: MAINTAINER, reviews: [], files: [file("src/app.ts", lines(40))] });
+    const delivery = randomUUID();
+    const body = JSON.stringify({
+      action: "closed", installation: { id: INSTALLATION }, repository: { id: 802, full_name: "club/site" },
+      pull_request: { id: 100_014, number: 14, merged: true, merged_at: "2026-08-20T10:00:00Z", merged_by: { id: 60 }, user: { id: STUDENT_GITHUB_ID }, base_repo: { id: 802 } },
+    });
+    await sql`select private.record_github_webhook(${delivery}, 'pull_request', 'closed', ${INSTALLATION}, ${body}::text::jsonb)`;
+    await runWorker({ db, cfg, fetch: gh.fetch, log, visibilitySeconds: 0 });
+    const [pr] = await sql`select counted from public.github_pull_requests where user_id = ${userId} and repo_full_name = 'club/site' and number = 14`;
+    expect(pr).toEqual({ counted: true });
+    const [ts] = await sql`select level from public.user_skills where user_id = ${userId} and skill_id = 'typescript'`;
+    expect(ts.level).toBe(3);
+    await sql`delete from private.github_webhook_events where delivery_id = ${delivery}`;
+  });
+
   it("disconnect revokes the grant at GitHub and forgets the secrets", async () => {
     const gh = fakeGithub();
     const [before] = await sql`select access_secret_id, refresh_secret_id from private.github_tokens where user_id = ${userId}`;
@@ -391,9 +526,15 @@ describe("github-link and github-worker", () => {
     expect(left.n).toBe(0);
     const [account] = await sql`select count(*)::int as n from public.github_accounts where user_id = ${userId}`;
     expect(account.n).toBe(0);
-    // Repository and commit data go with it, and the levels built on them.
-    const [left2] = await sql`select (select count(*) from public.github_commits where user_id = ${userId})::int as commits,
-                                     (select count(*) from public.user_skills where user_id = ${userId})::int as skills`;
-    expect(left2).toEqual({ commits: 0, skills: 0 });
+    // Repository and commit data go with it, and the levels built on them; L3 from merged
+    // pull requests survives (PRD 5.5).
+    const [left2] = await sql`select (select count(*) from public.github_commits where user_id = ${userId})::int as commits`;
+    expect(left2).toEqual({ commits: 0 });
+    const kept = await sql`select skill_id, level from public.user_skills where user_id = ${userId} order by skill_id`;
+    expect(kept).toEqual([
+      { skill_id: "fastapi", level: 3 },
+      { skill_id: "python", level: 3 },
+      { skill_id: "typescript", level: 3 },
+    ]);
   });
 });

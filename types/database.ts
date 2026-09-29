@@ -245,13 +245,13 @@ isOneToOne: false
                   ]
                 },"contributions": {
                   Row: {
-                    "before_venture": boolean,"commit_sha": string | null,"corrects_id": string | null,"created_at": string,"description": string,"evidence_url": string | null,"hours": number | null,"id": string,"kind": Database["public"]['Enums']["contribution_kind"],"source": Database["public"]['Enums']["contribution_source"],"user_id": string,"venture_id": string
+                    "before_venture": boolean,"commit_sha": string | null,"corrects_id": string | null,"created_at": string,"description": string,"evidence_url": string | null,"hours": number | null,"id": string,"kind": Database["public"]['Enums']["contribution_kind"],"skill_ids": (string)[],"source": Database["public"]['Enums']["contribution_source"],"user_id": string,"venture_id": string
                   }
                   Insert: {
-                    "before_venture"?: boolean,"commit_sha"?: string | null,"corrects_id"?: string | null,"created_at"?: string,"description": string,"evidence_url"?: string | null,"hours"?: number | null,"id"?: string,"kind": Database["public"]['Enums']["contribution_kind"],"source"?: Database["public"]['Enums']["contribution_source"],"user_id": string,"venture_id": string
+                    "before_venture"?: boolean,"commit_sha"?: string | null,"corrects_id"?: string | null,"created_at"?: string,"description": string,"evidence_url"?: string | null,"hours"?: number | null,"id"?: string,"kind": Database["public"]['Enums']["contribution_kind"],"skill_ids"?: (string)[],"source"?: Database["public"]['Enums']["contribution_source"],"user_id": string,"venture_id": string
                   }
                   Update: {
-                    "before_venture"?: boolean,"commit_sha"?: string | null,"corrects_id"?: string | null,"created_at"?: string,"description"?: string,"evidence_url"?: string | null,"hours"?: number | null,"id"?: string,"kind"?: Database["public"]['Enums']["contribution_kind"],"source"?: Database["public"]['Enums']["contribution_source"],"user_id"?: string,"venture_id"?: string
+                    "before_venture"?: boolean,"commit_sha"?: string | null,"corrects_id"?: string | null,"created_at"?: string,"description"?: string,"evidence_url"?: string | null,"hours"?: number | null,"id"?: string,"kind"?: Database["public"]['Enums']["contribution_kind"],"skill_ids"?: (string)[],"source"?: Database["public"]['Enums']["contribution_source"],"user_id"?: string,"venture_id"?: string
                   }
                   Relationships: [
                     {
@@ -459,6 +459,44 @@ isOneToOne: false
                   }
                   Update: {
                     "created_at"?: string,"github_id"?: number,"github_login"?: string,"id"?: never,"linked_user_id"?: string | null,"resolved_at"?: string | null,"resolved_by"?: string | null,"user_id"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"github_pr_skills": {
+                  Row: {
+                    "number": number,"paths": (string)[],"repo_github_id": number,"skill_id": string,"user_id": string
+                  }
+                  Insert: {
+                    "number": number,"paths"?: (string)[],"repo_github_id": number,"skill_id": string,"user_id": string
+                  }
+                  Update: {
+                    "number"?: number,"paths"?: (string)[],"repo_github_id"?: number,"skill_id"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "github_pr_skills_skill_id_fkey"
+      columns: ["skill_id"]
+isOneToOne: false
+      referencedRelation: "skills"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "github_pr_skills_user_id_repo_github_id_number_fkey"
+      columns: ["user_id","repo_github_id","number"]
+isOneToOne: false
+      referencedRelation: "github_pull_requests"
+      referencedColumns: ["user_id","repo_github_id","number"]
+    }
+                  ]
+                },"github_pull_requests": {
+                  Row: {
+                    "approver_github_id": number | null,"counted": boolean,"exclusion": string | null,"files": number,"merged_at": string,"number": number,"pr_github_id": number,"repo_full_name": string,"repo_github_id": number,"repo_private": boolean,"seen_at": string,"user_id": string
+                  }
+                  Insert: {
+                    "approver_github_id"?: number | null,"counted": boolean,"exclusion"?: string | null,"files"?: number,"merged_at": string,"number": number,"pr_github_id": number,"repo_full_name": string,"repo_github_id": number,"repo_private": boolean,"seen_at"?: string,"user_id": string
+                  }
+                  Update: {
+                    "approver_github_id"?: number | null,"counted"?: boolean,"exclusion"?: string | null,"files"?: number,"merged_at"?: string,"number"?: number,"pr_github_id"?: number,"repo_full_name"?: string,"repo_github_id"?: number,"repo_private"?: boolean,"seen_at"?: string,"user_id"?: string
                   }
                   Relationships: [
                     
@@ -1477,7 +1515,7 @@ isOneToOne: false
           Views: {
             "contributions_with_status": {
                   Row: {
-                    "before_venture": boolean | null,"by_member": boolean | null,"commit_sha": string | null,"confirmations": number | null,"confirmed_by_me": boolean | null,"corrected_at": string | null,"created_at": string | null,"current_id": string | null,"description": string | null,"evidence_url": string | null,"hours": number | null,"id": string | null,"kind": Database["public"]['Enums']["contribution_kind"] | null,"peer_verified": boolean | null,"source": Database["public"]['Enums']["contribution_source"] | null,"user_id": string | null,"venture_id": string | null
+                    "before_venture": boolean | null,"by_member": boolean | null,"commit_sha": string | null,"confirmations": number | null,"confirmed_by_me": boolean | null,"corrected_at": string | null,"created_at": string | null,"current_id": string | null,"description": string | null,"evidence_url": string | null,"hours": number | null,"id": string | null,"kind": Database["public"]['Enums']["contribution_kind"] | null,"peer_verified": boolean | null,"skill_ids": (string)[] | null,"source": Database["public"]['Enums']["contribution_source"] | null,"user_id": string | null,"venture_id": string | null
                   }
                   Relationships: [
                     {
@@ -1532,7 +1570,7 @@ isOneToOne: false
 { Args: { "p_entry": string }; Returns: boolean
                            },
 "correct_contribution":
-{ Args: { "p_description": string,"p_evidence_url"?: string,"p_hours"?: number,"p_kind": Database["public"]['Enums']["contribution_kind"],"p_original": string }; Returns: string
+{ Args: { "p_description": string,"p_evidence_url"?: string,"p_hours"?: number,"p_kind": Database["public"]['Enums']["contribution_kind"],"p_original": string,"p_skill_ids"?: (string)[] }; Returns: string
                            },
 "create_mfa_backup_codes":
 { Args: Record<PropertyKey, never>; Returns: (string)[]
@@ -1651,7 +1689,7 @@ isOneToOne: false
             }[]
                            },
 "log_contribution":
-{ Args: { "p_description": string,"p_evidence_url"?: string,"p_hours"?: number,"p_kind": Database["public"]['Enums']["contribution_kind"],"p_venture": string }; Returns: string
+{ Args: { "p_description": string,"p_evidence_url"?: string,"p_hours"?: number,"p_kind": Database["public"]['Enums']["contribution_kind"],"p_skill_ids"?: (string)[],"p_venture": string }; Returns: string
                            },
 "log_security_event":
 { Args: { "p_ip_hash": string,"p_kind": string,"p_user_agent": string }; Returns: undefined
@@ -1715,6 +1753,11 @@ isOneToOne: false
 "my_notifications":
 { Args: { "p_before"?: string,"p_limit"?: number }; Returns: {
               "actor_avatar_path": string,"actor_name": string,"actor_username": string,"category": string,"created_at": string,"data": Json,"entity_id": string,"entity_type": string,"id": string,"read_at": string,"type": string
+            }[]
+                           },
+"my_skill_proofs":
+{ Args: { "p_skill": string }; Returns: {
+              "detail": string,"kind": string,"level": number,"occurred_at": string,"title": string,"url": string,"venture_id": string
             }[]
                            },
 "my_skills":

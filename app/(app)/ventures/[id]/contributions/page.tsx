@@ -1,7 +1,7 @@
 import { ArrowSquareOut, GithubLogo, ListChecks, LockSimple, Plus } from "@phosphor-icons/react/dist/ssr";
 import { ConfirmAction } from "@/components/ventures/confirm-action";
 import { ContributionSheet } from "@/components/ventures/contribution-sheet";
-import { Badge, Button, EmptyState } from "@/components/ui";
+import { Badge, Button, EmptyState, SkillChip } from "@/components/ui";
 import { confirmContribution } from "@/lib/actions/ventures";
 import { getContributions, getVenture, type Contribution } from "@/lib/data/ventures";
 import { CONTRIBUTION_KINDS, CORRECTION_WINDOW_MS } from "@/lib/ventures/labels";
@@ -42,6 +42,7 @@ export default async function VentureContributionsPage({ params }: PageProps<"/v
   if (!v || v.viewer.byLinkOnly) return null;
   const entries = await getContributions(id);
   const names = new Map(v.team.map((m) => [m.userId, m.fullName]));
+  const skillNames = new Map(v.skills.map((s) => [s.id, s.name]));
   const open = v.status === "recruiting" || v.status === "in_progress";
   const canLog = v.viewer.isMember && open;
   // eslint-disable-next-line react-hooks/purity -- a server render: "now" is this request.
@@ -62,6 +63,7 @@ export default async function VentureContributionsPage({ params }: PageProps<"/v
         {canLog ? (
           <ContributionSheet
             ventureId={v.id}
+            skills={v.skills}
             trigger={
               <Button>
                 <Plus aria-hidden weight="bold" className="size-4" />
@@ -109,6 +111,15 @@ export default async function VentureContributionsPage({ params }: PageProps<"/v
                       {!c.byMember ? <span className="text-caption text-text-secondary">No longer on the team</span> : null}
                     </div>
                     <p className="mt-2 text-body whitespace-pre-line break-words">{c.description}</p>
+                    {c.skillIds.length ? (
+                      <ul aria-label="Skills it shows" className="mt-2 flex flex-wrap gap-2">
+                        {c.skillIds.map((id) => (
+                          <li key={id}>
+                            <SkillChip name={skillNames.get(id) ?? id} verified={c.peerVerified} />
+                          </li>
+                        ))}
+                      </ul>
+                    ) : null}
                     {c.evidenceUrl ? (
                       <a
                         href={c.evidenceUrl}
@@ -135,6 +146,7 @@ export default async function VentureContributionsPage({ params }: PageProps<"/v
                         {canCorrect ? (
                           <ContributionSheet
                             ventureId={v.id}
+                            skills={v.skills}
                             correcting={c}
                             trigger={
                               <Button variant="ghost" size="sm">

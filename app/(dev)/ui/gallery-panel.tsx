@@ -244,10 +244,10 @@ export function GalleryPanel({ theme }: { theme: "light" | "dark" }) {
           ownerName="Ayesha"
           isOwner={false}
           skills={[
-            { id: "python", name: "Python", category: "language", level: 3, lastUsedAt: "2026-09-20T10:00:00Z", peerVerified: true },
-            { id: "typescript", name: "TypeScript", category: "language", level: 2, lastUsedAt: "2026-09-25T10:00:00Z", peerVerified: false },
-            { id: "django", name: "Django", category: "framework", level: 2, lastUsedAt: "2026-09-18T10:00:00Z", peerVerified: false },
-            { id: "docker", name: "Docker", category: "tool", level: 1, lastUsedAt: null, peerVerified: false },
+            { id: "python", name: "Python", category: "language", level: 3, lastUsedAt: "2026-09-20T10:00:00Z", lastUsedLabel: "20 Sept 2026", peerVerified: true },
+            { id: "typescript", name: "TypeScript", category: "language", level: 2, lastUsedAt: "2026-09-25T10:00:00Z", lastUsedLabel: "25 Sept 2026", peerVerified: false },
+            { id: "django", name: "Django", category: "framework", level: 2, lastUsedAt: "2026-09-18T10:00:00Z", lastUsedLabel: "18 Sept 2026", peerVerified: false },
+            { id: "docker", name: "Docker", category: "tool", level: 1, lastUsedAt: null, lastUsedLabel: null, peerVerified: false },
           ]}
         />
       </Section>

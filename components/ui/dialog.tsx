@@ -101,7 +101,10 @@ export function SideSheetContent({ title, description, className, children, ...p
             <DialogPrimitive.Description className="mt-1 text-body-sm text-text-secondary">{description}</DialogPrimitive.Description>
           ) : null}
         </div>
-        <div className="min-h-0 flex-1 overflow-y-auto px-6 py-5">{children}</div>
+        {/* Focusable so keyboard users can scroll it even when it holds no links (axe scrollable-region-focusable). */}
+        <div tabIndex={0} className="min-h-0 flex-1 overflow-y-auto px-6 py-5 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-focus-ring">
+          {children}
+        </div>
         <CloseButton />
       </DialogPrimitive.Content>
     </DialogPrimitive.Portal>

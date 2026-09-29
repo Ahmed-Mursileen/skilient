@@ -65,7 +65,8 @@ export interface EndorseTeammate {
   avatarUrl: string | null;
   skills: { id: string; name: string; fromVenture: boolean }[];
   given: string[];
-  evidence: { id: string; description: string; kind: Kind; github: boolean; peerVerified: boolean }[];
+  /** Their entries in this venture, each with the skills it shows (evidence must match the skill). */
+  evidence: { id: string; description: string; kind: Kind; github: boolean; peerVerified: boolean; skills: string[] }[];
 }
 
 export interface EndorseOptions {
@@ -90,12 +91,15 @@ export async function getEndorseOptions(ventureId: string): Promise<EndorseOptio
         fromVenture: s.from_venture,
       })),
       given: r.given ?? [],
-      evidence: ((r.evidence ?? []) as { id: string; description: string; kind: Kind; source: string; peer_verified: boolean }[]).map((e) => ({
+      evidence: (
+        (r.evidence ?? []) as { id: string; description: string; kind: Kind; source: string; peer_verified: boolean; skills: string[] | null }[]
+      ).map((e) => ({
         id: e.id,
         description: e.description,
         kind: e.kind,
         github: e.source === "github",
         peerVerified: e.peer_verified,
+        skills: e.skills ?? [],
       })),
     })),
   };

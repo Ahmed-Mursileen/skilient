@@ -46,13 +46,13 @@ export const LEVELS: Record<ShownLevel, { name: string; own: string; other: stri
     name: "Corroborated",
     own: "Accepted by others",
     other: "Accepted by others",
-    rule: "A pull request using it was merged by someone else, or a teammate confirmed the contribution.",
+    rule: "A pull request using it was merged or approved by someone else in a repository they don't own, or a teammate confirmed a contribution tagged with it.",
   },
   4: {
     name: "Demonstrated",
     own: "Vouched for",
     other: "Vouched for",
-    rule: "A teammate or teacher vouched for specific work, or they passed a code check.",
+    rule: "Two different teammates vouched for it, each tied to a contribution that shows it.",
   },
 };
 
@@ -90,10 +90,10 @@ export function nextStep(level: number, category: SkillCategory, stats: SkillSta
       : "You've met L2's rules; it updates at your next sync.";
   }
   if (level === 2) {
-    return "To reach L3, get a pull request that uses it merged in someone else's repository, or have a teammate confirm a Skilient contribution.";
+    return "To reach L3, get a pull request that uses it merged or approved by someone else in a repository you don't own, or tag a venture contribution with it and have a teammate confirm it.";
   }
   if (level === 3) {
-    return "To reach L4, have a teammate or teacher vouch for a specific piece of your work, or pass a code check.";
+    return "To reach L4, have two different teammates endorse it, each tying the endorsement to one of your contributions that shows it.";
   }
   return null;
 }

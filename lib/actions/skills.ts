@@ -3,6 +3,7 @@
 import { z } from "zod";
 import { actionContext } from "@/lib/actions/context";
 import { fail, ok, type ActionResult } from "@/lib/actions/result";
+import { dayLabel } from "@/lib/format/time";
 import { createClient } from "@/lib/supabase/server";
 
 /**
@@ -17,6 +18,8 @@ export interface EvidenceItem {
   repo: string | null;
   url: string | null;
   occurredAt: string;
+  /** Formatted on the server (Node and browser ICU differ). */
+  dateLabel: string;
   detectors: string[];
   paths: string[];
   lines: number;
@@ -25,9 +28,23 @@ export interface EvidenceItem {
   signed: boolean;
 }
 
+/** What L3 and L4 rest on (PRD 5.5): merged pull requests, confirmed entries, endorsements. */
+export interface ProofItem {
+  kind: "pull_request" | "contribution" | "endorsement";
+  level: 3 | 4;
+  title: string;
+  detail: string | null;
+  /** GitHub link for a pull request. */
+  url: string | null;
+  /** The venture, for a confirmed entry or an endorsement. */
+  ventureId: string | null;
+  dateLabel: string;
+}
+
 export interface SkillEvidence {
   items: EvidenceItem[];
   total: number;
+  proofs: ProofItem[];
 }
 
 const input = z.object({ skillId: z.string().regex(/^[a-z0-9][a-z0-9-]{0,39}$/) });
@@ -49,16 +66,19 @@ export async function loadSkillEvidence(skillId: string): Promise<ActionResult<S
     return fail("no_session", "Your session expired. Sign in again to see your evidence.");
   }
 
-  // Ownership: only the signed-in student's own rows (RLS enforces the same).
-  const { data: rows, count, error } = await supabase
-    .from("skill_evidence")
-    .select("repo_id, sha, detectors, paths, lines, occurred_at", { count: "exact" })
-    .eq("user_id", user.id)
-    .eq("skill_id", parsed.data.skillId)
-    .order("occurred_at", { ascending: false })
-    .limit(LIMIT);
-  if (error) {
-    ctx.done("error", { error_code: error.code, user_id: user.id });
+  // Ownership: only the signed-in student's own rows (RLS and my_skill_proofs enforce the same).
+  const [{ data: rows, count, error }, proofs] = await Promise.all([
+    supabase
+      .from("skill_evidence")
+      .select("repo_id, sha, detectors, paths, lines, occurred_at", { count: "exact" })
+      .eq("user_id", user.id)
+      .eq("skill_id", parsed.data.skillId)
+      .order("occurred_at", { ascending: false })
+      .limit(LIMIT),
+    supabase.rpc("my_skill_proofs", { p_skill: parsed.data.skillId }),
+  ]);
+  if (error || proofs.error) {
+    ctx.done("error", { error_code: (error ?? proofs.error)?.code, user_id: user.id });
     return fail("unavailable", "Couldn't load your evidence. Try again.", { requestId: ctx.requestId });
   }
   const evidence = rows ?? [];
@@ -87,6 +107,7 @@ export async function loadSkillEvidence(skillId: string): Promise<ActionResult<S
       repo,
       url: repo ? `https://github.com/${repo}/commit/${e.sha}` : null,
       occurredAt: e.occurred_at,
+      dateLabel: dayLabel(e.occurred_at),
       detectors: e.detectors,
       paths: e.paths,
       lines: e.lines,
@@ -95,6 +116,15 @@ export async function loadSkillEvidence(skillId: string): Promise<ActionResult<S
       signed: commit?.signed ?? false,
     };
   });
-  ctx.done("ok", { user_id: user.id, items: items.length });
-  return ok({ items, total: count ?? items.length });
+  const proofItems: ProofItem[] = (proofs.data ?? []).map((p) => ({
+    kind: p.kind as ProofItem["kind"],
+    level: p.level === 4 ? 4 : 3,
+    title: p.title,
+    detail: p.detail,
+    url: p.url,
+    ventureId: p.venture_id,
+    dateLabel: dayLabel(p.occurred_at),
+  }));
+  ctx.done("ok", { user_id: user.id, items: items.length, proofs: proofItems.length });
+  return ok({ items, total: count ?? items.length, proofs: proofItems });
 }

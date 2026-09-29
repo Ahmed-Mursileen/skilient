@@ -447,6 +447,8 @@ export interface Contribution {
   byMember: boolean;
   /** A GitHub commit from before the venture was created: counts once a teammate confirms it. */
   beforeVenture: boolean;
+  /** Skills the current version is tagged with (a teammate's confirmation makes them L3). */
+  skillIds: string[];
 }
 
 /** The venture's timeline, newest first (RLS: whoever can see the venture). */
@@ -454,7 +456,7 @@ export async function getContributions(ventureId: string): Promise<Contribution[
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("contributions_with_status")
-    .select("id, user_id, kind, description, evidence_url, hours, source, created_at, corrected_at, confirmations, peer_verified, confirmed_by_me, by_member, before_venture")
+    .select("id, user_id, kind, description, evidence_url, hours, source, created_at, corrected_at, confirmations, peer_verified, confirmed_by_me, by_member, before_venture, skill_ids")
     .eq("venture_id", ventureId)
     .order("created_at", { ascending: false })
     .limit(300);
@@ -474,6 +476,7 @@ export async function getContributions(ventureId: string): Promise<Contribution[
     confirmedByMe: Boolean(c.confirmed_by_me),
     byMember: Boolean(c.by_member),
     beforeVenture: Boolean(c.before_venture),
+    skillIds: c.skill_ids ?? [],
   }));
 }
 
