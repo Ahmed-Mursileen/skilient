@@ -73,12 +73,14 @@ jobs:
           notify=$(curl -s -o /dev/null -w '%{http_code}' --max-time 30 -X POST http://127.0.0.1:54321/functions/v1/notify-worker || true)
           preview=$(curl -s -o /dev/null -w '%{http_code}' --max-time 30 -X POST http://127.0.0.1:54321/functions/v1/link-preview || true)
           cleanup=$(curl -s -o /dev/null -w '%{http_code}' --max-time 30 -X POST http://127.0.0.1:54321/functions/v1/storage-cleanup || true)
+          codecheck=$(curl -s -o /dev/null -w '%{http_code}' --max-time 30 -X POST http://127.0.0.1:54321/functions/v1/code-check -H 'content-type: application/json' -d '{}' || true)
           echo "github-worker: $worker $(cat /tmp/worker.txt)"
           echo "github-link: $link"
           echo "notify-worker: $notify"
           echo "link-preview: $preview"
           echo "storage-cleanup: $cleanup"
-          if [ "$worker" != 401 ] || [ "$notify" != 401 ] || [ "$preview" != 401 ] || [ "$cleanup" != 401 ] || ! echo "$link" | grep -q '"not_configured"'; then
+          echo "code-check: $codecheck"
+          if [ "$worker" != 401 ] || [ "$notify" != 401 ] || [ "$preview" != 401 ] || [ "$cleanup" != 401 ] || [ "$codecheck" != 401 ] || ! echo "$link" | grep -q '"not_configured"'; then
             docker logs supabase_edge_runtime_skilient 2>&1 | tail -60
             exit 1
           fi

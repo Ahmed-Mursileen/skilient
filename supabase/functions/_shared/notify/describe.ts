@@ -166,6 +166,20 @@ export function describeNotification(n: NotificationInput): NotificationText {
       const title = str(n.data.title) ?? "A credential";
       return { text: `${title} has expired, so it no longer counts.`, href: "/me/credentials", subject: "A credential expired" };
     }
+    case "code_check_ready": {
+      const skill = str(n.data.skill) ?? "your skill";
+      return {
+        text: `Your ${skill} code check is ready. Start it when you have 10 quiet minutes.`,
+        href: `/me/code-checks/${n.entityId}`,
+        subject: `Your ${skill} code check is ready`,
+      };
+    }
+    case "code_check_graded": {
+      const skill = str(n.data.skill) ?? "your skill";
+      return n.data.passed === true
+        ? { text: `You passed your ${skill} code check. ${skill} is now L4.`, href: `/me/code-checks/${n.entityId}`, subject: `You passed your ${skill} code check` }
+        : { text: `Your ${skill} code check didn't pass this time. See the feedback.`, href: `/me/code-checks/${n.entityId}`, subject: `Your ${skill} code check result` };
+    }
     case "venture_abandoned":
       return { text: `${venture} was closed without finishing.`, href: venturePath, subject: `${venture} was closed` };
     default:

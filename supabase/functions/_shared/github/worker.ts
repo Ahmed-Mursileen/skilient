@@ -10,6 +10,7 @@ import {
   type CompiledTaxonomy,
   type TaxonomySkill,
 } from "./detectors.ts";
+import { addedRuns, pickWindow } from "../codecheck/snippet.ts";
 import type { Db, Fetch, GithubConfig, Log } from "./types.ts";
 
 /**
@@ -32,6 +33,8 @@ export interface WorkerDeps {
   /** pgmq visibility timeout; tests use 0 to re-read failures at once. */
   visibilitySeconds?: number;
   batchSize?: number;
+  /** Picks code-check snippets (tests pass a fixed sequence). */
+  random?: () => number;
 }
 
 /** PRD 5.5: the latest 500 of the student's commits per repository. */
@@ -49,6 +52,7 @@ type Message =
   | { stage: "classify"; user_id: string; job_id: number; repo_id: number }
   | { stage: "harvest"; user_id: string; job_id?: number; repo_id: number }
   | { stage: "extract"; user_id: string; job_id?: number; repo_id: number; shas: string[]; pushed_at?: string }
+  | { stage: "code_check"; check_id: string }
   | { stage: "prs"; user_id: string }
   | { stage: "pr"; user_id: string; repo: string; number: number }
   | { stage: "webhook"; delivery_id: string }
@@ -576,6 +580,51 @@ const STAGES: { [S in Message["stage"]]: (ctx: Ctx, msg: Extract<Message, { stag
     }
     await db.query("select private.recompute_user_skills($1)", [msg.user_id]);
     await advance(ctx, msg.job_id, [], recorded);
+  },
+
+  /**
+   * A code check's snippet (PRD 5.5): a run of 20-40 lines the student added in one of their
+   * counted commits for the skill. Only where it is gets recorded, never the code.
+   */
+  async code_check(ctx, msg) {
+    const { db, github } = ctx;
+    const random = ctx.random ?? Math.random;
+    const [limits] = await db.query<{ min: number; max: number }>(
+      "select private.code_check_limit('min_lines') as min, private.code_check_limit('max_lines') as max",
+    );
+    const candidates = await db.query<{ repo_id: string; sha: string; installation_id: string; paths: string[] }>(
+      "select * from private.code_check_candidates($1)",
+      [msg.check_id],
+    );
+    for (const c of candidates) {
+      const token = await github.installationToken(Number(c.installation_id));
+      github.ensureBudget(token);
+      let commit: CommitDetail;
+      try {
+        ({ data: commit } = await github.request<CommitDetail>(token, `/repositories/${c.repo_id}/commits/${c.sha}`));
+      } catch (error) {
+        if (error instanceof GitHubError && [403, 404, 409, 422].includes(error.status)) continue;
+        throw error;
+      }
+      const files = changedFiles(commit.files).filter((f) => c.paths.includes(f.path) && f.patch);
+      for (const file of files.sort(() => random() - 0.5)) {
+        const window = pickWindow(addedRuns(file.patch), limits.min, limits.max, random);
+        if (!window) continue;
+        await db.query("select private.code_check_prepared($1, $2, $3, $4, $5, $6)", [
+          msg.check_id,
+          c.repo_id,
+          c.sha,
+          file.path,
+          window.start,
+          window.end,
+        ]);
+        return;
+      }
+    }
+    await db.query("select private.code_check_unavailable($1, $2)", [
+      msg.check_id,
+      "none of your commits for this skill has a long enough run of your own code yet",
+    ]);
   },
 
   /**

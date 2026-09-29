@@ -938,3 +938,29 @@ Append-only. One dated entry per product decision, with the reason. Carried over
   waits for the optimistic "sending" mark to clear before the other person opens the thread,
   and the credentials test waits for the delete dialog to close (an open dialog hides the page
   from the accessibility tree, so "gone" checks passed early).
+- 2026-09-30 (phase 4, slice 4): Code checks as built. A student asks for one from the skill
+  drawer; they need GitHub linked and the skill at L2 from their own commits (the L2 counts on
+  `user_skills`, whatever the shown level), no open check, no pass yet, and no attempt on that
+  skill in the last 30 days (5 requests a day). The GitHub worker's `code_check` stage picks a
+  run of 20–40 consecutive lines the student added in one of their counted commits for the
+  skill (the commit's patch, numbered as in the new file) and records only the repository,
+  commit, path and line range. The `code-check` Edge Function shows those lines, read from
+  GitHub's contents API at that commit each time and never stored, only to the student during
+  the attempt or to the trust reviewer who claimed it on two-factor; it checks the caller's
+  token with Supabase Auth (`/auth/v1/user`) and takes aal from its claims. The Next server
+  calls it with the user's session (no browser CORS). The 10 minutes and the 30-day clock start
+  when the code is first shown, not when Start is pressed, so a GitHub or network failure never
+  costs an attempt: code GitHub no longer shows before it was seen makes the check unavailable
+  (not an attempt). The change request stays hidden until the code is shown. Answers autosave
+  and are handed in at zero; the server takes nothing after 30 s of grace. A 5-minute job hands
+  in timed-out checks (failing those with no answers), expires checks not started within 7 days
+  and gives up on ones never prepared or never shown. The bank of 48 generic change requests (8
+  per category) is sent to Ahmed for review.
+- 2026-09-30 (phase 4, slice 4): Grading: every check goes to /ops (Evidence → Code checks)
+  until teachers (phase 7). A grader can't be the student, a friend or a venture teammate. The
+  reviewer claims a check (the code shows only then), marks the four rubric parts met or not
+  with optional comments and writes feedback; 3 of 4 passes. Claim and grade are in
+  `ops_audit_log`; the student is notified and reads the rubric and feedback, never who graded.
+  A pass makes the skill L4 (`l4_skills` now includes passed checks) and shows in the drawer's
+  proofs. Checks waiting more than 72 hours are marked overdue in the queue; nothing happens to
+  them automatically.

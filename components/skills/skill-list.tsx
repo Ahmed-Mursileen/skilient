@@ -6,8 +6,10 @@ import Link from "next/link";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { FormAlert } from "@/components/auth/form-alert";
 import { Badge, Button, Dialog, LoadingState, SideSheetContent, SkillChip, SkillLevelIcon } from "@/components/ui";
+import { requestCodeCheck } from "@/lib/actions/code-checks";
 import { loadSkillEvidence, type SkillEvidence } from "@/lib/actions/skills";
 import type { ActionError } from "@/lib/actions/result";
+import { STATUS_LABELS, type CodeCheckStatus } from "@/lib/code-checks/constants";
 import { cn } from "@/lib/cn";
 import type { ProfileSkill } from "@/lib/data/skills";
 import {
@@ -233,6 +235,7 @@ function EvidenceList({ skillId }: { skillId: string }) {
           </p>
         ) : (
           <>
+            <CodeCheckPanel skillId={skillId} state={state.data.codeCheck} />
             {state.data.proofs.length ? (
               <>
                 <h4 className="text-label text-text-secondary uppercase">Accepted and vouched for</h4>
@@ -261,7 +264,68 @@ function EvidenceList({ skillId }: { skillId: string }) {
   );
 }
 
+const OPEN: CodeCheckStatus[] = ["preparing", "ready", "in_progress", "submitted"];
+
+/** The code check path to L4 (PRD 5.5): request one, continue it, or see why not yet. */
+function CodeCheckPanel({ skillId, state }: { skillId: string; state: SkillEvidence["codeCheck"] }) {
+  const [error, setError] = useState<ActionError | null>(null);
+  const [pending, startTransition] = useTransition();
+  const status = state.status as CodeCheckStatus | null;
+  const open = status !== null && OPEN.includes(status);
+  return (
+    <div className="mb-4 flex flex-col gap-2 rounded-md border border-border-default px-4 py-3">
+      <h4 className="text-label text-text-secondary uppercase">Code check</h4>
+      {open && status && state.id ? (
+        <p className="text-body-sm">
+          {STATUS_LABELS[status]}.{" "}
+          <Link href={`/me/code-checks/${state.id}` as Route} className="font-semibold underline underline-offset-4">
+            {status === "submitted" ? "See your answers" : "Continue your code check"}
+          </Link>
+        </p>
+      ) : status === "passed" ? (
+        <p className="text-body-sm">You passed a code check for this skill.</p>
+      ) : state.blocker ? (
+        <p className="text-body-sm text-text-secondary">
+          {state.blocker[0].toUpperCase() + state.blocker.slice(1)}.
+          {status === "failed" && state.id ? (
+            <>
+              {" "}
+              <Link href={`/me/code-checks/${state.id}` as Route} className="underline underline-offset-4">
+                See your last result
+              </Link>
+            </>
+          ) : null}
+        </p>
+      ) : (
+        <>
+          <p className="text-body-sm text-text-secondary">
+            Explain a piece of your own code in 10 minutes. A Skilient reviewer grades it; passing makes this skill L4. One attempt every
+            30 days.
+          </p>
+          {error ? <FormAlert requestId={error.requestId}>{error.message}</FormAlert> : null}
+          <Button
+            size="sm"
+            variant="secondary"
+            className="self-start"
+            loading={pending}
+            onClick={() =>
+              startTransition(async () => {
+                setError(null);
+                const result = await requestCodeCheck(skillId);
+                if (result && !result.ok) setError(result);
+              })
+            }
+          >
+            Request a code check
+          </Button>
+        </>
+      )}
+    </div>
+  );
+}
+
 const PROOF_LABELS: Record<SkillEvidence["proofs"][number]["kind"], string> = {
+  code_check: "Code check passed",
   pull_request: "Pull request",
   contribution: "Confirmed contribution",
   endorsement: "Endorsement tied to your work",
@@ -275,7 +339,8 @@ function ProofRow({ item }: { item: SkillEvidence["proofs"][number] }) {
         <span className="font-semibold">{PROOF_LABELS[item.kind]}</span>
         <span className="text-text-secondary">· {item.dateLabel}</span>
       </div>
-      <p className="text-body-sm text-text-primary">
+      {item.kind === "code_check" ? null : (
+        <p className="text-body-sm text-text-primary">
         {item.url ? (
           <a href={item.url} target="_blank" rel="noreferrer noopener" className="inline-flex items-center gap-1 font-mono text-code-sm text-accent underline underline-offset-4">
             {item.title}
@@ -311,7 +376,8 @@ function ProofRow({ item }: { item: SkillEvidence["proofs"][number] }) {
             {item.detail}
           </>
         )}
-      </p>
+        </p>
+      )}
       {item.kind === "pull_request" && item.detail ? <p className="text-body-sm text-text-secondary">{item.detail}</p> : null}
     </li>
   );
