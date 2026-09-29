@@ -104,6 +104,10 @@ Legend: 📖 = PRD files to read (in `docs/prd/`), ✅ = done-when checks.
 
 ✅ pgTAP fixtures reproduce hand-calculated scores for 10 reference students · tiers correct on 1,000 synthetic students · decay pauses during an exam period
 
+*Plan 2026-09-30 (decisions.md): six slices, one PR each: endorsements; L3 and L4 levels; credentials and the /ops trust queue; code checks; the ranking engine; leaderboard, /me/score and tier badges.*
+
+*Slice 1 (endorsements): teammates on an in-progress or completed venture endorse up to 5 skills each per venture (20 a month), from the venture's tags or the endorsee's skills, optionally tied to one of the endorsee's entries, with a note; the endorsee hides and shows but nobody edits; 2 different teammates make a skill peer-verified; completion prompts every member. Every limit is refused when `endorse()` is called directly (pgTAP `28_endorsements`, E2E `endorsements.spec.ts`). Ring weights come with slice 5, L4 with slice 2.*
+
 ## Phase 5 — Verified CV
 
 📖 `05-18-verified-cv.md`

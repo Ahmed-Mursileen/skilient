@@ -1,5 +1,5 @@
 import type { Icon } from "@phosphor-icons/react";
-import { Code, FolderSimple, LockSimple, SealCheck, UsersThree } from "@phosphor-icons/react/dist/ssr";
+import { CheckCircle, Code, FolderSimple, LockSimple, SealCheck, UsersThree } from "@phosphor-icons/react/dist/ssr";
 import { cn } from "@/lib/cn";
 
 export type SkillLevel = 0 | 1 | 2 | 3 | 4;
@@ -30,16 +30,19 @@ export function SkillLevelIcon({ level, className }: { level: SkillLevel; classN
 /**
  * Skill tag with its evidence level (L0–L4, PRD 5.5). L3 and up, confirmed by other people,
  * use the verified proof colour. `verified` forces that style without a level (tags on posts).
+ * `peerVerified` adds a check for a skill endorsed by 2+ different teammates (PRD 5.16).
  */
 export function SkillChip({
   name,
   level,
   verified = false,
+  peerVerified = false,
   className,
 }: {
   name: string;
   level?: SkillLevel;
   verified?: boolean;
+  peerVerified?: boolean;
   className?: string;
 }) {
   const proof = verified || (level !== undefined && level >= 3);
@@ -62,6 +65,7 @@ export function SkillChip({
           L{level}
         </span>
       ) : null}
+      {peerVerified ? <CheckCircle aria-label="Peer-verified" role="img" weight="fill" className="size-4 text-verified" /> : null}
     </span>
   );
 }

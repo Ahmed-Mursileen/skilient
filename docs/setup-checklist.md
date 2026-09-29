@@ -7,7 +7,7 @@ Claude Code can't create these accounts or keys. Do them before (or alongside) p
 - [x] **GitHub repo** for Skilient (new, empty); give the Claude Code session push access.
 - [ ] **Domain** for Skilient; DNS at a provider you control.
 - [x] **Vercel** project linked to the repo; functions region `bom1` (Mumbai); preview deploys per PR. — *done: `bom1`, Node 22, env vars set*
-- [x] **Supabase** project in **Mumbai (`ap-south-1`)**, **Pro plan** (daily backups; free projects pause). Note the URL, publishable key (`sb_publishable_…`) and service-role key. Install the Supabase CLI locally (needs Docker). — *done on the **Free plan** by choice (decisions.md 2026-09-28): pausing accepted, no daily backups. ⚠️ Revisit before the closed beta.*
+- [x] **Supabase** project in **Mumbai (`ap-south-1`)**, **Pro plan** (daily backups; free projects pause). Note the URL, publishable key (`sb_publishable_…`) and service-role key. Install the Supabase CLI locally (needs Docker). — *done on the **Free plan** by choice (decisions.md 2026-09-28): pausing accepted, no daily backups. ⚠️ Revisit before the closed beta. Storage is 1 GB in total; staff see its use from phase 4 (decisions.md 2026-09-30).*
 - [ ] **GitHub repo secrets** for migrations on merge to `main` (Settings → Secrets and variables → Actions; put them on a `production` environment if you want an approval step): `SUPABASE_ACCESS_TOKEN` (a *scoped* personal access token limited to the Skilient project, not a classic full-account token), `SUPABASE_PROJECT_REF` (from the project URL), `SUPABASE_DB_PASSWORD`.
 - [x] **Sentry** project (Developer plan): DSN + auth token.
 - [x] **Resend**: verify the Skilient sending domain; API key; then set it as Supabase Auth custom SMTP. — *done: `send.techshiner.tech`, Supabase SMTP set*
@@ -25,6 +25,40 @@ Claude Code can't create these accounts or keys. Do them before (or alongside) p
 ## Phase 3 ⏳
 
 - [x] **Notification emails** (phase 3 slice 2): *done 2026-09-30.* set three Edge Function secrets on the Supabase project (Dashboard → Edge Functions → Secrets): `RESEND_API_KEY` (the Resend key), `EMAIL_FROM` (e.g. `Skilient <notify@send.techshiner.tech>`), `APP_URL` (the production origin, no trailing slash). Until they're set the `notify-worker` answers "not configured" and notifications stay in-app only; the queue keeps them for up to 12 hours (instant) or until the next digest. It reuses the Vault secret `project_url` set for the GitHub worker.
+
+## Phase 4
+
+- [ ] **Staff roles for Ahmed** (before slice 3's /ops trust queue): turn on two-factor for your
+  Skilient account (Settings → Security), then run in the Supabase SQL editor, with the email
+  you sign in to Skilient with:
+
+  ```sql
+  with me as (
+    select id from auth.users where email = lower('<your Skilient sign-in email>')
+  ), granted as (
+    insert into public.staff_roles (user_id, role, granted_by)
+    select me.id, r.role, me.id
+      from me cross join (values ('trust_reviewer'::public.staff_role), ('accounts'::public.staff_role)) as r(role)
+    on conflict (user_id, role) do nothing
+    returning user_id, role
+  )
+  insert into public.ops_audit_log (staff_id, action, target_type, target_id, reason, after)
+  select g.user_id, 'grant_staff_role', 'user', g.user_id::text,
+         'Bootstrap: phase 4 trust queue and exam periods (no staff UI until phase 11)',
+         jsonb_build_object('role', g.role)
+    from granted g;
+
+  -- Check: two rows.
+  select s.role, s.granted_at from public.staff_roles s
+    join auth.users u on u.id = s.user_id
+   where u.email = lower('<your Skilient sign-in email>');
+  ```
+
+  Roles count only on a two-factor session: sign out and back in with your code afterwards.
+- [ ] **NUTECH exam periods**: enter them by hand at `/ops/exam-periods` once slice 5 ships
+  (nothing is seeded or imported).
+- [ ] **Review** the recognised-issuer list (slice 3) and the code-check change requests
+  (slice 4) when they are sent.
 
 ## Before phase 10 ⏳
 
