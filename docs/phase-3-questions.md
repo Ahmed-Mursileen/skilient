@@ -39,6 +39,13 @@ either kept or changed in a follow-up PR. Answered items move to `docs/decisions
    Global.
 9. **Chat reactions** (slice 8). *Assumed:* 👍 ❤️ 😂 🎉 😮 🙏; a person may add several
    different ones to a message. Change the set, or one per person?
+10. **Moderation notifications by email** (slice 9). *Assumed:* in-app only by default
+    (your rule: instant email only for friend requests, applications, invites and
+    ownership transfers); people can switch "Account and safety" to instant email.
+    *Option:* make removals and warnings instant email by default so nobody misses one.
+11. **Who moderators can remove** (slice 9). *Assumed:* posts, comments and chat
+    messages can be removed; profiles and ventures can only be warned until phase 11
+    (suspend/ban). *Option:* let moderators clear a profile bio/photo or unlist a venture now.
 
 ## Answered
 

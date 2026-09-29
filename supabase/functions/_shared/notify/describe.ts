@@ -35,6 +35,21 @@ function postPath(data: Record<string, unknown>): string {
   return id ? `/post/${id}#comments` : "/feed";
 }
 
+function targetWord(value: unknown): string {
+  switch (value) {
+    case "post":
+      return "post";
+    case "comment":
+      return "comment";
+    case "message":
+      return "message";
+    case "venture":
+      return "venture";
+    default:
+      return "profile";
+  }
+}
+
 export function describeNotification(n: NotificationInput): NotificationText {
   const who = n.actorName ?? "Someone";
   const venture = str(n.data.venture_title) ?? "a venture";
@@ -86,6 +101,22 @@ export function describeNotification(n: NotificationInput): NotificationText {
       return { text: `${who} replied to your comment: "${excerpt(n.data)}"`, href: postPath(n.data), subject: `${who} replied to your comment` };
     case "comment_mention":
       return { text: `${who} mentioned you in a comment: "${excerpt(n.data)}"`, href: postPath(n.data), subject: `${who} mentioned you on Skilient` };
+    case "content_removed": {
+      const what = targetWord(n.data.target_type);
+      return {
+        text: `A moderator removed your ${what} for breaking the community guidelines.`,
+        href: `/moderation/${n.entityId}`,
+        subject: `Your ${what} was removed from Skilient`,
+      };
+    }
+    case "moderation_warning": {
+      const what = targetWord(n.data.target_type);
+      return {
+        text: `A moderator sent you a warning about your ${what}.`,
+        href: `/moderation/${n.entityId}`,
+        subject: "A warning from Skilient moderators",
+      };
+    }
     case "chat_message": {
       const thread = str(n.data.thread_id);
       const where = str(n.data.venture_title);

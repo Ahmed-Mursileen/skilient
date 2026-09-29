@@ -24,6 +24,7 @@ export interface ProfileView {
 }
 
 export interface ProfileCard {
+  userId: string;
   username: string;
   fullName: string;
   department: string | null;
@@ -95,6 +96,7 @@ export const getProfile = cache(async (rawUsername: string): Promise<ProfileLook
     return {
       kind: "card",
       card: {
+        userId: card.user_id,
         username: card.username,
         fullName: card.full_name,
         department: card.department,

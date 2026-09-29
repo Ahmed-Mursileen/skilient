@@ -713,3 +713,25 @@ Append-only. One dated entry per product decision, with the reason. Carried over
   blocked owner, University-only within the university) and returns the same row.
   Ranking is text match only (exact username first, then name similarity); nothing
   paid affects order. Listed in phase-3-questions.md (item 8).
+- 2026-09-29 (phase 3, slice 9): Reports and minimal /ops. Reports cover posts, comments,
+  chat messages, profiles (including the restricted card, which now carries the user id)
+  and ventures; one per reporter and target, 60 s apart (`rate_limit`), never on your
+  own content, only on things you can see. Reports on one target form one case
+  (`report_cases`) holding a snapshot taken at report time; a resolved case reopens,
+  unclaimed, when a new report arrives. A message report may attach up to 10 earlier
+  messages from the same chat; they are copied into `report_messages` so later edits
+  don't erase them, and staff read chat content only there. Each distinct post
+  reporter raises `post_stats.reports` (3 hold the post, slice 6); 3 Appropriate
+  crosses from non-friends open a soft-signal case with no reporter.
+- 2026-09-29 (phase 3, slice 9): Moderators (`is_staff('moderator')`, so two-factor) see
+  the queue oldest first, must claim a case before acting (another moderator can't take
+  it), and choose dismiss, remove or warn with a reason; every claim, release and
+  decision writes `ops_audit_log` in the same transaction. Dismiss resets a held post's
+  report count and restores its computed stage. Remove hides posts from everyone (the
+  author too) via `can_view_post`, and blanks comments and chat messages; a removed
+  message's image file stays in the private bucket (only its sender can delete files)
+  and is unreachable from the app. Profiles and ventures can only be warned here.
+  Warnings are rows in `sanctions` (kind warn); suspend and ban wait for phase 11. The
+  owner gets an in-app notification (category "Account and safety", in-app by default
+  per the 2026-09-28 email rules) linking to `/moderation/[id]`, which shows the content
+  excerpt and the moderator's reason, never who reported or decided. Appeals: phase 11.

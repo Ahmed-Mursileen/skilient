@@ -2,6 +2,7 @@ import { Buildings, GithubLogo, LinkSimple, LockSimple } from "@phosphor-icons/r
 import type { Metadata, Route } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ReportButton } from "@/components/reports/report-button";
 import { VentureActions } from "@/components/ventures/venture-actions";
 import { VentureStatusBadge } from "@/components/ventures/status-badge";
 import { VentureTabs } from "@/components/ventures/venture-tabs";
@@ -87,6 +88,7 @@ export default async function VentureLayout({ params, children }: LayoutProps<"/
         teamFull={v.counts.members >= 6}
         openSlots={openSlots}
       />
+      {!v.viewer.isOwner ? <ReportButton targetType="venture" targetId={v.id} className="self-start" /> : null}
 
       {v.viewer.byLinkOnly ? (
         <p className="rounded-md border border-border-default bg-bg-surface px-4 py-3 text-body-sm text-text-secondary">
