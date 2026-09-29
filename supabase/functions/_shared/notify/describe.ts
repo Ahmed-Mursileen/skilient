@@ -103,6 +103,20 @@ export function describeNotification(n: NotificationInput): NotificationText {
       return { text: `${who} mentioned you in a comment: "${excerpt(n.data)}"`, href: postPath(n.data), subject: `${who} mentioned you on Skilient` };
     case "content_removed": {
       const what = targetWord(n.data.target_type);
+      if (n.data.action === "cleared") {
+        return {
+          text: "A moderator removed your profile's bio and photo for breaking the community guidelines.",
+          href: `/moderation/${n.entityId}`,
+          subject: "Your profile's bio and photo were removed",
+        };
+      }
+      if (n.data.action === "unlisted") {
+        return {
+          text: "A moderator unlisted your venture for breaking the community guidelines.",
+          href: `/moderation/${n.entityId}`,
+          subject: "Your venture was unlisted on Skilient",
+        };
+      }
       return {
         text: `A moderator removed your ${what} for breaking the community guidelines.`,
         href: `/moderation/${n.entityId}`,

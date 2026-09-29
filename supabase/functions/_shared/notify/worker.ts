@@ -2,9 +2,12 @@
  * notify-worker: drains the `notification_emails` queue (PRD 5.11) and sends through
  * Resend. Shared by the Edge Function (Deno) and its tests (Node): web APIs only.
  *
- * Budget (Resend free plan, ~100/day): instant emails only for categories that allow them
- * (checked again here), digests only when there is something unread, a warning log once
- * the day's sends pass 80, and a quota refusal parks the queue until the next UTC day.
+ * Budget (Resend free plan, ~100/day, shared with Supabase Auth's emails): instant emails
+ * only for categories that allow them (checked again here), digests only when there is
+ * something unread, and notification emails stop for the day at 60 (decisions.md
+ * 2026-09-30) so verification codes, magic links and security emails, which go through
+ * Supabase's SMTP and never through this queue, always have room. Both the stop and a
+ * quota refusal park the queue until the next UTC day.
  */
 import type { Db, Fetch, Log } from "../github/types.ts";
 import { describeNotification } from "./describe.ts";
@@ -37,8 +40,8 @@ export function notifyConfigFromEnv(env: (name: string) => string | undefined): 
   };
 }
 
-/** Warn once the day's sends pass this (Ahmed, 2026-09-28). */
-export const DAILY_WARNING = 80;
+/** Notification emails a UTC day may send before the rest wait for tomorrow (Ahmed, 2026-09-30). */
+export const DAILY_CAP = 60;
 /** An instant email this old is no longer instant: it stays in-app only. */
 const STALE_MS = 12 * 60 * 60 * 1000;
 const DIGEST_ITEMS = 20;
@@ -118,9 +121,29 @@ export async function runNotifyWorker(opts: {
   const deferUntil = (id: QueueRow["msg_id"], seconds: number) =>
     db.query("select pgmq.set_vt('notification_emails', $1::bigint, $2::integer)", [id, Math.max(1, Math.ceil(seconds))]);
 
+  const sentToday = async () => {
+    const [{ today }] = await db.query<{ today: number }>(
+      "select count(*)::integer as today from private.email_sends where sent_at >= date_trunc('day', now() at time zone 'utc') at time zone 'utc'",
+    );
+    return today;
+  };
+  const parkUntilTomorrow = async () => {
+    const midnight = new Date(now());
+    midnight.setUTCHours(24, 5, 0, 0);
+    const wait = (midnight.getTime() - now().getTime()) / 1000;
+    await db.query("select pgmq.set_vt('notification_emails', msg_id, $1::integer) from pgmq.q_notification_emails", [Math.ceil(wait)]);
+  };
+
   let first = true;
   for (const row of rows) {
     const kind = row.message?.kind;
+    const today = await sentToday();
+    if (today >= DAILY_CAP) {
+      await parkUntilTomorrow();
+      result.deferred++;
+      log("notify.daily_cap", { level: "warn", outcome: "refused", daily_count: today, cap: DAILY_CAP });
+      break;
+    }
     let email: EmailMessage | null = null;
     let key = "";
     let userId: string | null = null;
@@ -159,13 +182,12 @@ export async function runNotifyWorker(opts: {
     first = false;
     const sent = await sendViaResend(cfg, opts.fetch, email, key);
     if (sent.ok) {
-      const [{ today }] = await db.query<{ today: number }>(
-        `with ins as (
-           insert into private.email_sends (kind, user_id, notification_id, resend_id) values ($1, $2::uuid, $3::uuid, $4)
-         )
-         select (count(*) + 1)::integer as today from private.email_sends where sent_at >= date_trunc('day', now() at time zone 'utc') at time zone 'utc'`,
-        [kind, userId, notificationId, sent.id],
-      );
+      await db.query("insert into private.email_sends (kind, user_id, notification_id, resend_id) values ($1, $2::uuid, $3::uuid, $4)", [
+        kind,
+        userId,
+        notificationId,
+        sent.id,
+      ]);
       if (kind === "digest") {
         await db.query(
           `insert into private.user_activity (user_id, last_active_at, last_digest_at) values ($1::uuid, '-infinity', now())
@@ -175,19 +197,13 @@ export async function runNotifyWorker(opts: {
       }
       await archive(row.msg_id);
       result.sent++;
-      log("notify.sent", { outcome: "ok", kind, daily_count: today });
-      if (today === DAILY_WARNING + 1) {
-        log("notify.daily_threshold", { level: "warn", outcome: "ok", daily_count: today, threshold: DAILY_WARNING });
-      }
+      log("notify.sent", { outcome: "ok", kind, daily_count: today + 1 });
       continue;
     }
 
     if (sent.retry === "tomorrow") {
       // Park this and every other message until the quota resets at 00:00 UTC.
-      const midnight = new Date(now());
-      midnight.setUTCHours(24, 5, 0, 0);
-      const wait = (midnight.getTime() - now().getTime()) / 1000;
-      await db.query("select pgmq.set_vt('notification_emails', msg_id, $1::integer) from pgmq.q_notification_emails", [Math.ceil(wait)]);
+      await parkUntilTomorrow();
       result.deferred++;
       log("notify.quota", { level: "error", outcome: "error", error_code: sent.name });
       break;

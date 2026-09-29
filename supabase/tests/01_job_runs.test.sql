@@ -10,25 +10,25 @@ select ok(
 -- A job (service_role) can log a run.
 set local role service_role;
 select lives_ok(
-  $$ select public.job_run_start('feed-stage', '{"batch": 1}') $$,
+  $$ select public.job_run_start('pgtap-probe', '{"batch": 1}') $$,
   'service_role can start a job run'
 );
 select is(
-  (select status::text from public.job_runs where job = 'feed-stage'),
+  (select status::text from public.job_runs where job = 'pgtap-probe'),
   'running',
   'a started run is running'
 );
 select lives_ok(
-  $$ select public.job_run_finish((select id from public.job_runs where job = 'feed-stage'), 'succeeded', 42) $$,
+  $$ select public.job_run_finish((select id from public.job_runs where job = 'pgtap-probe'), 'succeeded', 42) $$,
   'service_role can finish a job run'
 );
 select results_eq(
-  $$ select status::text, rows, finished_at is not null from public.job_runs where job = 'feed-stage' $$,
+  $$ select status::text, rows, finished_at is not null from public.job_runs where job = 'pgtap-probe' $$,
   $$ values ('succeeded', 42, true) $$,
   'finished run records status, rows and finish time'
 );
 select throws_ok(
-  $$ select public.job_run_finish((select id from public.job_runs where job = 'feed-stage'), 'failed') $$,
+  $$ select public.job_run_finish((select id from public.job_runs where job = 'pgtap-probe'), 'failed') $$,
   'P0002',
   null,
   'a finished run cannot be finished again'

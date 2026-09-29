@@ -1,16 +1,19 @@
--- Explore (PRD 5.10): people search shows card fields to everyone signed in, photo and
--- skills only where the profile is visible; never the searcher or anyone blocked; at
--- least 2 characters; friendship state in the same row. Venture search hides unlisted,
--- other universities' University-only ventures and blocked owners.
--- A, B, D study at NUTECH, C at FAST.
+-- Explore (PRD 5.10, decisions.md 2026-09-30): names and usernames are found across
+-- universities with card fields only, photo and skills only where the profile is
+-- visible; department and batch (filters or query words) reach only the searcher's own
+-- university and Global profiles; never the searcher or anyone blocked; at least 2
+-- characters; friendship state in the same row. Venture search hides unlisted, other
+-- universities' University-only ventures and blocked owners.
+-- A, B, D study at NUTECH, C and E at FAST (E's profile is Global).
 begin;
-select plan(20);
+select plan(25);
 
 insert into auth.users (id, email) values
   ('25000000-0000-0000-0000-00000000000a', 'a@nutech.edu.pk'),
   ('25000000-0000-0000-0000-00000000000b', 'b@nutech.edu.pk'),
   ('25000000-0000-0000-0000-00000000000c', 'c@nu.edu.pk'),
-  ('25000000-0000-0000-0000-00000000000d', 'd@nutech.edu.pk');
+  ('25000000-0000-0000-0000-00000000000d', 'd@nutech.edu.pk'),
+  ('25000000-0000-0000-0000-00000000000e', 'e@nu.edu.pk');
 update public.profiles set onboarding_complete = true, username = 'zx_' || right(user_id::text, 1),
        department = 'Computer Science', graduation_year = 2027, avatar_path = user_id::text || '/a.webp'
  where user_id::text like '25000000-%';
@@ -18,6 +21,8 @@ update public.profiles set full_name = 'Zainab Qureshi' where user_id = '2500000
 update public.profiles set full_name = 'Zaid Qadir' where user_id = '25000000-0000-0000-0000-00000000000b';
 update public.profiles set full_name = 'Zara Qasim', department = 'Electrical Engineering' where user_id = '25000000-0000-0000-0000-00000000000c';
 update public.profiles set full_name = 'Zohaib Quraishi' where user_id = '25000000-0000-0000-0000-00000000000d';
+update public.profiles set full_name = 'Zeeshan Qazi', department = 'Electrical Engineering', graduation_year = 2026,
+       visibility = 'global' where user_id = '25000000-0000-0000-0000-00000000000e';
 insert into public.user_skills (user_id, skill_id, level) values
   ('25000000-0000-0000-0000-00000000000b', 'python', 3),
   ('25000000-0000-0000-0000-00000000000c', 'python', 2);
@@ -45,7 +50,7 @@ select pg_temp.as_user('a');
 select throws_ok($$ select * from public.profiles_public_card $$, '42501', null, 'the card table is still not readable directly');
 select is_empty($$ select * from public.search_people('z') $$, 'one character lists nobody');
 select results_eq($$ select username from public.search_people('za') order by username $$,
-  $$ values ('zx_b'::text), ('zx_c') $$, 'part of a name finds people, never the searcher');
+  $$ values ('zx_b'::text), ('zx_c') $$, 'part of a name finds people at any university, never the searcher');
 select results_eq($$ select username, friendship from public.search_people('qur') $$,
   $$ values ('zx_d'::text, 'request_sent'::text) $$, 'with the friendship state');
 select is((select username from public.search_people('zx_c') limit 1), 'zx_c', 'an exact username comes first');
@@ -57,9 +62,20 @@ select results_eq($$ select avatar_path is not null, skills from public.search_p
   $$ values (true, '{Python}'::text[]) $$, 'a visible profile shows its photo and skills');
 select results_eq($$ select username from public.search_people('za', null, 'python') order by username $$,
   $$ values ('zx_b'::text) $$, 'the skill filter only matches skills you could see');
-select results_eq($$ select username from public.search_people('za', 'electrical') $$, $$ values ('zx_c'::text) $$, 'department filter');
+select results_eq($$ select username from public.search_people('za', 'computer') order by username $$, $$ values ('zx_b'::text) $$,
+  'the department filter keeps your own university');
+select results_eq($$ select username from public.search_people('z', 'electrical') $$, $$ select null::text where false $$,
+  'and still needs 2 characters');
+select results_eq($$ select username from public.search_people('zee', 'electrical') $$, $$ values ('zx_e'::text) $$,
+  'plus Global profiles elsewhere');
+select is_empty($$ select * from public.search_people('zara', 'electrical') $$,
+  'but not a University-only profile at another university');
+select results_eq($$ select username from public.search_people('za', null, null, null, 0, 2027::smallint) order by username $$,
+  $$ values ('zx_b'::text) $$, 'the batch filter works the same way');
 select results_eq($$ select username from public.search_people('computer science') order by username $$,
-  $$ values ('zx_b'::text), ('zx_d') $$, 'department words match');
+  $$ values ('zx_b'::text), ('zx_d') $$, 'department words match within your university');
+select results_eq($$ select username from public.search_people('electrical') $$, $$ values ('zx_e'::text) $$,
+  'and on Global profiles, never other universities'' University-only ones');
 select results_eq($$ select username from public.search_people('z%') $$, $$ select null::text where false $$,
   'LIKE wildcards are just characters');
 select pg_temp.as_user('d');

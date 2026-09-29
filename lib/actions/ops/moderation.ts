@@ -28,10 +28,12 @@ export async function claimCase(caseId: string, claim: boolean): Promise<ActionR
   ]);
 }
 
-export async function resolveCase(caseId: string, action: "dismiss" | "remove" | "warn", reason: string): Promise<ActionResult> {
+export type CaseAction = "dismiss" | "remove" | "clear_profile" | "unlist" | "warn";
+
+export async function resolveCase(caseId: string, action: CaseAction, reason: string): Promise<ActionResult> {
   const ctx = await actionContext("ops.resolve");
   const parsed = z
-    .object({ id: uuid, action: z.enum(["dismiss", "remove", "warn"]), reason: z.string().trim().min(3, "Give a reason.").max(2000) })
+    .object({ id: uuid, action: z.enum(["dismiss", "remove", "clear_profile", "unlist", "warn"]), reason: z.string().trim().min(3, "Give a reason.").max(2000) })
     .safeParse({ id: caseId, action, reason });
   if (!parsed.success) {
     ctx.done("refused", { error_code: "invalid_input" });

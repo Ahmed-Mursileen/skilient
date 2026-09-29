@@ -25,6 +25,12 @@ describe("describeNotification", () => {
     const d = describeNotification({ ...base, type: "content_removed", actorName: null, entityId: "c1", data: { target_type: "comment" } });
     expect(d.text).toBe("A moderator removed your comment for breaking the community guidelines.");
     expect(d.href).toBe("/moderation/c1");
+    expect(describeNotification({ ...base, type: "content_removed", actorName: null, entityId: "c2", data: { target_type: "venture", action: "unlisted" } }).text).toBe(
+      "A moderator unlisted your venture for breaking the community guidelines.",
+    );
+    expect(describeNotification({ ...base, type: "content_removed", actorName: null, entityId: "c3", data: { target_type: "profile", action: "cleared" } }).subject).toBe(
+      "Your profile's bio and photo were removed",
+    );
   });
 
   it("uses the decision in application_decided", () => {

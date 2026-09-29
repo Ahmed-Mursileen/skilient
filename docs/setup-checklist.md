@@ -24,7 +24,7 @@ Claude Code can't create these accounts or keys. Do them before (or alongside) p
 
 ## Phase 3 ⏳
 
-- [ ] **Notification emails** (phase 3 slice 2): set three Edge Function secrets on the Supabase project (Dashboard → Edge Functions → Secrets): `RESEND_API_KEY` (the Resend key), `EMAIL_FROM` (e.g. `Skilient <notify@send.techshiner.tech>`), `APP_URL` (the production origin, no trailing slash). Until they're set the `notify-worker` answers "not configured" and notifications stay in-app only; the queue keeps them for up to 12 hours (instant) or until the next digest. It reuses the Vault secret `project_url` set for the GitHub worker.
+- [x] **Notification emails** (phase 3 slice 2): *done 2026-09-30.* set three Edge Function secrets on the Supabase project (Dashboard → Edge Functions → Secrets): `RESEND_API_KEY` (the Resend key), `EMAIL_FROM` (e.g. `Skilient <notify@send.techshiner.tech>`), `APP_URL` (the production origin, no trailing slash). Until they're set the `notify-worker` answers "not configured" and notifications stay in-app only; the queue keeps them for up to 12 hours (instant) or until the next digest. It reuses the Vault secret `project_url` set for the GitHub worker.
 
 ## Before phase 10 ⏳
 
@@ -41,6 +41,8 @@ Claude Code can't create these accounts or keys. Do them before (or alongside) p
 - [ ] **security@** mailbox for `/.well-known/security.txt`.
 
 ## Before the closed beta ⏳
+
+- [ ] **Resend paid plan**: the free plan's ~100 emails a day is shared by Supabase Auth (verification codes, magic links), security and notification emails; notification emails stop at 60 a day until then (decisions.md 2026-09-30).
 
 - [ ] Final **user agreement** and **privacy notice** text (the app ships headings-only templates).
 - [ ] **NUTECH** partnership (beta university), plus 2 more partner universities; 10+ teachers per partner.

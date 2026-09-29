@@ -3,18 +3,25 @@
 import { useId, useState, useTransition } from "react";
 import { FormAlert } from "@/components/auth/form-alert";
 import { Button, Textarea } from "@/components/ui";
-import { resolveCase } from "@/lib/actions/ops/moderation";
+import { resolveCase, type CaseAction } from "@/lib/actions/ops/moderation";
 
-const ACTIONS = [
-  { value: "dismiss", label: "Dismiss", hint: "Nothing breaks the guidelines. A held post goes back to the feed." },
-  { value: "remove", label: "Remove content", hint: "Hidden from everyone, the owner included. The owner is told why." },
-  { value: "warn", label: "Warn the owner", hint: "The content stays. The owner gets a warning with your reason." },
-] as const;
+type Target = "post" | "comment" | "message" | "profile" | "venture";
 
-/** Dismiss, remove or warn, always with a reason (PRD 5.26). Suspend and ban come in phase 11. */
-export function ResolveForm({ caseId, canRemove }: { caseId: string; canRemove: boolean }) {
+const ACTIONS: { value: CaseAction; label: string; hint: string; targets: Target[] }[] = [
+  { value: "dismiss", label: "Dismiss", hint: "Nothing breaks the guidelines. A held post goes back to the feed.", targets: ["post", "comment", "message", "profile", "venture"] },
+  { value: "remove", label: "Remove content", hint: "Hidden from everyone, the owner included; images are deleted. The owner is told why.", targets: ["post", "comment", "message"] },
+  { value: "clear_profile", label: "Clear bio and photo", hint: "The profile stays; its bio and photo are removed. The owner is told why.", targets: ["profile"] },
+  { value: "unlist", label: "Unlist the venture", hint: "It leaves browse and search; members keep access. The owner is told why.", targets: ["venture"] },
+  { value: "warn", label: "Warn the owner", hint: "The content stays. The owner gets a warning with your reason.", targets: ["post", "comment", "message", "profile", "venture"] },
+];
+
+/**
+ * The decisions a moderator can take on this kind of target, always with a reason
+ * (PRD 5.26, decisions.md 2026-09-30). Suspend and ban come in phase 11.
+ */
+export function ResolveForm({ caseId, targetType }: { caseId: string; targetType: Target }) {
   const id = useId();
-  const [action, setAction] = useState<(typeof ACTIONS)[number]["value"] | null>(null);
+  const [action, setAction] = useState<CaseAction | null>(null);
   const [reason, setReason] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
@@ -37,7 +44,7 @@ export function ResolveForm({ caseId, canRemove }: { caseId: string; canRemove: 
       {error ? <FormAlert>{error}</FormAlert> : null}
       <fieldset className="flex flex-col gap-2">
         <legend className="mb-1 text-body-sm font-semibold">Action</legend>
-        {ACTIONS.filter((a) => canRemove || a.value !== "remove").map((a) => (
+        {ACTIONS.filter((a) => a.targets.includes(targetType)).map((a) => (
           <label key={a.value} className="flex items-start gap-2 text-body-sm">
             <input type="radio" name={`${id}-action`} value={a.value} checked={action === a.value} onChange={() => setAction(a.value)} className="mt-1 size-4" />
             <span>
@@ -52,7 +59,7 @@ export function ResolveForm({ caseId, canRemove }: { caseId: string; canRemove: 
           Reason
         </label>
         <p id={`${id}-hint`} className="text-caption text-text-secondary">
-          Recorded in the audit log. For removals and warnings the owner sees it too.
+          Recorded in the audit log. For anything but a dismissal, the owner sees it too.
         </p>
         <Textarea id={`${id}-reason`} aria-describedby={`${id}-hint`} value={reason} onChange={(e) => setReason(e.target.value)} rows={3} maxLength={2000} required minLength={3} />
       </div>
