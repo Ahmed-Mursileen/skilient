@@ -1057,3 +1057,4 @@ Append-only. One dated entry per product decision, with the reason. Carried over
   dates will be entered by hand at /ops/exam-periods; none are seeded or imported. The Phase 4
   production check (`docs/phase-4-production-check.md`) is **deferred** to just before the
   closed beta; it has not been done and Phase 4 is not marked passed on it.
+- 2026-09-30 (Ahmed): Adopted token-discipline working rules to keep sessions within budget.

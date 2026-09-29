@@ -43,6 +43,34 @@ Use the Postgres best-practices skill for every migration, RLS policy and query;
 5. Before finishing: typecheck, lint, unit tests, pgTAP, and the phase's E2E tests all green. Tick the phase's boxes in `docs/build-plan.md`.
 6. Log any decision or deviation in `docs/decisions.md` (dated one-liner + why). If the spec is ambiguous or two sections conflict, ask the owner (Ahmed) instead of picking.
 
+## Working efficiently (token discipline)
+
+Quality rules above still apply in full; these rules only cut waste.
+
+**Reading**
+- Read only the PRD sections the current slice needs. Use grep or line offsets instead of whole files once you know where something is.
+- Don't re-read files you've already read in this session unless they changed.
+- Pipe long command output through `tail -n 40` or `grep`; never paste full logs, full test output or full diffs.
+
+**Planning and questions**
+- Ask all questions for a phase in ONE list at planning time, each with a recommended default. After Ahmed answers, build on those answers without asking again. If something new comes up mid-slice, pick the safest default, log it in docs/decisions.md, and list it in the final report.
+
+**Building and testing**
+- One slice per session. When a slice is merged, the next slice starts in a fresh session.
+- Locally, run typecheck, lint and only the tests for the code you changed. The full suite runs in CI.
+- Prefer fewer, larger slices when a phase's pieces are small.
+
+**CI**
+- Push when local checks pass, then STOP. Do not poll, wait for or re-run CI. If CI fails, Ahmed pastes back the failing lines; fix only those.
+- Never loop on a failing check more than twice. Stop and report what's failing and your best guess why.
+
+**Reporting**
+- Final report per slice: at most 15 lines. What changed, what Ahmed must do by hand, and anything failing or deferred. No recap of the plan.
+- Put detail in the repo (docs/decisions.md, checklists), not in chat.
+
+**Tools**
+- No subagents, parallel reviews or extra verification passes unless Ahmed asks.
+
 ## Commands
 
 ```bash
