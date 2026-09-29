@@ -128,6 +128,10 @@ Legend: 📖 = PRD files to read (in `docs/prd/`), ✅ = done-when checks.
 
 ✅ Tampering one byte of a PDF shows Altered · revoked shows Revoked · every template passes the ATS text test · key rotation keeps old CVs valid
 
+*Plan 2026-10-01 (decisions.md): three slices, one PR each: the signing core; screens and control (`/me/cv`, share links, `/verify/[code]`, revocation); PDF export and the five ATS templates (after a Chromium-on-Vercel feasibility spike).*
+
+*Slice 1 (signing core): `signing_keys`, `cv_settings`, `cv_records` with RLS; `private.cv_snapshot()` builds CvSnapshotV1 from verified data only (L2+ skills up to 15, in-progress and completed ventures incl. former-member ones with confirmed work, deliverable counts not links, private repositories unnamed, counted pull requests, 5 evidence-tied endorsements, approved unexpired credentials, department-based summary); the `cv-sign` Edge Function generates keys into Vault (`private.cv_rotate_key()`), signs the RFC 8785 canonical envelope with Ed25519, and drains the monthly `cv-refresh` queue (changed snapshots only; the old version superseded); public keys at `/.well-known/skilient-cv-keys.json`. pgTAP `37_verified_cv`, worker `cv-sign` (rotation keeps old CVs valid, tampering caught, monthly refresh), unit `cv-canonical` (RFC 8785 examples), E2E `cv-keys.spec.ts`. Covers the done-when check "key rotation keeps old CVs valid".*
+
 ## Phase 6 — Student portal and learning layer
 
 📖 `05-25-student-portal.md`, `05-27-…` (tutorial, feedback)

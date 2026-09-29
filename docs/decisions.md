@@ -1058,3 +1058,93 @@ Append-only. One dated entry per product decision, with the reason. Carried over
   production check (`docs/phase-4-production-check.md`) is **deferred** to just before the
   closed beta; it has not been done and Phase 4 is not marked passed on it.
 - 2026-09-30 (Ahmed): Adopted token-discipline working rules to keep sessions within budget.
+- 2026-10-01 (Ahmed, phase 5 plan): Phase 5 ships in three slices, one PR each: the signing
+  core (tables, SQL snapshot builder, `cv-sign` Edge Function, key file, monthly refresh);
+  screens and control (`/me/cv`, share links, `/verify/[code]`, revocation, view counts); PDF
+  export and the five ATS templates. Technical choices approved:
+  - Signing happens in the `cv-sign` Edge Function, not a Vercel server action (PRD build note):
+    reading Vault from Vercel would need the service-role key or the database password in a
+    user-facing action. The function reads the private key from Vault over its direct
+    connection, like `code-check`. The snapshot is built in SQL (`private.cv_snapshot`), one
+    builder for the first CV and the monthly refresh; `lib/cv/types.ts` holds its type.
+  - Ed25519 from Web Crypto (Deno and Node 22), no `@noble/ed25519`; our own RFC 8785
+    canonical JSON (`supabase/functions/_shared/cv/canonical.ts`), tested against the RFC's
+    examples.
+  - The signature covers the SHA-256 digest of the canonical JSON of
+    `{v, code, key_id, issued_at, expires_at, snapshot}`, so it can't be reused under another
+    code or date. The snapshot holds integers and strings only.
+  - The recruiter API's signed JSON waits for phase 8; `/.well-known/skilient-cv-keys.json`
+    explains how to check a signature.
+- 2026-10-01 (Ahmed): CV signing key. Nobody creates it by hand: `cv-sign` generates the pair
+  and puts the private half straight into Vault (`cv_signing_key:<key_id>`); it never reaches
+  Vercel, the repo or a person. `select private.cv_rotate_key();` (SQL editor) creates the first
+  key and any later one. **No automatic yearly rotation**; rotation is manual, for emergencies and
+  the rotation test. A rotated-out key's private half is deleted from Vault; its public half
+  stays in `signing_keys` and the key file forever, and each record names its key, so old CVs
+  keep verifying. Because the Free plan has no database backups, a copy of the key file is
+  committed to `docs/signing-keys/` after every rotation (setup checklist). A leaked key: rotate,
+  then revoke what it signed (procedure, not a feature).
+- 2026-10-01 (Ahmed): CV content. Deliverables are a count, never links (PRD 5.28 over 5.18);
+  public repositories are named, private ones read "Private repository". The tier always shows;
+  the percentile shows as "Top N%" only within the top 50%, and is off by default for students
+  who opted out of the leaderboard (they can switch it on in CV settings). The summary is one
+  template: "{Department} student at {University}, class of {year}, with verified work in {top
+  3 skills} across {n} ventures ({m} completed). {Tier} tier on Skilient, top N%." with a
+  merged-pull-request sentence, each part dropped when empty. **Department, not programme**:
+  programme is free text and a signed CV shouldn't present unchecked text as verified.
+  Endorsements: up to 5, tied to evidence, not hidden, one per endorser, higher endorser tier
+  first then newest, with the endorser's full name, venture, skill and note ("note by …").
+  Contact: "Contact through Skilient" linking to `/verify/[code]` (phase 8 adds the recruiter
+  contact button there); showing an email is opt-in and only the verified university email.
+- 2026-10-01 (Ahmed): CV visibility is Private (owner only; links paused), Link (default: anyone
+  with a valid share link) or Recruiters (Link plus recruiters on Skilient, from phase 8). No
+  public option ("no public profile pages") and no CV view for other students.
+- 2026-10-01 (Ahmed): Share links need Spark or above when created; 7, 30 or 90 days or no expiry;
+  up to 10 active, each with an optional label; only a hash of the token is stored, so the link
+  is shown once. A link always opens the **newest** version; if that version is revoked the link
+  shows "no longer available" until a new version is issued, and never falls back to an older
+  one. Views are counted with no IP stored. Dropping below Spark keeps existing links working
+  until they expire or are revoked.
+- 2026-10-01 (Ahmed): Monthly refresh: every student with a CV, whatever their tier (5.18's
+  text over its build note's "Spark+"), at 00:30 PKT on the 1st, only if the snapshot changed;
+  a new version gets a new code, the previous shows Superseded, no PDF is made, in-app notice
+  only. The first CV is issued when the student first opens `/me/cv`. Free students' section
+  and order changes apply at the next refresh; Pro "Refresh now" (10 a day) stays off until
+  phase 10.
+- 2026-10-01 (Ahmed): Verify statuses, checked in this order: Not found, Revoked, Altered,
+  Superseded, Outdated, Valid. Valid shows the CV, issue date, valid-until and key id;
+  Superseded and Outdated the same with a notice (no link to a newer version); **Revoked shows
+  only the code, issue date and revocation date — no name, no reason, no content**; Altered
+  shows the genuine CV beside the message; Not found is generic. Codes print as XXXXX-XXXXX
+  (Crockford base32) and are read case- and hyphen-insensitively; 30 lookups a minute per IP;
+  noindex.
+- 2026-10-01 (Ahmed): Revocation. The student revokes any version or link anytime, and after
+  revoking the newest can re-issue the same content under a new code. A trust reviewer
+  (two-factor) revokes from an /ops/evidence CVs tab with a reason, audited, student notified.
+  A sign-in ban revokes every version and link (trigger on `auth.users.banned_until`; lifting
+  the ban restores nothing). Account deletion revokes all and wipes the content, keeping code,
+  dates and key so the verify page says Revoked. Later evidence changes, tier drops, Pro lapsing
+  and graduation never revoke; they show in the next version. When a trust reviewer upholds an
+  anti-gaming or ring flag, /ops prompts them to check that student's CVs and revoke if needed.
+- 2026-10-01 (Ahmed): PDFs: headless Chromium in our own Vercel function (no outside service),
+  one template set for web and PDF, fonts embedded, ligatures off, A4 default with Letter
+  optional. **Before building templates, a feasibility spike renders one PDF in a Vercel function
+  on the current plan and reports size, memory, duration and cold start; if it doesn't fit, stop
+  and propose the alternative.** Each export gets its own hash row (`cv_pdf_exports`); files are
+  deleted after 30 days, hashes kept. All five templates are built in slice 3, the four Pro ones
+  as locked previews until phase 10. `private.has_entitlement()` stays false except for user ids
+  in `platform_config` `entitlements.test_grants` (empty in production, SQL-only), removed in
+  phase 10. View counts per link and total (30 days, all time); company names wait for phase 8.
+- 2026-10-01 (Ahmed): The domain is **skilient.com**. Verify links and QR codes print
+  `https://skilient.com/verify/CODE`, from `NEXT_PUBLIC_SITE_URL` at render or export time; CVs
+  store only the code. Until skilient.com serves the app (planned before the closed beta),
+  `NEXT_PUBLIC_SITE_URL` is `https://skilient.vercel.app` and any PDF exported is test-only.
+- 2026-10-01 (phase 5, slice 1): Signing core as built. `signing_keys` (public, one active),
+  `cv_settings` (owner-read; written by slice 2's function), `cv_records` (owner-read; written only
+  by `private.cv_issue_commit` from `cv-sign`; `user_id` set null on account deletion so a
+  tombstone can remain). Unlisted ventures stay off the CV (teammates didn't choose to show
+  them); up to 10 projects, 20 pull requests, 15 skills. The monthly job is `cv-refresh`
+  (19:30 UTC on days 28–31; the function acts only when it is the 1st in PKT), queueing pgmq
+  `cv_jobs`, drained by `cv-sign` woken each minute (`cv-worker`); each run is in `job_runs`.
+  A "first" issue does nothing once any record exists; a monthly one does nothing when the
+  snapshot's hash matches the newest unrevoked version.

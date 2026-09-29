@@ -455,3 +455,8 @@ enabled = true
 [functions.code-check]
 # The function checks the caller's access token with Supabase Auth itself (like getUser()).
 verify_jwt = false
+
+[functions.cv-sign]
+# Callers are checked inside: the worker secret from Vault, or a student's access token
+# checked with Supabase Auth (like getUser()).
+verify_jwt = false
