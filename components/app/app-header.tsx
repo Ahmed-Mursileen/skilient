@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { SignOutButton } from "@/components/auth/sign-out-button";
+import { ChatNavLink } from "@/components/chat/chat-nav-link";
 import { FriendsNavLink } from "@/components/friends/friends-nav-link";
 import { NotificationBell } from "@/components/notifications/notification-bell";
 import { useCurrentUser } from "@/components/providers/current-user-provider";
@@ -40,6 +41,7 @@ export function AppHeader() {
             <Link href="/ventures" className="rounded-md px-2 py-1 text-body-sm text-text-secondary hover:bg-bg-subtle hover:text-text-primary">
               Ventures
             </Link>
+            <ChatNavLink userId={user.id} />
             <FriendsNavLink userId={user.id} />
             <Link href="/requests" className="rounded-md px-2 py-1 text-body-sm text-text-secondary hover:bg-bg-subtle hover:text-text-primary">
               Requests

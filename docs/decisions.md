@@ -672,3 +672,19 @@ Append-only. One dated entry per product decision, with the reason. Carried over
   dates in the browser; they move to server-formatted labels when next touched.
 - 2026-09-29 (phase 3): E2E axe checks wait for the streamed `<title>` first (Next 16
   streams metadata, so `<title>` can land after the body).
+- 2026-09-29 (phase 3, slice 7): Chat core. A DM opens between friends or the two sides
+  of an accepted application (PRD 5.9 "people you work with"), never across a block; a
+  block closes the DM (hidden from the list, no new messages, history unreadable) and
+  unblocking reopens it. Threads and memberships have no insert policies; only SQL
+  functions create them. Each venture gets one group chat whose membership follows
+  `venture_members` by trigger (existing ventures backfilled). Messages: up to 10,000
+  characters and/or one image, 30 a minute; the sender can edit (marked "edited") and
+  delete (the text is blanked and the row keeps its place, the image file is removed).
+  Chat images are the server's WebP re-encode in the private `chat-media` bucket, read
+  through 1-hour signed URLs. Messages arrive over Realtime `postgres_changes` (RLS
+  applies to the stream). One unread message notification per thread (digest category
+  `messages`); opening the thread marks it and the thread read. Typing, read receipts,
+  replies, reactions, pins and search come with slice 8.
+- 2026-09-29 (phase 3, slice 7): Muting a thread (8 hours, a week, or until unmuted)
+  stops its notifications and leaves it out of the header's unread count; the thread
+  list still shows its unread number so nothing is lost.

@@ -23,3 +23,9 @@ export function eventTime(iso: string): string {
 export function futureTime(iso: string): string {
   return dayTime.format(new Date(iso));
 }
+
+const clock = new Intl.DateTimeFormat("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Karachi" });
+/** "14:30" in Pakistan time, for chat bubbles. */
+export function clockTime(iso: string): string {
+  return clock.format(new Date(iso));
+}

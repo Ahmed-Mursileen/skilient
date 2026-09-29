@@ -1,5 +1,6 @@
 import { ConfirmAction } from "@/components/ventures/confirm-action";
 import { Badge } from "@/components/ui";
+import { openDm } from "@/lib/actions/chat";
 import {
   blockUser,
   cancelFriendRequest,
@@ -68,6 +69,7 @@ export function ProfileFriendActions({
       {state === "friends" ? (
         <>
           <Badge tone="success">Friends</Badge>
+          <ConfirmAction action={openDm.bind(null, username)} label="Message" variant="primary" />
           <ConfirmAction
             action={unfriend.bind(null, username)}
             label="Unfriend"
