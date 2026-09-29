@@ -107,6 +107,7 @@ test.describe("Reports and /ops", () => {
     await expect(mPage.getByTestId("case-reports")).toContainText("Harassment");
     await mPage.getByRole("button", { name: "Claim" }).click();
     await mPage.getByRole("radio", { name: /Remove content/ }).check();
+    await mPage.getByRole("radio", { name: /^Medium/ }).check();
     await mPage.getByLabel("Reason", { exact: true }).fill("Insulting another student");
     await axe(mPage, "ops case (claimed)");
     await mPage.getByRole("button", { name: "Confirm decision" }).click();
@@ -118,8 +119,14 @@ test.describe("Reports and /ops", () => {
     await mPage.getByRole("button", { name: "Claim" }).click();
     await mPage.getByRole("radio", { name: /Warn the owner/ }).check();
     await mPage.getByLabel("Reason", { exact: true }).fill("Promoting exam leaks");
+    // Upholding a report needs a severity (PRD 5.13 penalties).
+    await mPage.getByRole("button", { name: "Confirm decision" }).click();
+    await expect(mPage.getByText("Choose a severity.")).toBeVisible();
+    await mPage.getByRole("radio", { name: /^Low/ }).check();
     await mPage.getByRole("button", { name: "Confirm decision" }).click();
     await expect(mPage.getByTestId("case-outcome")).toContainText("Owner warned");
+    const { data: penalties } = await db.from("ranking_adjustments").select("severity").eq("user_id", author.id).order("severity");
+    expect(penalties!.map((p) => p.severity)).toEqual(["low", "medium"]);
     await mPage.goto("/ops?status=resolved");
     await expect(mPage.getByTestId("ops-case").filter({ hasText: `Rude message ${tag}` })).toContainText("Removed");
 

@@ -964,3 +964,61 @@ Append-only. One dated entry per product decision, with the reason. Carried over
   A pass makes the skill L4 (`l4_skills` now includes passed checks) and shows in the drawer's
   proofs. Checks waiting more than 72 hours are marked overdue in the queue; nothing happens to
   them automatically.
+- 2026-09-30 (phase 4, slice 5): The nightly ranking is a small state machine instead of one
+  SQL procedure. A procedure that commits between batches can't pin its `search_path`, and the
+  advisors gate (`function_search_path_mutable`, fail on warn) requires every function to pin
+  it. So `ranking-nightly` (03:07 PKT) starts a run (`ranking_runs`, one per PKT day, with the
+  formula and an as-of time fixed for every batch) and the per-minute `ranking-step` job does
+  one committed step: rings → students in batches of 500 (compute, rapid-gain check, publish)
+  → percentiles and tiers → the Sunday snapshot. Each run is in `job_runs`. A failed step marks
+  the run failed; the next night starts a new one. `private.ranking_run_all()` runs a whole
+  night in one call (pgTAP, or a manual rerun from the SQL editor).
+- 2026-09-30 (phase 4, slice 5): Every weight is in `platform_config` `ranking.formula` (caps,
+  Work, complexity, skill points and bonus, endorser weights, credential points, the three
+  Momentum parts, decay, penalties, tier points and milestones, ring window, rapid-gain limits,
+  batch size); the version of that row is the formula version each score records. One SQL
+  function per component (`score_work`, `score_skills`, `score_endorsements`,
+  `score_credentials`, `score_momentum`, plus `score_adjustments`) returns capped points and the
+  evidence ids; `compute_ranking(user, as_of)` is pure over the data. Components are rounded to
+  2 decimals after their caps and the total is their sum, never below 0. The 10 reference
+  students are worked by hand in `docs/ranking-reference.md` (pgTAP `32_ranking_reference`).
+- 2026-09-30 (phase 4, slice 5): Work details. A completed venture's owner, team, weeks
+  (created to completed), tags, deliverables, verified members and each member's units are
+  frozen at completion (`venture_completions`, `venture_completion_members`; earlier
+  completions backfilled from the venture as it stood). A venture counts only if those pass
+  every completion rule (≥ 2 members, a deliverable, ≥ 2 verified members). A confirmed
+  "before Skilient" GitHub entry counts as a GitHub day; an unconfirmed one counts 0.25 like
+  any unconfirmed entry. Completion also creates the Shipped post, which counts as activity.
+- 2026-09-30 (phase 4, slice 5): Tiers are cumulative: each tier needs its own milestone and
+  every lower tier's (a top-10% student with no L3 skill stays Flare). Percentile is
+  `percent_rank()` of the published total over ranked students on the whole platform; "top
+  X%" means a percentile of at least 1 − X (with 1,000 distinct totals, exactly the top 100 and
+  top 20). Tier and percentile change only in the tiers stage, so every endorsement in a run is
+  weighed by its endorser's tier from the previous run. Tested on 1,000 synthetic students
+  (`33_ranking_tiers`).
+- 2026-09-30 (phase 4, slice 5): Momentum's peak is the highest Momentum earned before decay;
+  the 40% floor never lifts Momentum above what the student earned now. Consistency counts a
+  student's contribution entries (GitHub ones included), counted pull requests and posts that
+  weren't removed; removed posts don't count anywhere.
+- 2026-09-30 (phase 4, slice 5): Rings as built. "Endorsed each other within 180 days" means
+  the two endorsements are within 180 days of each other (a ring doesn't expire with time).
+  Outside evidence is checked per endorsement: its venture is completed with a deliverable, or
+  the person endorsed has a GitHub entry in it. A pair is already a ring; connected rings share
+  one flag. Endorsements a reviewer decided stay decided (a later endorsement between the same
+  people is a new flag); an open flag follows its group and closes itself (cleared, no
+  reviewer) once the group is no longer a ring.
+- 2026-09-30 (phase 4, slice 5): Rapid gain as built. The gain is measured against the
+  published total (or, after a clear, the cleared total). New completions are exempt up to the
+  Work gain, except for a student in an open ring. "More than 2 completions in 7 days" is
+  flagged when a new completion arrives. An upheld gain becomes a negative adjustment that
+  doesn't expire. The first computation and formula changes are exempt.
+- 2026-09-30 (phase 4, slice 5): Penalties as built. Every decision that upholds a report
+  (Remove, Clear bio and photo, Unlist, Warn) needs a severity (low 50, medium 150, high 300);
+  Clear and Unlist are Remove for profiles and ventures, so they take one too. The penalty goes
+  to the content's owner, lasts 12 months from the decision, and is in the audit log.
+- 2026-09-30 (phase 4, slice 5): Exam periods as built: `accounts` staff (and super admins) on
+  two-factor add and remove them at `/ops/exam-periods` with a reason, each audited; at most 45
+  days both ends included; one university's periods never overlap. Students read their own
+  university's periods (for the score page's pause notice). None are seeded.
+- 2026-09-30 (phase 4, slice 5): Snapshots keep points per component only, not the evidence
+  lists, so a year of weekly history stays small on the Free plan's 500 MB database.

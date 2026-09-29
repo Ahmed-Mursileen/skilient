@@ -6,8 +6,9 @@ import { cn } from "@/lib/cn";
 import { CREDENTIAL_STATUS_LABELS } from "@/lib/credentials/constants";
 import { STATUS_LABELS as CHECK_LABELS } from "@/lib/code-checks/constants";
 import { getCodeCheckQueue } from "@/lib/data/code-checks";
+import { getRankingFlagQueue } from "@/lib/data/ops-ranking";
 import { getCredentialQueue, getFlagQueue, staffRoles } from "@/lib/data/ops-trust";
-import { FLAG_LABELS } from "@/lib/ops/labels";
+import { FLAG_LABELS, RANKING_FLAG_LABELS, RANKING_FLAG_STATUS } from "@/lib/ops/labels";
 
 export const metadata: Metadata = { title: "Evidence" };
 
@@ -17,6 +18,8 @@ const TABS = [
   { key: "checks", label: "Code checks" },
   { key: "graded", label: "Graded checks" },
   { key: "flags", label: "GitHub flags" },
+  { key: "ranking", label: "Ranking flags" },
+  { key: "ranking_reviewed", label: "Reviewed ranking flags" },
 ] as const;
 type Tab = (typeof TABS)[number]["key"];
 
@@ -50,7 +53,9 @@ export default async function OpsEvidencePage({ searchParams }: PageProps<"/ops/
           ))}
         </ul>
       </nav>
-      {tab === "flags" ? (
+      {tab === "ranking" || tab === "ranking_reviewed" ? (
+        <RankingFlagTable status={tab === "ranking" ? "open" : "reviewed"} />
+      ) : tab === "flags" ? (
         <FlagTable />
       ) : tab === "checks" || tab === "graded" ? (
         <CodeCheckTable status={tab === "graded" ? "graded" : "submitted"} />
@@ -142,6 +147,54 @@ async function FlagTable() {
               <td className="px-3 py-2 align-top tabular-nums">{r.commits}</td>
               <td className="px-3 py-2 align-top tabular-nums">{r.age}</td>
               <td className="px-3 py-2 align-top">{r.claimedByMe ? "You" : (r.claimedBy ?? "Nobody yet")}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+async function RankingFlagTable({ status }: { status: "open" | "reviewed" }) {
+  const rows = await getRankingFlagQueue(status);
+  if (!rows.length) {
+    return (
+      <EmptyState
+        title={status === "open" ? "No ranking flags open" : "Nothing reviewed in the last 30 days"}
+        description="Endorsement rings and fast gains from the nightly ranking run appear here, oldest first."
+      />
+    );
+  }
+  return (
+    <div className="overflow-x-auto rounded-lg border border-border-default bg-bg-surface">
+      <table className="w-full min-w-[720px] text-left text-body-sm" data-testid="ranking-flag-queue">
+        <thead className="border-b border-border-default bg-bg-subtle text-caption text-text-secondary">
+          <tr>
+            <th scope="col" className="px-3 py-2 font-semibold">Flag</th>
+            <th scope="col" className="px-3 py-2 font-semibold">Students</th>
+            <th scope="col" className="px-3 py-2 font-semibold">What</th>
+            <th scope="col" className="px-3 py-2 font-semibold">{status === "open" ? "Waiting" : "Reviewed"}</th>
+            <th scope="col" className="px-3 py-2 font-semibold">{status === "open" ? "Claimed by" : "Outcome"}</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-border-muted">
+          {rows.map((r) => (
+            <tr key={r.id} data-testid="ranking-flag-row">
+              <td className="px-3 py-2 align-top">
+                <Link href={`/ops/evidence/ranking/${r.id}` as Route} className="font-semibold underline underline-offset-4">
+                  {RANKING_FLAG_LABELS[r.kind]}
+                </Link>
+              </td>
+              <td className="px-3 py-2 align-top">{r.members.join(", ")}</td>
+              <td className="px-3 py-2 align-top tabular-nums">
+                {r.kind === "rapid_gain"
+                  ? `+${r.gain?.toFixed(2)} (${r.fromTotal?.toFixed(2)} to ${r.toTotal?.toFixed(2)})`
+                  : `${r.endorsements} ${r.endorsements === 1 ? "endorsement" : "endorsements"}`}
+              </td>
+              <td className="px-3 py-2 align-top tabular-nums">{status === "open" ? r.age : r.reviewedLabel}</td>
+              <td className="px-3 py-2 align-top">
+                {status === "open" ? (r.claimedByMe ? "You" : (r.claimedBy ?? "Nobody yet")) : RANKING_FLAG_STATUS[r.status]}
+              </td>
             </tr>
           ))}
         </tbody>

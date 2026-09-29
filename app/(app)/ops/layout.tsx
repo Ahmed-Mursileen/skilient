@@ -12,7 +12,7 @@ const MB = 1024 ** 2;
 /**
  * /ops (PRD 5.26, screen spec 3.11): Skilient staff only. proxy.ts already requires a
  * two-factor session here; anyone without a staff role gets a plain 404. Each area checks
- * its own role (moderators: reports; trust reviewers: evidence).
+ * its own role (moderators: reports; trust reviewers: evidence; accounts: exam periods).
  */
 export default async function OpsLayout({ children }: LayoutProps<"/ops">) {
   const roles = await staffRoles();
@@ -25,7 +25,7 @@ export default async function OpsLayout({ children }: LayoutProps<"/ops">) {
         <span className="flex items-center gap-2 text-body-sm font-semibold">
           <ShieldCheck aria-hidden weight="bold" className="size-4" /> Staff
         </span>
-        <OpsNav moderator={roles.has("moderator")} trust={roles.has("trust_reviewer")} />
+        <OpsNav moderator={roles.has("moderator")} trust={roles.has("trust_reviewer")} accounts={roles.has("accounts")} />
         {usage ? (
           <p className="text-caption text-text-secondary" data-testid="storage-use">
             Storage {(usage.total / MB).toFixed(1)} MB of {(usage.quota / GB).toFixed(0)} GB ({Math.round(share * 100)}%)

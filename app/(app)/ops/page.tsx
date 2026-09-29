@@ -15,6 +15,7 @@ export default async function OpsQueuePage({ searchParams }: PageProps<"/ops">) 
   const roles = await staffRoles();
   if (!roles.has("moderator")) {
     if (roles.has("trust_reviewer")) redirect("/ops/evidence");
+    if (roles.has("accounts")) redirect("/ops/exam-periods");
     notFound();
   }
   const sp = await searchParams;
