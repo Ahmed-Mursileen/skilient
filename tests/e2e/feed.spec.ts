@@ -23,7 +23,7 @@ test.describe("Ranked feed", () => {
     for (let i = 0; i < 30; i++) {
       if (await page.getByTestId("feed-end").isVisible()) return;
       const more = page.getByRole("button", { name: "Load more" });
-      if ((await more.count()) && (await more.isEnabled())) await more.click({ timeout: 2_000 }).catch(() => undefined);
+      if (await more.isEnabled({ timeout: 1_000 }).catch(() => false)) await more.click({ timeout: 2_000 }).catch(() => undefined);
       await page.waitForTimeout(500);
     }
     await expect(page.getByTestId("feed-end")).toBeVisible();

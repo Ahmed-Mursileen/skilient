@@ -65,7 +65,9 @@ test.describe("Micro-survey", () => {
       await expect(rPage.getByTestId("post").filter({ hasText: text }).getByTestId("survey-strip").locator("p").first()).toHaveText(question);
     }
 
-    // Answer once the post has been on screen for 1.5 s; then change it.
+    // Answer once the post has been on screen for 1.5 s; then change it. (The feed is ranked,
+    // so other tests' posts can push this one below the fold: bring it on screen first.)
+    await rPage.getByTestId("post").filter({ hasText: text }).scrollIntoViewIfNeeded();
     await rPage.waitForTimeout(1_800);
     await rPage.getByTestId("post").filter({ hasText: text }).getByRole("button", { name: "Yes", exact: true }).click();
     const answered = rPage.getByTestId("post").filter({ hasText: text }).getByTestId("survey-answered");
