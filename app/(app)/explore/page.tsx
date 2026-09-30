@@ -9,6 +9,8 @@ import { Avatar, EmptyState, Skeleton, SkillChip, TierBadge } from "@/components
 import { cn } from "@/lib/cn";
 import { EXPLORE_PAGE, listUniversities, searchPeople, searchVentures, type ExploreFilters, type PersonResult } from "@/lib/data/explore";
 import { listTaxonomy } from "@/lib/data/skills";
+import { getIdeas } from "@/lib/data/teach";
+import { DIFFICULTY_LABELS } from "@/lib/teach/constants";
 import { exploreHref, type ExploreState } from "@/lib/explore/href";
 
 export const metadata: Metadata = { title: "Explore" };
@@ -17,6 +19,7 @@ const TABS = [
   { value: "people", label: "People" },
   { value: "projects", label: "Projects" },
   { value: "startups", label: "Startups" },
+  { value: "ideas", label: "Project ideas" },
 ] as const;
 
 const FRIENDSHIP_LABELS = { friends: "Friends", request_sent: "Request sent", request_received: "Wants to be friends" } as const;
@@ -69,7 +72,45 @@ export default async function ExplorePage({ searchParams }: PageProps<"/explore"
   );
 }
 
+/** Project ideas from teachers (PRD 5.21): open ones at the viewer's university and global ones, newest first. */
+async function IdeasResults({ state }: { state: ExploreState }) {
+  const q = state.q.trim().toLowerCase();
+  const all = await getIdeas({ skill: state.skill || undefined });
+  const ideas = q ? all.filter((i) => `${i.title} ${i.brief} ${i.courseLabel ?? ""}`.toLowerCase().includes(q)) : all;
+  if (!ideas.length) {
+    return (
+      <EmptyState
+        icon={<MagnifyingGlass aria-hidden className="size-8" />}
+        title="No project ideas"
+        description="Teachers at your university post ideas here. Start a venture from one and its teacher is invited to supervise."
+      />
+    );
+  }
+  return (
+    <ul className="flex flex-col gap-3" data-testid="idea-results">
+      {ideas.map((i) => (
+        <li key={i.id}>
+          <Link href={`/ideas/${i.id}` as Route} className="flex flex-col gap-2 rounded-lg border border-border-default bg-bg-surface p-4 hover:bg-bg-subtle">
+            <span className="text-h4">{i.title}</span>
+            <span className="text-body-sm text-text-secondary">
+              {i.teacherName} · {i.teacherLine}
+              {i.formerFaculty ? " (former faculty)" : ""} · {DIFFICULTY_LABELS[i.difficulty]} · teams of {i.teamSize} · {i.durationWeeks} weeks
+              {i.deadlineLabel ? ` · until ${i.deadlineLabel}` : ""}
+            </span>
+            <span className="flex flex-wrap gap-1">
+              {i.skills.map((s) => (
+                <SkillChip key={s.id} name={s.name} />
+              ))}
+            </span>
+          </Link>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 async function Results({ state, filters }: { state: ExploreState; filters: ExploreFilters }) {
+  if (state.tab === "ideas") return <IdeasResults state={state} />;
   if (state.tab === "people" && filters.q.trim().length < 2) {
     return (
       <EmptyState

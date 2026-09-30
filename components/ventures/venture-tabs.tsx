@@ -7,7 +7,7 @@ import { cn } from "@/lib/cn";
 
 /**
  * Venture page tabs (PRD 5.28): About, Team, Contributions, Updates, Deliverables, and Chat
- * for members. Reviews join with teachers (phase 7).
+ * for members, and Reviews (faculty supervision and reviews, phase 7).
  * Manage is the owner's.
  */
 export function VentureTabs({ id, isOwner, isMember = false }: { id: string; isOwner: boolean; isMember?: boolean }) {
@@ -19,6 +19,7 @@ export function VentureTabs({ id, isOwner, isMember = false }: { id: string; isO
     { href: `${base}/contributions`, label: "Contributions" },
     { href: `${base}/updates`, label: "Updates" },
     { href: `${base}/deliverables`, label: "Deliverables" },
+    { href: `${base}/reviews`, label: "Reviews" },
     ...(isMember ? [{ href: `${base}/chat`, label: "Chat" }] : []),
     ...(isOwner ? [{ href: `${base}/manage`, label: "Manage" }] : []),
   ];

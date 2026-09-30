@@ -5,6 +5,7 @@ import { useState, useTransition, type FormEvent } from "react";
 import { FormAlert } from "@/components/auth/form-alert";
 import { SkillPicker, type SkillOption } from "@/components/ventures/skill-picker";
 import { Button, Field, Input, Textarea } from "@/components/ui";
+import { startVentureFromIdea } from "@/lib/actions/teach";
 import { createVenture } from "@/lib/actions/ventures";
 import type { ActionError } from "@/lib/actions/result";
 import { cn } from "@/lib/cn";
@@ -53,13 +54,23 @@ export function Choice<T extends string>({
   );
 }
 
+/** A teacher's idea the venture starts from (PRD 5.21): the form arrives prefilled and the venture is linked to it. */
+export interface IdeaPrefill {
+  id: string;
+  title: string;
+  brief: string;
+  skillIds: string[];
+  teamSize: number;
+  teacher: string;
+}
+
 /** /ventures/new (screen spec 3.4): type, title, description, visibility, skills, team, roles, questions. */
-export function VentureForm({ skills, defaultType }: { skills: SkillOption[]; defaultType: VentureType }) {
-  const [type, setType] = useState<VentureType>(defaultType);
+export function VentureForm({ skills, defaultType, idea }: { skills: SkillOption[]; defaultType: VentureType; idea?: IdeaPrefill }) {
+  const [type, setType] = useState<VentureType>(idea ? "project" : defaultType);
   const [visibility, setVisibility] = useState<VentureVisibility>("public");
   const [stage, setStage] = useState<VentureStage>("idea");
-  const [skillIds, setSkillIds] = useState<string[]>([]);
-  const [teamSize, setTeamSize] = useState(4);
+  const [skillIds, setSkillIds] = useState<string[]>(idea?.skillIds ?? []);
+  const [teamSize, setTeamSize] = useState(idea?.teamSize ?? 4);
   const [roles, setRoles] = useState<RoleDraft[]>([]);
   const [questions, setQuestions] = useState<string[]>([]);
   const [error, setError] = useState<ActionError | null>(null);
@@ -72,7 +83,7 @@ export function VentureForm({ skills, defaultType }: { skills: SkillOption[]; de
     const text = (k: string) => String(form.get(k) ?? "");
     setError(null);
     startTransition(async () => {
-      const result = await createVenture({
+      const input = {
         type,
         title: text("title"),
         description: text("description"),
@@ -84,7 +95,8 @@ export function VentureForm({ skills, defaultType }: { skills: SkillOption[]; de
         teamSize,
         roles: roles.map(({ title, skillIds: s, slots }) => ({ title, skillIds: s, slots })),
         questions: questions.filter((q) => q.trim()),
-      });
+      };
+      const result = idea ? await startVentureFromIdea(idea.id, input) : await createVenture(input);
       if (result && !result.ok) setError(result);
     });
   }
@@ -94,6 +106,11 @@ export function VentureForm({ skills, defaultType }: { skills: SkillOption[]; de
       {error && !Object.keys(fields).length ? <FormAlert requestId={error.requestId}>{error.message}</FormAlert> : null}
       {error && Object.keys(fields).length ? <FormAlert>{error.message}</FormAlert> : null}
 
+      {idea ? (
+        <p className="rounded-md border border-border-default bg-bg-subtle px-4 py-3 text-body-sm" data-testid="idea-banner">
+          Starting from <strong>{idea.teacher}</strong>&apos;s project idea. {idea.teacher} is invited to supervise it once you start.
+        </p>
+      ) : (
       <Choice
         legend="What are you starting?"
         name="type"
@@ -104,9 +121,10 @@ export function VentureForm({ skills, defaultType }: { skills: SkillOption[]; de
           { value: "startup", label: TYPE_LABELS.startup.one, description: "A company in the making, from idea to revenue." },
         ]}
       />
+      )}
 
       <Field id="title" label="Title" error={fields.title}>
-        <Input id="title" name="title" required maxLength={80} aria-invalid={fields.title ? true : undefined} aria-describedby={fields.title ? "title-error" : undefined} />
+        <Input id="title" name="title" required maxLength={80} defaultValue={idea?.title} aria-invalid={fields.title ? true : undefined} aria-describedby={fields.title ? "title-error" : undefined} />
       </Field>
       <Field id="description" label="What are you building?" error={fields.description} helper="The problem, what you'll make, and who it's for.">
         <Textarea
@@ -114,6 +132,7 @@ export function VentureForm({ skills, defaultType }: { skills: SkillOption[]; de
           name="description"
           rows={6}
           required
+          defaultValue={idea?.brief}
           maxLength={4000}
           aria-invalid={fields.description ? true : undefined}
           aria-describedby={fields.description ? "description-error" : "description-helper"}

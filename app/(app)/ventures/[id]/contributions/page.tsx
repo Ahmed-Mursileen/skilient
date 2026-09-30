@@ -17,7 +17,11 @@ function weekStart(iso: string): string {
 }
 
 function Status({ c }: { c: Contribution }) {
-  const verified = c.peerVerified ? <Badge tone="verified">Peer-verified</Badge> : null;
+  const verified = c.facultyConfirmed ? (
+    <Badge tone="verified">Faculty-confirmed</Badge>
+  ) : c.peerVerified ? (
+    <Badge tone="verified">Peer-verified</Badge>
+  ) : null;
   if (c.source === "github") {
     return (
       <>

@@ -11,7 +11,7 @@
  */
 import type { Db, Fetch, Log } from "../github/types.ts";
 import { describeNotification } from "./describe.ts";
-import { digestEmail, instantEmail, type EmailMessage } from "./email.ts";
+import { digestEmail, instantEmail, teacherDigestEmail, type EmailMessage } from "./email.ts";
 
 export interface NotifyConfig {
   resendApiKey: string;
@@ -171,6 +171,18 @@ export async function runNotifyWorker(opts: {
       }
       email = built.email;
       key = `digest-${userId}-${now().toISOString().slice(0, 10)}`;
+    } else if (kind === "teacher_digest" && row.message.user_id) {
+      // The teacher portal's one weekly email (PRD 5.21), instead of per-event emails.
+      userId = row.message.user_id;
+      const built = await buildTeacherDigest(db, cfg, userId);
+      if ("skip" in built) {
+        await archive(row.msg_id);
+        result.skipped++;
+        log("notify.skipped", { outcome: "ok", reason: built.skip, kind: "teacher_digest" });
+        continue;
+      }
+      email = built.email;
+      key = `teacher-digest-${userId}-${now().toISOString().slice(0, 10)}`;
     } else {
       await archive(row.msg_id);
       result.skipped++;
@@ -183,7 +195,7 @@ export async function runNotifyWorker(opts: {
     const sent = await sendViaResend(cfg, opts.fetch, email, key);
     if (sent.ok) {
       await db.query("insert into private.email_sends (kind, user_id, notification_id, resend_id) values ($1, $2::uuid, $3::uuid, $4)", [
-        kind,
+        kind === "instant" ? "instant" : "digest",
         userId,
         notificationId,
         sent.id,
@@ -303,4 +315,21 @@ async function buildDigest(
     return { text: d.text, href: d.href };
   });
   return { email: digestEmail(who.email, cfg.appUrl, lines, Math.max(0, items[0].total - items.length)) };
+}
+
+async function buildTeacherDigest(db: Db, cfg: NotifyConfig, userId: string): Promise<{ skip: string } | { email: EmailMessage }> {
+  const [who] = await db.query<{ email: string | null; digest: boolean | null; counts: Record<string, number> | null }>(
+    `select u.email, coalesce(s.digest, true) as digest, private.teacher_digest_data(u.id) as counts
+       from auth.users u
+       join public.teacher_profiles t on t.user_id = u.id and t.status = 'approved'
+       left join public.teacher_settings s on s.user_id = u.id
+      where u.id = $1::uuid`,
+    [userId],
+  );
+  if (!who?.email) return { skip: "no_address" };
+  if (who.digest === false) return { skip: "opted_out" };
+  const counts = who.counts ?? {};
+  const total = Object.values(counts).reduce((n, v) => n + Number(v), 0);
+  if (total === 0) return { skip: "empty" };
+  return { email: teacherDigestEmail(who.email, cfg.appUrl, counts) };
 }

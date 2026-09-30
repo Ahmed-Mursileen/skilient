@@ -76,3 +76,27 @@ export function digestEmail(
     text: `${title}\n\n${items.map((i) => `- ${i.text} ${appUrl}${i.href}`).join("\n")}\n${moreLine ? `\n${moreLine}\n` : ""}\nSee all: ${appUrl}/notifications\n\n${footer}\n`,
   };
 }
+
+/** The teacher portal's weekly email (PRD 5.21): counts only, never student work. Never sent empty. */
+export function teacherDigestEmail(to: string, appUrl: string, counts: Record<string, number>): EmailMessage {
+  const n = (k: string) => Number(counts[k] ?? 0);
+  const lines: { text: string; href: string }[] = [];
+  if (n("invites")) lines.push({ text: `${n("invites")} venture${n("invites") === 1 ? "" : "s"} asked you to supervise`, href: "/teach" });
+  if (n("review_requests")) {
+    const soon = n("review_due_soon") ? ` (${n("review_due_soon")} due within 3 days)` : "";
+    lines.push({ text: `${n("review_requests")} review request${n("review_requests") === 1 ? "" : "s"} waiting${soon}`, href: "/teach/reviews" });
+  }
+  if (n("checks_waiting")) lines.push({ text: `${n("checks_waiting")} code check${n("checks_waiting") === 1 ? "" : "s"} to grade`, href: "/teach/code-checks" });
+  if (n("ideas_closing")) lines.push({ text: `${n("ideas_closing")} of your ideas close within a week`, href: "/teach/ideas" });
+  const subject = "Your week on Skilient";
+  const footer = `You get this once a week. Turn it off in your teacher settings: ${appUrl}/teach/settings`;
+  const listHtml = `<ul style="margin:0 0 16px 0;padding-left:20px;font-size:15px;line-height:24px;">${lines
+    .map((i) => `<li style="margin:0 0 8px 0;"><a href="${escapeHtml(`${appUrl}${i.href}`)}" style="color:#0E0D0B;">${escapeHtml(i.text)}</a></li>`)
+    .join("")}</ul>`;
+  return {
+    to,
+    subject,
+    html: layout(subject, listHtml + button(`${appUrl}/teach`, "Open the teacher portal"), footer),
+    text: `${subject}\n\n${lines.map((i) => `- ${i.text} ${appUrl}${i.href}`).join("\n")}\n\nOpen the teacher portal: ${appUrl}/teach\n\n${footer}\n`,
+  };
+}

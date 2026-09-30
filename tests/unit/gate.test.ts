@@ -131,3 +131,20 @@ describe("decideRoute", () => {
     expect(decideRoute(at("/reset-password", { state: { ...done, agreement_accepted: false } }))).toEqual({ type: "next" });
   });
 });
+
+describe("faculty (PRD 5.21)", () => {
+  const faculty: GateState = { ...done, role: "faculty", username: null };
+  it("sends faculty to the teacher portal, not the student feed", () => {
+    expect(homeFor(faculty)).toBe("/teach");
+    expect(decideRoute(at("/signin", { state: faculty }))).toEqual({ type: "redirect", to: "/teach" });
+  });
+  it("keeps faculty out of the student onboarding", () => {
+    expect(decideRoute(at("/onboarding/university", { state: faculty }))).toEqual({ type: "redirect", to: "/teach" });
+  });
+  it("still asks faculty for the agreement first", () => {
+    expect(decideRoute(at("/teach", { state: { ...faculty, agreement_accepted: false } })).type).toBe("redirect");
+  });
+  it("lets faculty open the teacher portal", () => {
+    expect(decideRoute(at("/teach", { state: faculty }))).toEqual({ type: "next" });
+  });
+});

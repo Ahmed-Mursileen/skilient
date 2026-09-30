@@ -39,7 +39,8 @@ export function homeFor(state: GateState): string {
   if (state.status === "deleting") return DELETE_PATH;
   if (!state.agreement_accepted) return "/agreement";
   if (!state.onboarding_complete) return onboardingPath(state.onboarding_step);
-  return "/feed";
+  // Faculty have no student onboarding: their home is the teacher portal (PRD 5.21).
+  return state.role === "faculty" ? "/teach" : "/feed";
 }
 
 const AUTH_PAGES = ["/signin", "/signup", "/forgot-password"];
@@ -146,7 +147,7 @@ export function decideRoute({ pathname, path, signedIn, aal, hasVerifiedFactor, 
     }
     return redirect(onboardingPath(state.onboarding_step));
   }
-  if (matches(pathname, "/onboarding") && pathname !== "/onboarding/done") return redirect("/feed");
+  if (matches(pathname, "/onboarding") && pathname !== "/onboarding/done") return redirect(homeFor(state));
 
   return next;
 }

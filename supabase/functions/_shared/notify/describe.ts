@@ -206,6 +206,39 @@ export function describeNotification(n: NotificationInput): NotificationText {
         ? { text: `You passed your ${skill} code check. ${skill} is now L4.`, href: `/me/code-checks/${n.entityId}`, subject: `You passed your ${skill} code check` }
         : { text: `Your ${skill} code check didn't pass this time. See the feedback.`, href: `/me/code-checks/${n.entityId}`, subject: `Your ${skill} code check result` };
     }
+    case "teacher_decided":
+      return n.data.approved === true
+        ? { text: "You're approved as a teacher. Post a project idea or open your portal.", href: "/teach", subject: "You're approved as a teacher on Skilient" }
+        : { text: "Your teacher role was removed. Your past reviews and endorsements stay, marked as former faculty.", href: "/teach/apply", subject: "Your teacher role on Skilient" };
+    case "supervision_requested":
+      return {
+        text: `${who} asked you to supervise ${venture}.`,
+        href: ventureId ? `/teach/ventures/${ventureId}` : "/teach",
+        subject: `${who} asked you to supervise ${venture}`,
+      };
+    case "supervision_answered": {
+      const accepted = n.data.accepted === true;
+      const ended = n.data.ended === true;
+      return {
+        text: ended ? `Supervision of ${venture} ended.` : accepted ? `${who} will supervise ${venture}.` : `${who} can't supervise ${venture}.`,
+        href: `${venturePath}/reviews`,
+        subject: ended ? `Supervision of ${venture} ended` : accepted ? `${who} will supervise ${venture}` : `An answer about supervising ${venture}`,
+      };
+    }
+    case "supervisor_comment":
+      return { text: `${who} wrote in the supervisor thread of ${venture}.`, href: `${venturePath}/reviews`, subject: `A new comment on ${venture}` };
+    case "supervisor_confirmed":
+      return { text: `${who} confirmed one of your entries on ${venture}. It is faculty-confirmed now.`, href: `${venturePath}/contributions`, subject: `${who} confirmed your work` };
+    case "review_requested":
+      return { text: `${who} asked you to review ${venture}. You have 14 days.`, href: `/teach/reviews/${n.entityId}`, subject: `Review request for ${venture}` };
+    case "review_reminder":
+      return { text: `A review of ${venture} is still waiting for you.`, href: `/teach/reviews/${n.entityId}`, subject: `Reminder: review ${venture}` };
+    case "review_received":
+      return { text: `${who} reviewed ${venture}. Read their feedback.`, href: `${venturePath}/reviews`, subject: `${venture} was reviewed by faculty` };
+    case "review_expired":
+      return n.data.declined === true
+        ? { text: `${who} declined to review ${venture}.`, href: `${venturePath}/reviews`, subject: `A review request for ${venture} was declined` }
+        : { text: `A review request for ${venture} expired without an answer. You can ask again.`, href: `${venturePath}/reviews`, subject: `A review request for ${venture} expired` };
     case "venture_abandoned":
       return { text: `${venture} was closed without finishing.`, href: venturePath, subject: `${venture} was closed` };
     case "cv_refreshed":

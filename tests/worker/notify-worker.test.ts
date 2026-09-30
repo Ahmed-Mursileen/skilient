@@ -209,4 +209,37 @@ describe("notify-worker", () => {
     const [{ n }] = await sql<{ n: number }[]>`select count(*)::int as n from pgmq.q_notification_emails where message->>'user_id' = ${users.a}`;
     expect(n).toBe(0);
   });
+  it("sends a teacher one weekly summary with counts only, never empty", async () => {
+    const t = randomUUID();
+    const quiet = randomUUID();
+    const tEmail = `nw-t-${t.slice(0, 8)}@nutech.edu.pk`;
+    await sql`insert into auth.users (id, email, raw_user_meta_data) values (${t}, ${tEmail}, '{"role":"faculty"}'), (${quiet}, ${`nw-q-${quiet.slice(0, 8)}@nutech.edu.pk`}, '{"role":"faculty"}')`;
+    try {
+      await sql`insert into public.teacher_profiles (user_id, university_id, department, title, status, approved_at, approval_source)
+                select p.user_id, p.university_id, 'CS', 'Lecturer', 'approved', now(), 'staff' from public.profiles p where p.user_id = any(${[t, quiet]})`;
+      await sql`insert into public.project_ideas (teacher_id, university_id, title, brief, skills, difficulty, team_size, duration_weeks, deliverables, deadline)
+                select ${t}, p.university_id, 'Closing soon', 'b', '{react}', 'intro', 3, 4, 'd', (now() at time zone 'Asia/Karachi')::date + 2
+                  from public.profiles p where p.user_id = ${t}`;
+      await sql`select private.queue_teacher_digests()`;
+      const queued = await sql<{ user_id: string }[]>`select message->>'user_id' as user_id from pgmq.q_notification_emails where message->>'kind' = 'teacher_digest'`;
+      expect(queued.map((q) => q.user_id)).toEqual([t]);
+      // A digest queued for the teacher with nothing to report is skipped, not sent empty.
+      await sql`select pgmq.send('notification_emails', ${sql.json({ kind: "teacher_digest", user_id: quiet })})`;
+      const resend = fakeResend();
+      await runNotifyWorker({ db, cfg, fetch: resend.impl, log });
+      const toT = resend.sent.filter((s) => s.body.to[0] === tEmail);
+      expect(toT).toHaveLength(1);
+      expect(toT[0].body.subject).toBe("Your week on Skilient");
+      expect(toT[0].body.text).toContain("1 of your ideas close within a week");
+      expect(toT[0].headers["idempotency-key"]).toMatch(/^teacher-digest-/);
+      expect(resend.sent).toHaveLength(1);
+      // Turning the digest off in settings stops it.
+      await sql`insert into public.teacher_settings (user_id, digest) values (${t}, false)`;
+      await sql`select pgmq.purge_queue('notification_emails')`;
+      await sql`select private.queue_teacher_digests()`;
+      expect(await queueSize()).toBe(0);
+    } finally {
+      await sql`delete from auth.users where id = any(${[t, quiet]})`;
+    }
+  });
 });

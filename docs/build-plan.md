@@ -149,7 +149,7 @@ Legend: 📖 = PRD files to read (in `docs/prd/`), ✅ = done-when checks.
 
 📖 `05-21-teacher-portal.md`
 
-- [ ] Teacher verification, ideas, supervision, reviews, teacher endorsements, code-check grading queue with claim and 48 h fallback
+- [x] Teacher verification, ideas, supervision, reviews, teacher endorsements, code-check grading queue with claim and 48 h fallback
 
 ✅ Parallel claims never double-assign a check · a teacher can't endorse outside reviewed/supervised ventures · CV shows the faculty badge without a score
 

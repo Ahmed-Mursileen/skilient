@@ -20,7 +20,7 @@ export function AppHeader() {
   return (
     <header className="border-b border-border-default bg-bg-surface">
       <div className="mx-auto flex h-14 max-w-page items-center justify-between gap-4 px-[var(--page-gutter)]">
-        <Link href="/feed" aria-label="Skilient home" className="shrink-0 rounded-sm">
+        <Link href={user?.role === "faculty" ? "/teach" : "/feed"} aria-label="Skilient home" className="shrink-0 rounded-sm">
           <Image src="/brand/skilient-icon.svg" alt="" width={28} height={28} className="size-7 dark:hidden" />
           <Image src="/brand/skilient-icon-white.svg" alt="" width={28} height={28} className="hidden size-7 dark:block" />
         </Link>
@@ -30,7 +30,7 @@ export function AppHeader() {
           // widening the page.
           <nav aria-label="Account" className="-mr-2 flex min-w-0 items-center gap-1 overflow-x-auto pr-2 whitespace-nowrap sm:gap-3 [&>*]:shrink-0">
             <Link
-              href={(user.username && user.onboardingComplete ? `/profile/${user.username}` : "/feed") as Route}
+              href={(user.role === "faculty" ? "/teach" : user.username && user.onboardingComplete ? `/profile/${user.username}` : "/feed") as Route}
               className="flex items-center gap-2 rounded-md px-2 py-1 hover:bg-bg-subtle"
             >
               <Avatar name={user.fullName} src={user.avatarUrl} size="sm" />
@@ -38,15 +38,22 @@ export function AppHeader() {
                 {user.fullName}
               </span>
             </Link>
+            {user.role === "faculty" ? (
+              <Link href="/teach" className="rounded-md px-2 py-1 text-body-sm text-text-secondary hover:bg-bg-subtle hover:text-text-primary">
+                Teach
+              </Link>
+            ) : null}
             <Link href="/ventures" className="rounded-md px-2 py-1 text-body-sm text-text-secondary hover:bg-bg-subtle hover:text-text-primary">
               Ventures
             </Link>
             <Link href="/explore" className="rounded-md px-2 py-1 text-body-sm text-text-secondary hover:bg-bg-subtle hover:text-text-primary">
               Explore
             </Link>
-            <Link href="/leaderboard" className="rounded-md px-2 py-1 text-body-sm text-text-secondary hover:bg-bg-subtle hover:text-text-primary">
-              Leaderboard
-            </Link>
+            {user.role === "faculty" ? null : (
+              <Link href="/leaderboard" className="rounded-md px-2 py-1 text-body-sm text-text-secondary hover:bg-bg-subtle hover:text-text-primary">
+                Leaderboard
+              </Link>
+            )}
             <ChatNavLink userId={user.id} />
             <FriendsNavLink userId={user.id} />
             <Link href="/requests" className="rounded-md px-2 py-1 text-body-sm text-text-secondary hover:bg-bg-subtle hover:text-text-primary">
