@@ -100,7 +100,8 @@ Claude Code can't create these accounts or keys. Do them before (or alongside) p
   `CV_EXPORT_SECRET`, **Sensitive**, for Production and Preview. Redeploy production. Never paste it
   anywhere else. Until it is set, PDF export answers "PDF export isn't set up yet" (nobody has the
   entitlement before phase 10 anyway).
-- [ ] **PDF renderer check on Vercel** (the feasibility spike's Vercel numbers): signed in to Skilient
+- [x] **PDF renderer check on Vercel** (*done 2026-10-01: cold 2.7 s, warm 0.42 s, 67 KB PDF, about
+  320 MB with Chromium, `bom1`; decisions.md*) (the feasibility spike's Vercel numbers): signed in to Skilient
   with your staff account and two-factor, open `https://skilient.vercel.app/api/ops/pdf-check` twice
   (the first call after a deploy is the cold start). Paste both JSON answers into the next session;
   they give PDF size, Node and Chromium memory, and timings. If `total_ms` is over 10,000 when warm,
@@ -116,6 +117,10 @@ Claude Code can't create these accounts or keys. Do them before (or alongside) p
     from public.platform_config where key = 'entitlements.test_grants';
   ```
 
+  The insert itself returns no rows. To confirm the grant, run
+  `select value from public.platform_config where key = 'entitlements.test_grants' order by version desc limit 1;`
+  (your id should be listed under both keys). Export needs `CV_EXPORT_SECRET` in Vercel first (the
+  step above); without it the button answers "PDF export isn't set up yet".
   Export at `/me/cv`, then check the file at `/verify/<code>`. PDFs printed before skilient.com serves
   the app carry skilient.vercel.app links and are test-only. Remove the grant afterwards the same way
   with `'{}'::jsonb` as the value.

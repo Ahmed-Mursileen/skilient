@@ -1196,3 +1196,13 @@ Append-only. One dated entry per product decision, with the reason. Carried over
   `/ops/evidence?tab=cvs` and revoke one or all with a reason (audited; the student gets a
   `cv_revoked` notice, emailed). An upheld ranking flag's page links to each member's CVs.
   Monthly refreshes send an in-app `cv_refreshed` notice only.
+- 2026-10-01 (phase 5, spike result on Vercel): `/api/ops/pdf-check` on production (`bom1`,
+  Node 22.23) printed the full sample CV in 2.7 s cold (2.2 s launching Chromium) and 0.42 s warm.
+  The PDF is 67 KB; memory is 175 MB for Node plus 142 MB for Chromium, about 320 MB against the
+  function's 2 GB. That is inside the PRD 10 target (p95 under 10 s) and the plan's limits, so
+  headless Chromium on Vercel stays; no fallback renderer is needed.
+- 2026-10-01 (ops): The same production build logged Sentry's "Failed to create release: Network
+  error / 502 Bad Gateway" after compiling. That is the source-map upload failing on Sentry's side;
+  the deploy still went out, and only errors from that build show minified stack traces in Sentry
+  (no source maps). No change: it is left alone unless it recurs on every build, in which case the
+  Vercel env `SENTRY_AUTH_TOKEN`/`SENTRY_ORG`/`SENTRY_PROJECT` get checked first.
