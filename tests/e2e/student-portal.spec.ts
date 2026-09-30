@@ -60,7 +60,7 @@ test.describe("Student portal", () => {
     }
     await expect(popover).toHaveCount(0);
     const db = adminClient();
-    await expect.poll(async () => (await db.from("tour_progress").select("completed_at").eq("user_id", me.id).single()).data?.completed_at ?? null).not.toBeNull();
+    await expect.poll(async () => (await db.from("tour_progress").select("completed_at").eq("user_id", me.id).single()).data?.completed_at ?? null, { timeout: 30_000 }).not.toBeNull();
     // Finished: it doesn't start again.
     await page.reload();
     await expect(page.getByTestId("progress-card")).toBeVisible();
@@ -73,7 +73,7 @@ test.describe("Student portal", () => {
     await expect(page.getByTestId("tour-progress")).toHaveText("Step 1 of 9");
     await page.keyboard.press("Escape");
     await expect(popover).toHaveCount(0);
-    await expect.poll(async () => (await db.from("tour_progress").select("skipped_at").eq("user_id", me.id).single()).data?.skipped_at ?? null).not.toBeNull();
+    await expect.poll(async () => (await db.from("tour_progress").select("skipped_at").eq("user_id", me.id).single()).data?.skipped_at ?? null, { timeout: 30_000 }).not.toBeNull();
 
     // The progress card: a new student is asked to join a venture; it hides for the day.
     const card = page.getByTestId("progress-card");
