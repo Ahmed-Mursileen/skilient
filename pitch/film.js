@@ -3,6 +3,7 @@ import { W, H, C } from "./lib.js";
 import * as b1 from "./beats/b1-number.js";
 import * as b2 from "./beats/b2-gap.js";
 import * as b3 from "./beats/b3-scale.js";
+import * as b4a from "./beats/b4a-shatter.js";
 
 function placeholder(title, duration) {
   return {
@@ -24,7 +25,7 @@ export const beats = [
   { name: "The number", ...b1 },
   { name: "The gap", ...b2 },
   { name: "The scale", ...b3 },
-  placeholder("4a Shatter", 16),
+  { name: "Shatter", ...b4a },
   placeholder("4b Signed CV", 16),
   placeholder("5 Why it holds", 16),
   placeholder("6a Loop: students", 28),
