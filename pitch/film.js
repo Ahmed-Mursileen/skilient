@@ -1,6 +1,7 @@
 // Timeline: a list of beats. seek(ctx, T) paints global time T (seconds).
 import { W, H, C } from "./lib.js";
 import * as b1 from "./beats/b1-number.js";
+import * as b2 from "./beats/b2-gap.js";
 
 function placeholder(title, duration) {
   return {
@@ -20,7 +21,7 @@ function placeholder(title, duration) {
 
 export const beats = [
   { name: "The number", ...b1 },
-  placeholder("2 The gap", 18),
+  { name: "The gap", ...b2 },
   placeholder("3 The scale", 18),
   placeholder("4 Proof", 22),
   placeholder("5 The loop", 55),
