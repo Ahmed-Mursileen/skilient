@@ -1,0 +1,13 @@
+{
+  "issuer": "Skilient",
+  "format": "Each CV record is signed over the SHA-256 digest (32 bytes) of the RFC 8785 canonical JSON of {v, code, key_id, issued_at, expires_at, snapshot}, with the Ed25519 key named by key_id. public_key is the raw 32-byte key, base64url. Retired keys no longer sign but still verify.",
+  "keys": [
+    {
+      "key_id": "cv-20260930-6ec51b99",
+      "alg": "Ed25519",
+      "public_key": "rq9HfoLtDThUl2RGesrhARtVqE_yO5BuRvvAtUP1V8g",
+      "active_from": "2026-09-30T12:51:34.978239+00:00",
+      "retired_at": null
+    }
+  ]
+}
