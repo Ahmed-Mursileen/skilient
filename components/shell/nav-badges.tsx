@@ -1,25 +1,36 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { useEffect, useSyncExternalStore } from "react";
 import { usePathname } from "next/navigation";
 import { NO_BADGES, type NavBadges } from "@/lib/nav";
 import { createClient } from "@/lib/supabase/client";
 
-const BadgesContext = createContext<NavBadges>(NO_BADGES);
+/**
+ * The counts on every nav item (PRD 5.25). They live in a tiny external store, not in a
+ * React context provider: a provider that wraps the page and re-renders when a count arrives
+ * made React re-hydrate the still-streaming page content and leave a hidden second copy of it
+ * in the DOM. `NavBadgesSync` (renders nothing, sits beside the page, not around it) fills the
+ * store; the nav items read it with `useNavBadges()`.
+ */
+let current: NavBadges = NO_BADGES;
+const listeners = new Set<() => void>();
 
-export function useNavBadges(): NavBadges {
-  return useContext(BadgesContext);
+function publish(next: NavBadges) {
+  current = next;
+  for (const l of listeners) l();
+}
+function subscribe(l: () => void) {
+  listeners.add(l);
+  return () => void listeners.delete(l);
 }
 
-/**
- * The counts on every nav item, from one nav_badges() call (PRD 5.25). It refreshes on each
- * navigation and when the tab regains focus, and live over Realtime when a notification or
- * a chat message arrives for this user, so the shell holds one subscription instead of one
- * per item.
- */
-export function NavBadgesProvider({ userId, children }: { userId: string; children: ReactNode }) {
+export function useNavBadges(): NavBadges {
+  return useSyncExternalStore(subscribe, () => current, () => NO_BADGES);
+}
+
+/** One nav_badges() call, refreshed on each navigation, on focus, and live over Realtime. */
+export function NavBadgesSync({ userId }: { userId: string }) {
   const pathname = usePathname();
-  const [badges, setBadges] = useState<NavBadges>(NO_BADGES);
 
   useEffect(() => {
     const supabase = createClient();
@@ -27,7 +38,7 @@ export function NavBadgesProvider({ userId, children }: { userId: string; childr
     let channel: ReturnType<typeof supabase.channel> | null = null;
     const refresh = () =>
       supabase.rpc("nav_badges").then(({ data }) => {
-        if (alive && data && typeof data === "object") setBadges({ ...NO_BADGES, ...(data as Partial<NavBadges>) });
+        if (alive && data && typeof data === "object") publish({ ...NO_BADGES, ...(data as Partial<NavBadges>) });
       });
     void refresh();
     // Realtime applies RLS with the socket's token: load the signed-in JWT before joining.
@@ -52,5 +63,7 @@ export function NavBadgesProvider({ userId, children }: { userId: string; childr
     };
   }, [userId, pathname]);
 
-  return <BadgesContext.Provider value={badges}>{children}</BadgesContext.Provider>;
+  // Another account signing in must not inherit the previous counts.
+  useEffect(() => () => publish(NO_BADGES), [userId]);
+  return null;
 }

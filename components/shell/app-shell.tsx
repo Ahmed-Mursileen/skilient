@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { AppHeader } from "@/components/app/app-header";
 import { useCurrentUser } from "@/components/providers/current-user-provider";
 import { BottomTabs } from "@/components/shell/bottom-tabs";
-import { NavBadgesProvider } from "@/components/shell/nav-badges";
+import { NavBadgesSync } from "@/components/shell/nav-badges";
 import { Sidebar } from "@/components/shell/sidebar";
 import { TopBar } from "@/components/shell/top-bar";
 import { TourHost, type TourInitial } from "@/components/tour/tour-host";
@@ -29,7 +29,8 @@ export function AppShell({ children, tour }: { children: ReactNode; tour: TourIn
     );
   }
   return (
-    <NavBadgesProvider userId={user.id}>
+    <>
+      <NavBadgesSync userId={user.id} />
       <Sidebar />
       <div className="md:pl-[72px] lg:pl-60">
         <TopBar />
@@ -39,6 +40,6 @@ export function AppShell({ children, tour }: { children: ReactNode; tour: TourIn
       <Suspense fallback={null}>
         <TourHost tourId="student" initial={tour} />
       </Suspense>
-    </NavBadgesProvider>
+    </>
   );
 }
