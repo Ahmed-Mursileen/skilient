@@ -5,6 +5,7 @@ import * as b2 from "./beats/b2-gap.js";
 import * as b3 from "./beats/b3-scale.js";
 import * as b4a from "./beats/b4a-shatter.js";
 import * as b4b from "./beats/b4b-signed-cv.js";
+import * as b5 from "./beats/b5-why-it-holds.js";
 
 function placeholder(title, duration) {
   return {
@@ -28,7 +29,7 @@ export const beats = [
   { name: "The scale", ...b3 },
   { name: "Shatter", ...b4a },
   { name: "Signed CV", ...b4b },
-  placeholder("5 Why it holds", 16),
+  { name: "Why it holds", ...b5 },
   placeholder("6a Loop: students", 28),
   placeholder("6b Loop: universities and recruiters", 27),
   placeholder("7 Traction and discovery", 20),

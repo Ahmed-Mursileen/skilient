@@ -30,6 +30,19 @@ Status: `verified` (source checked) · `needs-confirm` (Ahmed must confirm) · `
 | Altered when a file does not match an issued export; Revoked when the student revokes | tested | PRD 5.18, pgTAP 38, E2E `cv.spec.ts` | verified |
 | The sample PDF itself was not issued through the product, so the film says "Sample file" | illustration | n/a | by design |
 
+## Why it holds (beat 5), all built
+
+| On-screen statement | Source | Status |
+| --- | --- | --- |
+| Code check asks three fixed questions (what it does, why written this way, how you would change it); graded by a person against a rubric; no AI generates questions or grades; one attempt per skill per 30 days. Do not say "teacher" until the teacher portal ships: today a Skilient reviewer grades | PRD 5.5 "Code check"; `supabase/functions/code-check` | verified |
+| No likes; micro-survey ("Did you learn something from this?" tick/cross) replaces them | PRD 5.28; `CLAUDE.md` Never list | verified |
+| Posts ranked by survey answers, not likes | `20260929040000_feed_ranking.sql` | verified |
+| "12 / 13 people find this informative" | PRD 5.28's own example line; shown as "Sample post" | illustration, labelled |
+| Boards show rank and tier (never points); tiers Raw, Spark, Flare, Shine, Radiant, Luminary | PRD 5.17; `20261005000000_ranking.sql` enum `ranking_tier` | verified |
+| Money never buys rank or visibility | PRD 4a hard rules; `CLAUDE.md` | verified |
+| Row-level security on every table; a test fails if one is missing | pgTAP `00_rls_everywhere` | verified |
+| 24 lock tiles | illustrative grid, not a table count | illustration |
+
 ## Waitlist (source: uploaded CSV `waitlist_emails_rows.csv`)
 
 | Claim | Value | Status |
