@@ -1,11 +1,13 @@
 import type { Metadata, Route } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { EmptyState } from "@/components/ui";
+import { Button, EmptyState, Input } from "@/components/ui";
 import { cn } from "@/lib/cn";
 import { CREDENTIAL_STATUS_LABELS } from "@/lib/credentials/constants";
 import { STATUS_LABELS as CHECK_LABELS } from "@/lib/code-checks/constants";
+import { OpsCvRevoke } from "@/components/ops/cv-revoke";
 import { getCodeCheckQueue } from "@/lib/data/code-checks";
+import { getOpsCvRecords } from "@/lib/data/cv";
 import { getRankingFlagQueue } from "@/lib/data/ops-ranking";
 import { getCredentialQueue, getFlagQueue, staffRoles } from "@/lib/data/ops-trust";
 import { FLAG_LABELS, RANKING_FLAG_LABELS, RANKING_FLAG_STATUS } from "@/lib/ops/labels";
@@ -20,6 +22,7 @@ const TABS = [
   { key: "flags", label: "GitHub flags" },
   { key: "ranking", label: "Ranking flags" },
   { key: "ranking_reviewed", label: "Reviewed ranking flags" },
+  { key: "cvs", label: "CVs" },
 ] as const;
 type Tab = (typeof TABS)[number]["key"];
 
@@ -53,7 +56,9 @@ export default async function OpsEvidencePage({ searchParams }: PageProps<"/ops/
           ))}
         </ul>
       </nav>
-      {tab === "ranking" || tab === "ranking_reviewed" ? (
+      {tab === "cvs" ? (
+        <CvLookup query={typeof sp.q === "string" ? sp.q : ""} />
+      ) : tab === "ranking" || tab === "ranking_reviewed" ? (
         <RankingFlagTable status={tab === "ranking" ? "open" : "reviewed"} />
       ) : tab === "flags" ? (
         <FlagTable />
@@ -245,6 +250,61 @@ async function CodeCheckTable({ status }: { status: "submitted" | "graded" }) {
           ))}
         </tbody>
       </table>
+    </div>
+  );
+}
+
+/** CVs (PRD 5.26 "revoke a verified CV"): find by code or username, revoke one or all with a reason. */
+async function CvLookup({ query }: { query: string }) {
+  const rows = await getOpsCvRecords(query);
+  return (
+    <div className="flex flex-col gap-4">
+      <form method="get" action="/ops/evidence" className="flex flex-wrap items-end gap-2">
+        <input type="hidden" name="tab" value="cvs" />
+        <div className="flex flex-col gap-1">
+          <label htmlFor="cv-q" className="text-body-sm font-semibold">
+            Code or username
+          </label>
+          <Input id="cv-q" name="q" defaultValue={query} placeholder="ABCDE-12345 or @username" className="w-72" />
+        </div>
+        <Button type="submit" variant="secondary">
+          Find
+        </Button>
+      </form>
+      {query.trim().length < 3 ? (
+        <EmptyState title="Find a CV" description="Enter a CV code or a student's username." />
+      ) : !rows.length ? (
+        <EmptyState title="No CVs found" description="Check the code or username." />
+      ) : (
+        <div className="overflow-x-auto rounded-lg border border-border-default">
+          <table className="w-full min-w-[720px] text-left text-body-sm" data-testid="ops-cv-table">
+            <thead className="bg-bg-subtle text-text-secondary">
+              <tr>
+                <th className="px-3 py-2">Code</th>
+                <th className="px-3 py-2">Student</th>
+                <th className="px-3 py-2">Version</th>
+                <th className="px-3 py-2">Status</th>
+                <th className="px-3 py-2">Revoke</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((r) => (
+                <tr key={r.id} className="border-t border-border-default">
+                  <td className="px-3 py-2 align-top font-mono">{r.code}</td>
+                  <td className="px-3 py-2 align-top">{r.fullName ? `${r.fullName} (@${r.username})` : "Deleted account"}</td>
+                  <td className="px-3 py-2 align-top tabular-nums">
+                    {r.version} · {r.issuedLabel}
+                  </td>
+                  <td className="px-3 py-2 align-top">
+                    {r.revokedLabel ? `Revoked ${r.revokedLabel} (${r.revokedReason})` : r.superseded ? "Superseded" : "Current"}
+                  </td>
+                  <td className="px-3 py-2 align-top">{r.revokedLabel ? null : <OpsCvRevoke id={r.id} code={r.code} />}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }

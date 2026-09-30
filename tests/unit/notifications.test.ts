@@ -10,7 +10,7 @@ describe("describeNotification", () => {
       "friend_request", "friend_accepted", "application_received", "application_decided", "application_withdrawn",
       "invite_received", "invite_answered", "ownership_transferred", "member_left", "member_removed",
       "venture_completed", "venture_abandoned", "comment_received", "comment_reply", "comment_mention", "chat_message",
-      "content_removed", "moderation_warning",
+      "content_removed", "moderation_warning", "cv_refreshed", "cv_revoked",
     ];
     for (const type of types) {
       const d = describeNotification({ ...base, type });

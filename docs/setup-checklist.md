@@ -66,7 +66,7 @@ Claude Code can't create these accounts or keys. Do them before (or alongside) p
 - [x] **`NEXT_PUBLIC_SITE_URL`** in Vercel (Production and Preview): `https://skilient.vercel.app` until
   skilient.com serves the app, then `https://skilient.com`. It is the origin printed in CV verify links
   and QR codes (decisions.md 2026-10-01). *Done by Ahmed.*
-- [ ] **First CV signing key** (after the slice 1 PR is merged and CI has deployed the migration and
+- [x] **First CV signing key** (*done 2026-09-30; backed up as `docs/signing-keys/2026-09-30.json`*) (after the slice 1 PR is merged and CI has deployed the migration and
   the `cv-sign` Edge Function): in the Supabase SQL editor run
 
   ```sql
@@ -88,6 +88,37 @@ Claude Code can't create these accounts or keys. Do them before (or alongside) p
 
   (Use `https://skilient.com/...` once the domain serves the app.) Rotate only for an emergency
   (leaked key) or a test: there is no automatic rotation.
+- [ ] **`CV_EXPORT_SECRET`** (after the phase 5 slices 2-3 PR is merged and CI has deployed its
+  migration): the migration generates this key into Vault; copy it to Vercel so the PDF route can
+  prove an export is Skilient's (decisions.md 2026-10-01). In the Supabase SQL editor run
+
+  ```sql
+  select decrypted_secret from vault.decrypted_secrets where name = 'cv_export_secret';
+  ```
+
+  and add the 64-character value in Vercel → Project → Settings → Environment Variables as
+  `CV_EXPORT_SECRET`, **Sensitive**, for Production and Preview. Redeploy production. Never paste it
+  anywhere else. Until it is set, PDF export answers "PDF export isn't set up yet" (nobody has the
+  entitlement before phase 10 anyway).
+- [ ] **PDF renderer check on Vercel** (the feasibility spike's Vercel numbers): signed in to Skilient
+  with your staff account and two-factor, open `https://skilient.vercel.app/api/ops/pdf-check` twice
+  (the first call after a deploy is the cold start). Paste both JSON answers into the next session;
+  they give PDF size, Node and Chromium memory, and timings. If `total_ms` is over 10,000 when warm,
+  or the call fails, say so before phase 10 turns export on.
+- [ ] **Optional: try a PDF export yourself** (test-only grant until phase 10). With your user id:
+
+  ```sql
+  insert into public.platform_config (key, version, value, reason)
+  select 'entitlements.test_grants', max(version) + 1,
+         jsonb_build_object('cv.pdf_export', jsonb_build_array('<your user id>'),
+                            'cv.templates', jsonb_build_array('<your user id>')),
+         'Ahmed trying PDF export'
+    from public.platform_config where key = 'entitlements.test_grants';
+  ```
+
+  Export at `/me/cv`, then check the file at `/verify/<code>`. PDFs printed before skilient.com serves
+  the app carry skilient.vercel.app links and are test-only. Remove the grant afterwards the same way
+  with `'{}'::jsonb` as the value.
 
 ## Before phase 10 ⏳
 

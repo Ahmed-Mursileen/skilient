@@ -16,6 +16,11 @@ already signed in keeps working until its access token expires (1 hour by defaul
 is signed out. Their content stays visible; remove specific posts, comments or messages
 through `/ops` if needed.
 
+Since phase 5 a ban also revokes every version of the student's verified CV and every share
+link, automatically (a trigger on `auth.users.banned_until`; decisions.md 2026-10-01): their
+verify pages show Revoked and their links say the CV is no longer available. Lifting the ban
+restores none of them; the student gets a new CV at the next monthly refresh (or reissues it).
+
 To lift it, open the same menu and choose **Unban user**.
 
 ## 2. Record it in `ops_audit_log`

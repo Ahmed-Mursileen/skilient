@@ -117,12 +117,19 @@ describe("cv-sign", () => {
   });
 
   it("refreshes monthly only when the data changed", async () => {
+    // The start queues every student with a CV (others may exist in the local database).
     await sql`select private.cv_refresh_start(true)`;
+    const [mine] = await sql`select count(*)::integer as n from pgmq.q_cv_jobs where message->>'user_id' = ${userId}`;
+    expect(mine.n).toBe(1);
+    await sql`select pgmq.purge_queue('cv_jobs')`;
+    const queueMine = () => sql`select pgmq.send('cv_jobs', ${sql.json({ user_id: userId, source: "monthly" })})`;
+
     const beforeCount = (await sql`select count(*)::integer as n from public.cv_records where user_id = ${userId}`)[0].n;
+    await queueMine();
     expect(await drainQueue({ db, log })).toMatchObject({ issued: 0, unchanged: 1, failed: 0 });
 
     await sql`update public.profiles set graduation_year = 2028 where user_id = ${userId}`;
-    await sql`select private.cv_refresh_start(true)`;
+    await queueMine();
     expect(await drainQueue({ db, log })).toMatchObject({ issued: 1, failed: 0 });
     const after = await sql`select count(*)::integer as n from public.cv_records where user_id = ${userId}`;
     expect(after[0].n).toBe(beforeCount + 1);
@@ -149,5 +156,26 @@ describe("cv-sign", () => {
     keys.push(String(rotated.body.key_id));
     const [active] = await sql`select key_id from public.signing_keys where retired_at is null`;
     expect(active.key_id).toBe(rotated.body.key_id);
+  });
+
+  it("re-issues the revoked newest version under a new code, and keeps refresh for Pro", async () => {
+    const verify = async (token: string) => (token === "student-token" ? { id: userId } : null);
+    const deps = { db, log, verify };
+    expect(await handleCvSign(deps, "Bearer student-token", { action: "refresh" })).toEqual({ status: 403, body: { error: "forbidden" } });
+    expect(await handleCvSign(deps, "Bearer student-token", { action: "reissue" })).toEqual({ status: 409, body: { error: "not_now" } });
+
+    const [newest] = await sql`select id, code, content_hash, snapshot from public.cv_records where user_id = ${userId} order by version desc limit 1`;
+    await sql`update public.cv_records set revoked_at = now(), revoked_reason = 'owner', revoked_by = ${userId} where id = ${newest.id}`;
+    // Data changed since, but a re-issue signs the revoked content, not a fresh snapshot.
+    await sql`update public.profiles set graduation_year = 2029 where user_id = ${userId}`;
+    const out = await handleCvSign(deps, "Bearer student-token", { action: "reissue" });
+    expect(out.status).toBe(200);
+    expect(out.body.code).not.toBe(newest.code);
+    const [again] = await sql<{ id: string; content_hash: string; snapshot: unknown; source: string }[]>`
+      select id, content_hash, snapshot, source from public.cv_records where code = ${String(out.body.code)}`;
+    expect(again.source).toBe("reissue");
+    expect(again.content_hash).toBe(newest.content_hash);
+    expect(again.snapshot).toEqual(newest.snapshot);
+    expect(await check(again.id)).toBe("valid");
   });
 });

@@ -356,6 +356,25 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"cv_pdf_exports": {
+                  Row: {
+                    "bytes": number,"created_at": string,"file_deleted_at": string | null,"id": string,"paper": string,"path": string,"pdf_hash": string,"record_id": string,"template": string,"user_id": string | null
+                  }
+                  Insert: {
+                    "bytes": number,"created_at"?: string,"file_deleted_at"?: string | null,"id": string,"paper": string,"path": string,"pdf_hash": string,"record_id": string,"template": string,"user_id"?: string | null
+                  }
+                  Update: {
+                    "bytes"?: number,"created_at"?: string,"file_deleted_at"?: string | null,"id"?: string,"paper"?: string,"path"?: string,"pdf_hash"?: string,"record_id"?: string,"template"?: string,"user_id"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "cv_pdf_exports_record_id_fkey"
+      columns: ["record_id"]
+isOneToOne: false
+      referencedRelation: "cv_records"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"cv_records": {
                   Row: {
                     "code": string,"content_hash": string,"created_at": string,"expires_at": string,"id": string,"issued_at": string,"key_id": string,"revoked_at": string | null,"revoked_by": string | null,"revoked_reason": string | null,"signature": string,"snapshot": Json | null,"snapshot_hash": string,"source": string,"superseded_by": string | null,"template": string,"user_id": string | null,"version": number
@@ -393,6 +412,44 @@ isOneToOne: false
                   }
                   Relationships: [
                     
+                  ]
+                },"cv_share_links": {
+                  Row: {
+                    "created_at": string,"expires_at": string | null,"id": string,"label": string | null,"last_viewed_at": string | null,"revoked_at": string | null,"revoked_reason": string | null,"token_hash": string,"user_id": string,"view_count": number
+                  }
+                  Insert: {
+                    "created_at"?: string,"expires_at"?: string | null,"id"?: string,"label"?: string | null,"last_viewed_at"?: string | null,"revoked_at"?: string | null,"revoked_reason"?: string | null,"token_hash": string,"user_id": string,"view_count"?: number
+                  }
+                  Update: {
+                    "created_at"?: string,"expires_at"?: string | null,"id"?: string,"label"?: string | null,"last_viewed_at"?: string | null,"revoked_at"?: string | null,"revoked_reason"?: string | null,"token_hash"?: string,"user_id"?: string,"view_count"?: number
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"cv_views": {
+                  Row: {
+                    "day": string,"id": number,"link_id": string | null,"record_id": string | null,"source": string,"user_id": string,"viewed_at": string,"viewer_key": string,"viewer_org_id": string | null
+                  }
+                  Insert: {
+                    "day"?: string,"id"?: never,"link_id"?: string | null,"record_id"?: string | null,"source": string,"user_id": string,"viewed_at"?: string,"viewer_key": string,"viewer_org_id"?: string | null
+                  }
+                  Update: {
+                    "day"?: string,"id"?: never,"link_id"?: string | null,"record_id"?: string | null,"source"?: string,"user_id"?: string,"viewed_at"?: string,"viewer_key"?: string,"viewer_org_id"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "cv_views_link_id_fkey"
+      columns: ["link_id"]
+isOneToOne: false
+      referencedRelation: "cv_share_links"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "cv_views_record_id_fkey"
+      columns: ["record_id"]
+isOneToOne: false
+      referencedRelation: "cv_records"
+      referencedColumns: ["id"]
+    }
                   ]
                 },"endorsements": {
                   Row: {
@@ -1875,6 +1932,9 @@ isOneToOne: false
 "create_post":
 { Args: { "p": Json }; Returns: string
                            },
+"create_share_link":
+{ Args: { "p_days": number,"p_label": string,"p_token_hash": string }; Returns: string
+                           },
 "create_venture":
 { Args: { "p": Json }; Returns: string
                            },
@@ -1891,6 +1951,11 @@ isOneToOne: false
 "credentials_for":
 { Args: { "p_user": string }; Returns: {
               "expires_on": string,"id": string,"issued_on": string,"issuer": string,"recognised": boolean,"title": string,"verify_url": string
+            }[]
+                           },
+"cv_export_rights":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "pdf_export": boolean,"refresh_on_demand": boolean,"templates": boolean
             }[]
                            },
 "decide_application":
@@ -2112,13 +2177,26 @@ isOneToOne: false
               "avatar_path": string,"id": string,"last_message": string,"last_message_at": string,"last_sender_is_me": boolean,"muted": boolean,"title": string,"type": Database["public"]['Enums']["chat_thread_type"],"unread": number,"username": string,"venture_id": string
             }[]
                            },
+"open_shared_cv":
+{ Args: { "p_token_hash": string,"p_viewer_key": string }; Returns: {
+              "code": string,"expires_at": string,"issued_at": string,"key_id": string,"signature": string,"snapshot": Json,"snapshot_hash": string,"state": string,"username": string
+            }[]
+                           },
 "ops_case":
 { Args: { "p_case": string }; Returns: Json
+                           },
+"ops_cv_records":
+{ Args: { "p_query": string }; Returns: {
+              "code": string,"full_name": string,"id": string,"issued_at": string,"revoked_at": string,"revoked_reason": string,"superseded": boolean,"user_id": string,"username": string,"version": number
+            }[]
                            },
 "ops_queue":
 { Args: { "p_status"?: string }; Returns: {
               "claimed_by_me": boolean,"claimed_by_name": string,"excerpt": string,"id": string,"last_reported_at": string,"opened_at": string,"owner_name": string,"reasons": (Database["public"]['Enums']["report_reason"])[],"reports": number,"soft_signal": boolean,"status": Database["public"]['Enums']["report_case_status"],"target_type": Database["public"]['Enums']["report_target"]
             }[]
+                           },
+"ops_revoke_cv":
+{ Args: { "p_all": boolean,"p_reason": string,"p_record": string }; Returns: number
                            },
 "pending_friend_request_count":
 { Args: Record<PropertyKey, never>; Returns: number
@@ -2173,6 +2251,9 @@ isOneToOne: false
 { Args: { "p_messages": (string)[] }; Returns: {
               "message_id": string,"reactions": Json
             }[]
+                           },
+"record_cv_export":
+{ Args: { "p_bytes": number,"p_export": string,"p_mac": string,"p_paper": string,"p_pdf_hash": string,"p_record": string,"p_template": string }; Returns: undefined
                            },
 "record_github_webhook":
 { Args: { "p_action"?: string,"p_delivery_id": string,"p_event": string,"p_installation_id"?: number,"p_payload": Json }; Returns: boolean
@@ -2231,14 +2312,23 @@ isOneToOne: false
 "review_ranking_flag":
 { Args: { "p_id": string,"p_reason": string,"p_uphold": boolean }; Returns: undefined
                            },
+"revoke_cv":
+{ Args: { "p_record": string }; Returns: undefined
+                           },
 "revoke_invite":
 { Args: { "p_invite": string }; Returns: boolean
+                           },
+"revoke_share_link":
+{ Args: { "p_id": string }; Returns: undefined
                            },
 "rsvp_event":
 { Args: { "p_post": string,"p_status": Database["public"]['Enums']["rsvp_status"] }; Returns: undefined
                            },
 "save_code_check":
 { Args: { "p_answers": Json,"p_id": string,"p_submit"?: boolean }; Returns: Database["public"]['Enums']["code_check_status"]
+                           },
+"save_cv_settings":
+{ Args: { "p_sections": (string)[],"p_show_email": boolean,"p_show_percentile": boolean,"p_visibility": Database["public"]['Enums']["cv_visibility"] }; Returns: undefined
                            },
 "save_venture_role":
 { Args: { "p_role"?: string,"p_skill_ids": (string)[],"p_slots": number,"p_title": string,"p_venture": string }; Returns: string
@@ -2388,6 +2478,11 @@ isOneToOne: false
                            },
 "venture_verified_contributors":
 { Args: { "p_venture": string }; Returns: number
+                           },
+"verify_cv":
+{ Args: { "p_code": string,"p_pdf_hash"?: string }; Returns: {
+              "code": string,"expires_at": string,"issued_at": string,"key_id": string,"pdf_checked": boolean,"pdf_matches": boolean,"public_key": string,"revoked_at": string,"signature": string,"snapshot": Json,"snapshot_hash": string,"superseded_at": string
+            }[]
                            },
 "vote_poll":
 { Args: { "p_position": number,"p_post": string }; Returns: undefined

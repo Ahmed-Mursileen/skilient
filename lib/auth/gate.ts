@@ -69,7 +69,7 @@ function matches(pathname: string, prefix: string): boolean {
 export function isPublicPath(pathname: string): boolean {
   return (
     pathname === "/" ||
-    ["/auth", "/api", "/ui", "/verify", "/.well-known"].some((p) => matches(pathname, p))
+    ["/auth", "/api", "/ui", "/verify", "/cv", "/.well-known"].some((p) => matches(pathname, p))
   );
 }
 

@@ -68,6 +68,14 @@ describe("storage-cleanup worker", () => {
     expect(storage.calls[0]).toMatchObject({ url: "http://storage.test/storage/v1/object/credentials", prefixes: [path] });
   });
 
+  it("deletes CV PDFs (phase 5)", async () => {
+    const path = `${randomUUID()}/${randomUUID()}.pdf`;
+    await queue("cv-exports", path);
+    const storage = fakeStorage();
+    expect(await runStorageCleanup({ db, remove: storage.remove, log })).toEqual({ deleted: 1, failed: 0, dropped: 0 });
+    expect(storage.calls[0]).toMatchObject({ url: "http://storage.test/storage/v1/object/cv-exports", prefixes: [path] });
+  });
+
   it("leaves files queued when the Storage API fails", async () => {
     await queue("chat-media", pathFor());
     const out = await runStorageCleanup({ db, remove: fakeStorage(500).remove, log });

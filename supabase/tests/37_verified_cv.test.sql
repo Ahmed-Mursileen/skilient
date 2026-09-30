@@ -208,7 +208,7 @@ select is(pg_temp.commit('AAAAAAAAAC', repeat('1', 64), 'monthly'), null, 'the m
 select isnt(pg_temp.commit('AAAAAAAAAD', repeat('3', 64), 'monthly'), null, 'and issues a changed one');
 select is((select array_agg(version || ':' || (superseded_by is not null) order by version) from public.cv_records where user_id = pg_temp.u('S')),
   array['1:true', '2:false'], 'the new version supersedes the old');
-select throws_ok($$select pg_temp.commit('AAAAAAAAAD', repeat('4', 64), 'on_demand')$$, '23505', null,
+select throws_ok($$select pg_temp.commit('AAAAAAAAAD', repeat('4', 64), 'monthly')$$, '23505', null,
   'a code clash raises, so the worker retries with a new code');
 
 select is(private.cv_refresh_start(true), 1, 'the monthly refresh queues every student with a CV');
