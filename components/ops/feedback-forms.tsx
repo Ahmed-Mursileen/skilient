@@ -125,3 +125,26 @@ export function BatchForm({ universityId, batch, name }: { universityId: string;
     </form>
   );
 }
+
+/** Pick a university to give its own final-year batch; the rule covers everyone else. */
+export function BatchAdd({ options }: { options: { id: string; name: string }[] }) {
+  const uid = useId();
+  const [picked, setPicked] = useState("");
+  const chosen = options.find((o) => o.id === picked);
+  return (
+    <div className="flex flex-col gap-3 rounded-lg border border-border-default bg-bg-surface p-4">
+      <div className="flex flex-col gap-2">
+        <Label htmlFor={`${uid}-u`}>Add an exception for a university</Label>
+        <select id={`${uid}-u`} value={picked} onChange={(e) => setPicked(e.target.value)} className={cn(controlBase, "h-10")}>
+          <option value="">Choose a university</option>
+          {options.map((o) => (
+            <option key={o.id} value={o.id}>
+              {o.name}
+            </option>
+          ))}
+        </select>
+      </div>
+      {chosen ? <BatchForm key={chosen.id} universityId={chosen.id} batch={null} name={chosen.name} /> : null}
+    </div>
+  );
+}

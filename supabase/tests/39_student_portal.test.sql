@@ -4,7 +4,7 @@
 -- A is an active student, G graduates, X another student, Z is deleted with a team behind
 -- them, T is accounts staff (aal2).
 begin;
-select plan(85);
+select plan(88);
 
 insert into auth.users (id, email)
 select ('93900000-0000-0000-0000-0000000000' || x.k)::uuid, 'sp' || x.k || '@nutech.edu.pk'
@@ -52,13 +52,12 @@ select throws_ok($$update public.profiles set delete_after = now() where user_id
 -- Graduate rollover
 -- ---------------------------------------------------------------------------
 reset role;
-update public.universities set final_year_batch = 2026
- where id = (select university_id from public.profiles where user_id = pg_temp.u('A'));
-select is(private.graduate_rollover(), 2, 'the rollover graduates the batch (G and Z)');
+select is(private.graduate_rollover('2026-08-31'), 0, 'before 1 September the class of 2026 has not graduated');
+select is(private.graduate_rollover('2026-09-01'), 2, 'on 1 September the platform rule graduates it (G and Z), with no university set up');
 select is((select status::text from public.profiles where user_id = pg_temp.u('G')), 'graduate', 'G is a graduate');
 select is((select status::text from public.profiles where user_id = pg_temp.u('A')), 'active', 'A (batch 2028) is not');
 select isnt((select graduated_at from public.profiles where user_id = pg_temp.u('G')), null, 'with the date');
-select is(private.graduate_rollover(), 0, 'running it again changes nothing');
+select is(private.graduate_rollover('2026-09-02'), 0, 'running it again changes nothing');
 -- Z stays active in this test: keep them out of the graduate rules below.
 update public.profiles set status = 'active', graduated_at = null where user_id = pg_temp.u('Z');
 
@@ -240,6 +239,10 @@ select lives_ok($$select public.ops_set_final_year_batch((select university_id f
 reset role;
 select is((select final_year_batch from public.universities where id = (select university_id from public.profiles where user_id = pg_temp.u('A'))), 2027::smallint, 'it is saved');
 select is((select count(*)::integer from public.ops_audit_log where action = 'university.final_year_batch'), 1, 'and audited');
+update public.universities set final_year_batch = 2028 where id = (select university_id from public.profiles where user_id = pg_temp.u('A'));
+select cmp_ok(private.graduate_rollover('2026-09-02'), '>', 0, 'a university''s own batch replaces the rule for it');
+select is((select status::text from public.profiles where user_id = pg_temp.u('A')), 'graduate', 'so the class of 2028 there graduates early');
+
 
 select * from finish();
 rollback;

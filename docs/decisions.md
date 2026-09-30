@@ -1218,9 +1218,12 @@ Append-only. One dated entry per product decision, with the reason. Carried over
   types until phase 8, which adds them as categories then. Feedback replies are a new category,
   default daily digest; deletion notices use the existing `account` category (instant).
 - 2026-10-02 (phase 6, graduates): `profiles.status` (active, graduate, deleting), `graduated_at`,
-  `delete_after`, and `universities.final_year_batch`. The nightly `graduate-rollover` (00:10 PKT)
-  graduates students whose `graduation_year` is at or before their university's batch. Accounts staff
-  set the batch at `/ops/batches` (audited, with a reason) until university admins arrive in phase 9.
+  `delete_after`. One platform rule, not 200 university settings: the nightly `graduate-rollover`
+  (00:10 PKT) graduates every student whose `graduation_year` is that year or earlier on and after
+  1 September (Pakistan time; versioned in `platform_config` `graduates.rule`). `universities.final_year_batch`
+  is only an optional exception that replaces the rule for one university, empty by default; accounts
+  staff add or clear one at `/ops/graduation` (audited, with a reason). Nothing needs setting up for launch.
+  A student who finishes early (December) is still treated as graduating that September.
   Triggers (not edits to the post and venture functions) refuse a graduate's University Feed post,
   application to, or membership of a university-only venture; the automatic "shipped" post is exempt.
   Graduates leave the university boards 12 months after `graduated_at`; the global board keeps them.

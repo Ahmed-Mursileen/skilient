@@ -97,7 +97,7 @@ test.describe("Ventures", () => {
     await expect(page.getByRole("main")).toContainText("2 of 4 members");
     await axe(page, "venture team (owner)");
     await applicantPage.goto(ventureUrl);
-    await expect(applicantPage.getByText("You're on the team")).toBeVisible();
+    await expect(applicantPage.getByText("You're on the team").locator("visible=true")).toBeVisible();
 
     // A member adds a deliverable; an outsider sees only the count.
     await applicantPage.goto(`${ventureUrl}/deliverables`);
@@ -147,7 +147,7 @@ test.describe("Ventures", () => {
     await expect(page.getByRole("listitem", { name: `${owner.fullName}: Management` })).toBeVisible();
 
     await page.goto(`${ventureUrl}/manage`);
-    await expect(page.getByText("from at least 2 members (you have 0)")).toBeVisible();
+    await expect(page.getByText("from at least 2 members (you have 0)").locator("visible=true")).toBeVisible();
     await page.getByRole("button", { name: "Mark complete" }).click();
     await page.getByRole("dialog").getByRole("button", { name: "Mark complete" }).click();
     await expect(page.getByRole("dialog").getByRole("alert")).toContainText("peer-verified contribution");

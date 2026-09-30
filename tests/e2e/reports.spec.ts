@@ -93,7 +93,7 @@ test.describe("Reports and /ops", () => {
     await mPage.getByRole("checkbox", { name: "I've saved these codes" }).check();
     await mPage.getByRole("button", { name: "Done" }).click();
     await mPage.goto("/ops");
-    await expect(mPage.getByTestId("staff-marker")).toBeVisible();
+    await expect(mPage.getByTestId("staff-marker").locator("visible=true")).toBeVisible({ timeout: 15_000 });
     const queue = mPage.getByTestId("ops-queue");
     await expect(queue.getByTestId("ops-case").filter({ hasText: `Rude message ${tag}` })).toBeVisible();
     await expect(queue.getByTestId("ops-case").filter({ hasText: `Buy exam leaks ${tag}` })).toContainText("Spam");
