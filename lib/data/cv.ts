@@ -329,3 +329,11 @@ export async function getOpsCvRecords(query: string): Promise<OpsCvRow[]> {
     superseded: r.superseded,
   }));
 }
+
+/** Views of the signed-in student's CV in the last 30 days (counts only; names are a Pro feature). */
+export async function getCvViewsLast30Days(userId: string): Promise<number> {
+  const supabase = await createClient();
+  const since = new Date(Date.now() - 30 * 86_400_000).toISOString();
+  const { count } = await supabase.from("cv_views").select("id", { count: "exact", head: true }).eq("user_id", userId).gte("viewed_at", since);
+  return count ?? 0;
+}

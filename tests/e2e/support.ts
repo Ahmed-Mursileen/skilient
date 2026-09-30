@@ -39,6 +39,8 @@ export async function createStudent(opts: {
   fullName: string;
   onboarded?: boolean;
   agreement?: boolean;
+  /** Leave the guided tour to start by itself (it is skipped by default so it doesn't cover other tests). */
+  tour?: boolean;
 }): Promise<TestStudent> {
   const email = uniqueEmail(opts.domain);
   const db = adminClient();
@@ -61,6 +63,10 @@ export async function createStudent(opts: {
       .update({ username, department: "Computer Science", graduation_year: 2027, onboarding_complete: true })
       .eq("user_id", id);
     if (e) throw new Error(`profile: ${e.message}`);
+    if (!opts.tour) {
+      const { error: t } = await db.from("tour_progress").insert({ user_id: id, tour_id: "student", step: 0, skipped_at: new Date().toISOString() });
+      if (t) throw new Error(`tour: ${t.message}`);
+    }
   }
   return { id, email, password: PASSWORD, fullName: opts.fullName, username };
 }

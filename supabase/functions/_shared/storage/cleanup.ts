@@ -12,7 +12,7 @@ interface QueueRow {
   message: { bucket?: string; path?: string };
 }
 
-const BUCKETS = new Set(["post-media", "chat-media", "avatars", "credentials", "cv-exports"]);
+const BUCKETS = new Set(["post-media", "chat-media", "avatars", "credentials", "cv-exports", "feedback"]);
 // Every bucket stores WebP re-encodes, except credentials, which also keeps PDFs as uploaded,
 // and cv-exports, which holds only CV PDFs (deleted after 30 days; decisions.md 2026-10-01).
 const PATH = /^[0-9a-f-]{36}\/[0-9a-f-]{36}\.webp$/;

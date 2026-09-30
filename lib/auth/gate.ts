@@ -14,6 +14,8 @@ export interface GateState {
   agreement_version: number | null;
   agreement_accepted: boolean;
   email_allowed: boolean;
+  /** Absent on a database from before phase 6. */
+  status?: "active" | "graduate" | "deleting";
 }
 
 export const ONBOARDING_STEPS = ["university", "profile", "github", "skills", "looking-for", "people"] as const;
@@ -31,7 +33,10 @@ export function onboardingStepNumber(slug: string): number | null {
 }
 
 /** Where a signed-in user belongs right now (PRD 5.2: onboarding if incomplete, else /feed). */
+export const DELETE_PATH = "/settings/account/delete";
+
 export function homeFor(state: GateState): string {
+  if (state.status === "deleting") return DELETE_PATH;
   if (!state.agreement_accepted) return "/agreement";
   if (!state.onboarding_complete) return onboardingPath(state.onboarding_step);
   return "/feed";
@@ -118,6 +123,9 @@ export function decideRoute({ pathname, path, signedIn, aal, hasVerifiedFactor, 
   if (!state || !state.has_profile || !state.email_allowed) {
     return { type: "sign-out", to: "/signin?error=domain" };
   }
+
+  // Cooling-off (PRD 5.25): a deleting account can only reach the page that cancels it.
+  if (state.status === "deleting") return pathname === DELETE_PATH ? next : redirect(DELETE_PATH);
 
   if (isAuthPage(pathname)) return redirect(homeFor(state));
   if (pathname === "/reset-password") return next;

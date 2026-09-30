@@ -28,6 +28,22 @@ describe("safeNext", () => {
   );
 });
 
+describe("a deleting account", () => {
+  const deleting: GateState = { ...done, status: "deleting" };
+  it("can only reach the cancel page", () => {
+    expect(decideRoute(at("/feed", { state: deleting }))).toEqual({ type: "redirect", to: "/settings/account/delete" });
+    expect(decideRoute(at("/settings", { state: deleting }))).toEqual({ type: "redirect", to: "/settings/account/delete" });
+    expect(decideRoute(at("/settings/account/delete", { state: deleting }))).toEqual({ type: "next" });
+  });
+  it("lands there after signing in", () => {
+    expect(homeFor(deleting)).toBe("/settings/account/delete");
+    expect(decideRoute(at("/signin", { state: deleting }))).toEqual({ type: "redirect", to: "/settings/account/delete" });
+  });
+  it("graduates are not restricted", () => {
+    expect(decideRoute(at("/feed", { state: { ...done, status: "graduate" } }))).toEqual({ type: "next" });
+  });
+});
+
 describe("homeFor", () => {
   it("sends people to the agreement, then onboarding, then the feed", () => {
     expect(homeFor({ ...done, agreement_accepted: false, onboarding_complete: false })).toBe("/agreement");

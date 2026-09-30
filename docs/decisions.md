@@ -1206,3 +1206,57 @@ Append-only. One dated entry per product decision, with the reason. Carried over
   the deploy still went out, and only errors from that build show minified stack traces in Sentry
   (no source maps). No change: it is left alone unless it recurs on every build, in which case the
   Vercel env `SENTRY_AUTH_TOKEN`/`SENTRY_ORG`/`SENTRY_PROJECT` get checked first.
+- 2026-10-02 (phase 6, Opportunities): All seven tabs exist at `/opportunities/[tab]` and read one SQL
+  function, `opportunities(tab)`, which returns no rows until jobs, contact requests and applications
+  (phase 8), competitions and job fairs (phase 9) and project ideas (phase 7) fill it. Each empty tab
+  says what belongs there and offers one action. "For you" is ordered by match alone and the UI only
+  labels "Sponsored" on the Jobs tab; pgTAP 39 keeps the function text free of any sponsorship input.
+  The application tracker route (`/opportunities/applications/[id]`) comes with phase 8.
+- 2026-10-02 (phase 6, notification defaults): Kept per-category preferences (phase 3) rather than
+  per type. The PRD's "instant email for contact requests and application updates" is not added now:
+  only four categories may email instantly (Ahmed, 2026-09-28) and those two have no notification
+  types until phase 8, which adds them as categories then. Feedback replies are a new category,
+  default daily digest; deletion notices use the existing `account` category (instant).
+- 2026-10-02 (phase 6, graduates): `profiles.status` (active, graduate, deleting), `graduated_at`,
+  `delete_after`. One platform rule, not 200 university settings: the nightly `graduate-rollover`
+  (00:10 PKT) graduates every student whose `graduation_year` is that year or earlier on and after
+  1 September (Pakistan time; versioned in `platform_config` `graduates.rule`). `universities.final_year_batch`
+  is only an optional exception that replaces the rule for one university, empty by default; accounts
+  staff add or clear one at `/ops/graduation` (audited, with a reason). Nothing needs setting up for launch.
+  A student who finishes early (December) is still treated as graduating that September.
+  Triggers (not edits to the post and venture functions) refuse a graduate's University Feed post,
+  application to, or membership of a university-only venture; the automatic "shipped" post is exempt.
+  Graduates leave the university boards 12 months after `graduated_at`; the global board keeps them.
+  Sponsored Pro is not built until phase 10, so the "graduates lose sponsored Pro" rule is left for
+  that phase to honour.
+- 2026-10-02 (phase 6, account deletion): Asking needs the typed username and starts 14 days; the
+  account then reaches only `/settings/account/delete` (gate in `proxy.ts`), and cancelling restores
+  it (graduates stay graduates). The hourly `account-deletion` job passes owned ventures to the
+  longest-standing other member (a venture nobody else is on is deleted), queues the person's
+  stored images for the storage worker, and deletes the auth user; cascades remove their posts,
+  messages, endorsements given and credentials, notifications and reports keep only an empty actor,
+  and the CV trigger leaves a revoked, content-wiped record. During the cascade `private.notify`
+  ignores the person being deleted, so no notification points at a user that is going. Staff
+  accounts can't start a deletion (a super admin removes them). No data export, per PRD 5.25.
+- 2026-10-02 (phase 6, learning layer): Tours live in `lib/tours/*` (student now; faculty, recruiter
+  and university-admin are empty until their portals), progress in `tour_progress`, tips in
+  `tips_seen`, day-dismissals in `ui_state` (only two known keys). The tour uses `@floating-ui/react`
+  with a focus trap, Esc to leave, an aria-live step announcement and no motion. Steps whose anchor is
+  not on screen (Leaderboard on a phone) are skipped, so a phone sees 8 steps and desktop 9. It starts
+  once on Home, resumes at its saved step, and `?tour=1` (Settings, "Take the tour") restarts it.
+- 2026-10-02 (phase 6, checklist points): "Each shows its point reward" reads the formula in force:
+  L2 skill 15, endorsement 15, completed venture 150 ("when it completes"); profile, GitHub and CV
+  show no points because the formula pays none for them.
+- 2026-10-02 (phase 6, privacy centre): Profile visibility, recruiter visibility and CV settings keep
+  their existing homes and the centre shows their current value with a link; the leaderboard switch
+  and blocked people are live there. Blocked companies wait for recruiters (phase 8), viewer names for
+  Pro (phase 10) and "who at my university viewed my record" for phase 9, each said plainly on the page.
+- 2026-10-02 (phase 6, feedback): Private `feedback` bucket (5 MB, WebP re-encoded by sharp, 10 a
+  day per student). Staff triage at `/ops/feedback` for any staff role with claim and audit; a status
+  change or reply notifies the student. The "Requests" link moved from the old header to the Ventures
+  page (the Ventures nav badge counts applications and invites).
+- 2026-10-02 (phase 6, design gates): The two screen-spec design gates (critique and audit passes)
+  were not run as separate passes, per the token-discipline rule; axe (WCAG 2.2 AA) runs on every new
+  screen in `student-portal.spec.ts`.
+- 2026-10-02 (phase 6, deferred): The Phase 4 production check and moving skilient.com stay deferred,
+  as asked; neither was run or ticked.

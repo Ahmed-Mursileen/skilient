@@ -1,3 +1,4 @@
+import { FirstVisitTip } from "@/components/learn/first-visit-tip";
 import type { Metadata } from "next";
 import { CvExport } from "@/components/cv/cv-export";
 import { CvPaper } from "@/components/cv/cv-paper";
@@ -46,6 +47,7 @@ export default async function MyCvPage() {
   return (
     <main className="mx-auto grid w-full max-w-[1200px] gap-8 px-[var(--page-gutter)] py-8 lg:grid-cols-[minmax(0,1fr)_360px]">
       <div className="flex min-w-0 flex-col gap-4">
+        <FirstVisitTip id="cv" />
         <div>
           <h1 className="font-display text-h1">Your verified CV</h1>
           <p className="mt-1 text-body text-text-secondary">

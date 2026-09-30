@@ -2,6 +2,7 @@ import { Buildings, GithubLogo, LinkSimple, LockSimple } from "@phosphor-icons/r
 import type { Metadata, Route } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { FirstVisitTip } from "@/components/learn/first-visit-tip";
 import { ReportButton } from "@/components/reports/report-button";
 import { VentureActions } from "@/components/ventures/venture-actions";
 import { VentureStatusBadge } from "@/components/ventures/status-badge";
@@ -27,6 +28,7 @@ export default async function VentureLayout({ params, children }: LayoutProps<"/
 
   return (
     <main className="mx-auto flex max-w-[760px] flex-col gap-6 px-[var(--page-gutter)] py-8">
+      <FirstVisitTip id="venture" />
       <div>
         <Link href={(v.type === "startup" ? "/ventures?type=startup" : "/ventures") as Route} className="text-body-sm text-text-secondary underline underline-offset-4">
           {TYPE_LABELS[v.type].many}

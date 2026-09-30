@@ -1,3 +1,4 @@
+import { FirstVisitTip } from "@/components/learn/first-visit-tip";
 import type { Metadata, Route } from "next";
 import Link from "next/link";
 import { EmptyState, TierBadge, tierLabel } from "@/components/ui";
@@ -20,6 +21,7 @@ export default async function ScorePage() {
   const s = await getMyScore();
   return (
     <main className="mx-auto flex w-full max-w-[680px] flex-col gap-6 px-[var(--page-gutter)] py-8">
+      <FirstVisitTip id="score" />
       <div>
         <h1 className="font-display text-h1">Your score</h1>
         <p className="mt-1 text-body text-text-secondary">
