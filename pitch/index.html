@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Skilient pitch film</title>
+<style>
+  html, body { margin: 0; background: #0E0D0B; overflow: hidden; }
+  canvas { display: block; width: 1920px; height: 1080px; }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<script type="module">
+import { seek, TOTAL } from "./film.js";
+
+const dpr = Number(new URLSearchParams(location.search).get("dpr") || window.devicePixelRatio || 1);
+const canvas = document.getElementById("c");
+canvas.width = 1920 * dpr;
+canvas.height = 1080 * dpr;
+const ctx = canvas.getContext("2d");
+
+const faces = [
+  ["Spectral", "500", "spectral-latin-500-normal.woff2"],
+  ["Spectral", "600", "spectral-latin-600-normal.woff2"],
+  ["Barlow", "400", "barlow-latin-400-normal.woff2"],
+  ["Barlow", "500", "barlow-latin-500-normal.woff2"],
+  ["Barlow", "600", "barlow-latin-600-normal.woff2"],
+];
+await Promise.all(faces.map(async ([family, weight, file]) => {
+  const f = new FontFace(family, `url(/fonts/${file})`, { weight });
+  document.fonts.add(await f.load());
+}));
+
+window.__total = TOTAL;
+window.seek = (t) => {
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  seek(ctx, t);
+};
+window.seek(0);
+window.__ready = true;
+</script>
+</body>
+</html>
