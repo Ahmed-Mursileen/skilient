@@ -4,7 +4,7 @@
 
 **Where do the market numbers come from?** PBS Labour Force Survey 2024-25 Annual Report (Table 9.7, p.110); Pakistan Economic Survey 2025-26, Ch. 10 (Table 10.2, p.172: 1.96 million university students, 2023-24). "2.3×" is our own division of two published rates (10.9 / 4.7). Dropped as unsourced: 18.3%, 31.2%, 32.8% graduate unemployment, the 2019 "78% of employers dissatisfied" survey (secondary, login-gated).
 
-**Do employers really screen by CGPA?** We have no published source that says so and we do not state it as a statistic. Beat 2 is an illustration of what a CGPA cannot show or verify. (Ahmed: add any interview evidence here.)
+**Do employers really screen by CGPA?** No study shows it, and the film does not claim it. What we can point to: some employers publish a CGPA minimum (MCB Bank Pakistan's trainee programme lists 3.00; Ahmed to open https://www.mcb.com.pk/careers/entry-level-programs and confirm before saying it), and in a 2019 employer survey (Naqeebz, secondary source) 60% said new recruits' skills do not reflect their grades and 82% said they do not hire on high grades alone. Both support the same point: a CGPA is a weak signal of capability. Beat 2 is an illustration, not a statistic.
 
 **How do you stop students using AI?** We don't try to detect it. A code check asks three fixed questions about the student's own code (what it does, why it is written that way, how they would change it); a person grades against a rubric; no AI generates questions or grades. AI-assisted authorship is irrelevant because understanding is what is tested. One attempt per skill every 30 days.
 
@@ -20,6 +20,6 @@
 
 **Traction?** 182 people joined the waitlist from our landing page with no paid ads; 1 in 3 used a university email. We took the platform through ILO's SIYB programme and changed it from what we learned.
 
-**Research basis?** "30+ research papers" is founder-stated. (Ahmed: supply the list, so each paper can be named if asked.)
+**Research basis?** 30+ papers: Ahmed's list has 43 entries across commit and collaboration behaviour, GitHub in education, contribution scoring, skill extraction, authorship attribution and AI-code detection (`research-papers.md`). Note the detection papers are why we do not rely on detection: they report detectors failing (arXiv 2505.20158, 2505.08244) and stylometry being spoofable (arXiv 1905.12386), so the product tests understanding instead.
 
 **What is the sample CV?** The product's own CV document with a made-up student (Ayesha Khan). The fingerprints on screen are the real SHA-256 of a real PDF of it and of the same file with one byte flipped.

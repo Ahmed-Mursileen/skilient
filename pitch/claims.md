@@ -76,7 +76,7 @@ Status: `verified` (source checked) · `needs-confirm` (Ahmed must confirm) · `
 | Skills are proven by understanding, not by detecting AI: a teacher grades the student on their own code, no AI generates questions or grades, "AI-assisted authorship is irrelevant" | PRD 5.5 "Code check"; decisions; `supabase/functions/code-check` | verified |
 | "We remove and punish AI usage in projects" | CONTRADICTS the spec: PRD 5.5 lists "AI-generated-code detection" under *Deliberately excluded*, and anti-gaming flags "hold evidence for review, never penalise". Only upheld reports carry penalties (PRD 5.13). | dropped; say the verified line above instead |
 | Skill confidence is balanced by evidence levels L1–L4 | PRD 5.5, migrations `*_skill_levels.sql` | verified |
-| Skill verification design drew on 30+ research papers | founder-stated; PRD cites a "research blueprint" not in the repo | needs-confirm: Ahmed to supply the list for the Q&A sheet |
+| Skill verification design drew on 30+ research papers | Ahmed supplied the list (`pitch/research-papers.md`): 43 entries in 8 groups, of which 40 have direct paper links (1 is a Wikipedia page, 2 are tools cited through another paper). Supports "30+". Sources not opened here (network block) | founder-supplied list, count verified |
 | No likes; the micro-survey replaces them | PRD 5.28, `CLAUDE.md` Never list | verified |
 | Feed ranking uses survey answers (informative, interesting, credible), not likes | `supabase/migrations/20260929040000_feed_ranking.sql` (`feed_score` reads `post_survey_counts`) | verified |
 | Universities will get a dashboard of recruiters' opinions of their students | PRD 5.20 (90-day hire outcome, aggregate only into placement stats) and 5.23 (outcomes for paid licences); NOT built | verified as planned; label "launching" |
@@ -109,3 +109,18 @@ Dropped (do not use):
 | World Bank 1.6% "inadequately educated workforce" | single-biggest-obstacle question, not a skills-gap rate |
 | 72% (2025 study), 65% (World Bank via search) | unsourced search summaries |
 | Universities 262-263, graduates about 445,000 | search summaries, superseded |
+
+
+## CGPA screening: what a published-source search found (2026-09-30)
+
+Network policy blocked every primary page, so these come from search snippets only and none is verified by opening the page.
+
+| Finding | Source | Status |
+| --- | --- | --- |
+| MCB Bank Pakistan publishes a minimum CGPA of 3.00 (or equivalent) and 16 years of education from an HEC-recognised university for its Trainee Business Officer programme | MCB Bank careers page, https://www.mcb.com.pk/careers/entry-level-programs (company's own page) | candidate primary source; Ahmed to open and confirm before use |
+| Naqeebz 2019 employer survey: 82% say they do not hire fresh graduates merely on high grades; 60% say new recruits' knowledge and skills do not reflect the grades they obtained; high grades and volunteer work cited as valued by only 18% | Naqeebz Consulting, reported by Daily Parliament Times (2019-05-06) and Consultancy.asia; original report login-gated | secondary, 2019 (pre-2022). Cuts against "employers screen on CGPA alone" and supports "grades do not reflect capability" |
+| Nestlé Pakistan management trainee eligibility "CGPA 2.5 and above" | a 2021 notice hosted by Karakoram International University | secondary, 2021; not opened |
+| Unilever Pakistan "3.0 CGPA silent cutoff"; Engro "CGPA 2.5" | job-board blogs | weak, do not use |
+| Employers screening by university name | blogs (Medium, LinkedIn, Quora) and a newspaper opinion piece | not research; do not use |
+
+Conclusion: no study shows Pakistani employers shortlist by CGPA. The defensible wording is narrower: some employers publish CGPA minimums (MCB Bank, once confirmed) and employers themselves say grades do not reflect capability (Naqeebz 2019, secondary). The film makes neither claim; beat 2 is labelled as an illustration.
