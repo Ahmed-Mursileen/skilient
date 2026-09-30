@@ -33,7 +33,7 @@ const base = `http://127.0.0.1:${server.address().port}`;
 const exe = process.env.PW_CHROMIUM_PATH || process.env.CV_CHROMIUM_PATH || undefined;
 
 async function openPage(browser, dpr) {
-  const page = await browser.newPage({ viewport: { width: 1920, height: 1080 }, deviceScaleFactor: 1 });
+  const page = await browser.newPage({ viewport: { width: 1920, height: 1080 }, deviceScaleFactor: dpr });
   await page.goto(`${base}/?dpr=${dpr}`);
   await page.waitForFunction(() => window.__ready === true);
   return page;
