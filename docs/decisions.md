@@ -1260,3 +1260,72 @@ Append-only. One dated entry per product decision, with the reason. Carried over
   screen in `student-portal.spec.ts`.
 - 2026-10-02 (phase 6, deferred): The Phase 4 production check and moving skilient.com stay deferred,
   as asked; neither was run or ticked.
+- 2026-10-03 (Ahmed, phase 7 answers): Teacher portal defaults. Until university admins exist (phase 9)
+  Skilient `accounts` staff (two-factor) approve teacher requests and import faculty CSVs in `/ops/teachers`;
+  `approve_teacher`, `revoke_teacher` and `import_faculty_csv` already accept a university admin of that
+  university, so phase 9 only adds its screen. Staff check the university's public faculty page for
+  requests that aren't on a CSV. Removing a teacher ends their supervisions and open requests, releases
+  their code checks and closes their ideas; past reviews and endorsements stay, marked "former faculty".
+- 2026-10-03 (phase 7, signup): Faculty sign up at `/signup?role=faculty` with a university email
+  (domain kind `faculty` or `both`; not Google). They get a `faculty` profile with onboarding already
+  complete, land on `/teach`, and ask for the teacher role at `/teach/apply` (department, title). A
+  pending or removed teacher gets student permissions only: every `teacher_*` function refuses with
+  42501 and the portal layout sends them to the apply page. A CSV email is approved the moment it asks.
+  Faculty never appear on the leaderboard (only students are scored).
+- 2026-10-03 (phase 7, limits): `platform_config` `teacher.limits` holds the launch values: 15
+  supervisions at once, 40 endorsements a month, 5 skills per student per venture, weight 1.5, concentration
+  flag at more than 30% of 90 days (minimum 10 endorsements so one of one isn't a flag), review due in
+  14 days with reminders at 7 and 12, at most 3 open review requests per venture. The 15-supervision cap
+  and the weekly grading cap hold under parallel requests (advisory lock per teacher), tested in
+  `tests/worker/teacher-concurrency.test.ts`.
+- 2026-10-03 (phase 7, ideas): Audience is "my university" (default) or global; a global idea needs no
+  extra approval. An idea is open until the teacher closes it, its deadline (end of that day, Pakistan
+  time) passes, or `max_teams` non-abandoned ventures started from it. After a team starts, only the
+  limit, deadline, label and audience can change. "Start a venture from this idea" is `/ventures/new?idea=`
+  (prefilled, project type, linked by `ventures.idea_id`) and invites the idea's teacher to supervise.
+  Explore gets a "Project ideas" tab (newest first, never ordered by anything paid). There is no public
+  teacher profile page (public profiles are banned); supervised outcomes stay in `/teach` and, from
+  phase 9, in the faculty engagement panel.
+- 2026-10-03 (phase 7, supervision): One supervisor per venture at a time (partial unique index; history
+  kept). A venture owner invites any approved teacher at their university, or a venture started from an
+  idea invites that idea's teacher. Supervisors and teachers with an open review request read the
+  venture's full data through `private.is_venture_teacher()` (added to `can_view_venture` and two
+  policies); they are not members, so they can't log work or use team chat. The supervisor thread is
+  plain text (no images, no Realtime; it refreshes with the page), readable by the team and the active
+  supervisor only. A supervisor's confirmation is a `contribution_confirmations` row with
+  `confirmer_role = 'supervisor'`: faculty-confirmed, and peer-verified everywhere the existing rules look.
+- 2026-10-03 (phase 7, reviews): Rubric v1 is stored as `{scope, technical, collaboration, documentation,
+  outcome}`, each a 1 to 5 score with a required comment, plus an optional overall comment. The scores
+  and comments are visible to the venture's members and the reviewing teacher only; everyone else who
+  can see the venture sees "Reviewed by faculty", the teacher and the date. The CV snapshot gets
+  `faculty_reviewed` (any review exists) and `faculty_confirmed` (count of the student's entries the
+  supervisor confirmed) per project and never a score (`cv_snapshot` wraps the phase 5 function as
+  `cv_snapshot_base`). Reviews don't change ranking. A teacher can decline a request; the owner can
+  withdraw one; unanswered requests expire at 14 days. A second review of the same venture is allowed.
+- 2026-10-03 (phase 7, endorsements): Teacher endorsements go into `endorsements` with
+  `endorser_kind = 'teacher'`; only for members of ventures the teacher reviewed or supervised (an ended
+  supervision counts), only for skills tagged in that venture, optionally tied to an entry. Ranking weights
+  them 1.5 (config), an evidence-tied one reaches L4 alone and makes the skill peer-verified alone, and a
+  counting one is Luminary's external signal (`facts.teacher_endorsement`). The concentration check runs
+  inside the anti-gaming stage of the nightly run (`detect_rings` now also calls
+  `detect_teacher_concentration`) and writes `teacher_concentration_flags` for a trust reviewer in
+  `/ops/teachers` (clear or uphold, audited); nothing is removed automatically. Profiles label them
+  "Faculty" or "Former faculty".
+- 2026-10-03 (phase 7, code checks): A submitted check gets `due_at` (72 hours) and waits with the
+  university's teachers who opted in for its skill (`routed_to_staff_at` null); with no eligible teacher it
+  goes to Skilient reviewers at once. `teacher-reminders` (hourly; it also sends the review reminders and
+  expiry and closes ideas past their deadline) moves a check unclaimed for 48 hours, or held by a teacher
+  past 72 hours, to Skilient reviewers. `/ops` shows only routed checks and a trigger stops staff claiming
+  an unrouted one. A teacher can't grade a friend, a teammate or a student in a venture they supervised
+  (or supervised before); claims use `FOR UPDATE SKIP LOCKED`; the weekly cap counts claims held plus
+  checks graded since Monday (Pakistan time). Grading reuses the four-part rubric and sends the student the
+  same notification; the code-check Edge Function shows the code to the teacher who holds the check.
+- 2026-10-03 (phase 7, digest): Teachers get no per-event emails: their notification types are in-app
+  only (category `faculty`). `teacher-digest` (Mondays 09:00 Pakistan time) queues one email per approved
+  teacher with something waiting (supervision invites, open and soon-due reviews, checks to grade, ideas
+  closing within a week); the notify worker builds it from counts only, never student work, and skips an
+  empty one. Teachers switch it off in `/teach/settings`.
+- 2026-10-03 (phase 7, deferred): The faculty guided tour stays empty (tours are still student-only), and
+  the faculty engagement panel, the `/uni/people` approval screen and supervised outcomes on a university
+  dashboard wait for phase 9. The Phase 4 production check and moving skilient.com stay deferred, as asked;
+  neither was run or ticked.

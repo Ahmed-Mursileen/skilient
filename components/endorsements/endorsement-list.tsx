@@ -31,7 +31,7 @@ export function EndorsementList({
             <p className="text-body-sm text-text-secondary">
               {g.endorsers} teammate{g.endorsers === 1 ? "" : "s"}
             </p>
-            {g.endorsers >= peerVerifiedMin ? (
+            {g.endorsers >= peerVerifiedMin || g.faculty ? (
               <span className="inline-flex items-center gap-1 text-body-sm text-text-primary">
                 <SealCheck aria-hidden weight="fill" className="size-4 text-verified" />
                 Peer-verified
@@ -51,6 +51,11 @@ export function EndorsementList({
                     ) : (
                       <span className="font-semibold">{e.endorser.name}</span>
                     )}
+                    {e.faculty ? (
+                      <span className="ml-1 rounded-full border border-verified px-2 py-0.5 text-caption font-semibold text-verified">
+                        {e.formerFaculty ? "Former faculty" : "Faculty"}
+                      </span>
+                    ) : null}
                     <span className="text-text-secondary">
                       {e.venture ? (
                         <>

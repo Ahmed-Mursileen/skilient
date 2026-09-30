@@ -4,12 +4,21 @@ import { useState, useTransition } from "react";
 import { FormAlert } from "@/components/auth/form-alert";
 import { Button, Input, Textarea } from "@/components/ui";
 import { gradeCodeCheck } from "@/lib/actions/ops/trust";
+import type { ActionResult } from "@/lib/actions/result";
 import { RUBRIC, type RubricKey } from "@/lib/code-checks/constants";
 
 type Part = { pass: boolean | null; comment: string };
+type Rubric = Record<RubricKey, { pass: boolean; comment: string }>;
 
 /** The 4-part rubric (PRD 5.21), each met or not with an optional comment; 3 of 4 passes. */
-export function CodeCheckGradeForm({ id }: { id: string }) {
+export function CodeCheckGradeForm({
+  id,
+  grade = gradeCodeCheck,
+}: {
+  id: string;
+  /** Who grades: Skilient reviewers by default, a teacher through their own action. */
+  grade?: (id: string, rubric: Rubric, feedback: string) => Promise<ActionResult<unknown>>;
+}) {
   const [parts, setParts] = useState<Record<RubricKey, Part>>({
     behaviour: { pass: null, comment: "" },
     design: { pass: null, comment: "" },
@@ -33,11 +42,8 @@ export function CodeCheckGradeForm({ id }: { id: string }) {
         }
         startTransition(async () => {
           setError(null);
-          const rubric = Object.fromEntries(RUBRIC.map((r) => [r.key, { pass: parts[r.key].pass === true, comment: parts[r.key].comment }])) as Record<
-            RubricKey,
-            { pass: boolean; comment: string }
-          >;
-          const result = await gradeCodeCheck(id, rubric, feedback);
+          const rubric = Object.fromEntries(RUBRIC.map((r) => [r.key, { pass: parts[r.key].pass === true, comment: parts[r.key].comment }])) as Rubric;
+          const result = await grade(id, rubric, feedback);
           if (!result.ok) setError(result.message);
         });
       }}

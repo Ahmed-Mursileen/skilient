@@ -14,7 +14,7 @@ import { detectionMessage, detectUniversity } from "@/lib/auth/email-domain";
 import type { Agreement } from "@/lib/data/agreement";
 import { useDomainDirectory } from "@/lib/hooks/use-domain-directory";
 
-export function SignupForm({ siteKey, agreement }: { siteKey: string | null; agreement: Agreement | null }) {
+export function SignupForm({ siteKey, agreement, role = "student" }: { siteKey: string | null; agreement: Agreement | null; role?: "student" | "faculty" }) {
   const directory = useDomainDirectory();
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -41,6 +41,7 @@ export function SignupForm({ siteKey, agreement }: { siteKey: string | null; agr
     const form = new FormData(event.currentTarget);
     if (token) form.set("turnstileToken", token);
     if (chosen) form.set("universityId", chosen.id);
+    form.set("role", role);
     setError(null);
     startTransition(async () => {
       const result = await signUp(form);
@@ -123,7 +124,7 @@ export function SignupForm({ siteKey, agreement }: { siteKey: string | null; agr
             <p className="flex items-start gap-1.5 text-body-sm text-text-secondary">
               <Buildings aria-hidden weight="bold" className="mt-0.5 size-4 shrink-0 text-text-muted" />
               <span>
-                Signing up as a student of <strong className="font-semibold text-text-primary">{chosen.name}</strong>.{" "}
+                Signing up as {role === "faculty" ? "faculty" : "a student"} of <strong className="font-semibold text-text-primary">{chosen.name}</strong>.{" "}
                 {!shared ? (
                   <button
                     type="button"
@@ -210,19 +211,36 @@ export function SignupForm({ siteKey, agreement }: { siteKey: string | null; agr
         Create account
       </Button>
 
-      <div className="flex items-center gap-3 text-body-sm text-text-muted" aria-hidden>
-        <span className="h-px flex-1 bg-border-default" />
-        or
-        <span className="h-px flex-1 bg-border-default" />
-      </div>
+      {role === "faculty" ? (
+        <p className="text-center text-body-sm text-text-muted">
+          Faculty sign up with their university email, then ask for the teacher role.{" "}
+          <Link href="/signup" className="font-semibold text-text-primary underline underline-offset-4">
+            I&apos;m a student
+          </Link>
+        </p>
+      ) : (
+        <>
+          <div className="flex items-center gap-3 text-body-sm text-text-muted" aria-hidden>
+            <span className="h-px flex-1 bg-border-default" />
+            or
+            <span className="h-px flex-1 bg-border-default" />
+          </div>
 
-      <div className="flex flex-col gap-2">
-        <Button type="button" variant="secondary" size="lg" onClick={onGoogle} loading={googlePending} disabled={pending}>
-          <GoogleLogo aria-hidden weight="bold" className="size-5" />
-          Continue with Google
-        </Button>
-        <p className="text-center text-body-sm text-text-muted">Only your university Google account works.</p>
-      </div>
+          <div className="flex flex-col gap-2">
+            <Button type="button" variant="secondary" size="lg" onClick={onGoogle} loading={googlePending} disabled={pending}>
+              <GoogleLogo aria-hidden weight="bold" className="size-5" />
+              Continue with Google
+            </Button>
+            <p className="text-center text-body-sm text-text-muted">Only your university Google account works.</p>
+            <p className="text-center text-body-sm text-text-muted">
+              Teaching at a university?{" "}
+              <Link href="/signup?role=faculty" className="font-semibold text-text-primary underline underline-offset-4">
+                Sign up as faculty
+              </Link>
+            </p>
+          </div>
+        </>
+      )}
     </form>
   );
 }

@@ -3,7 +3,7 @@ import type { Route } from "next";
 /** Explore's state lives in the URL (PRD 5.10): shareable and Back-safe. */
 export interface ExploreState {
   q: string;
-  tab: "people" | "projects" | "startups";
+  tab: "people" | "projects" | "startups" | "ideas";
   department: string;
   /** Graduation year ("" for any). */
   batch: string;

@@ -116,18 +116,21 @@ const signUpSchema = z.object({
   universityId: z.union([z.uuid(), z.literal("")]).optional(),
   acceptAgreement: z.literal("on", { error: "Accept the User Agreement and Privacy Notice to continue." }),
   turnstileToken: z.string().max(4096).optional(),
+  // Faculty sign up here too (PRD 5.21) and then ask for the teacher role; nothing else is offered.
+  role: z.enum(["student", "faculty"]).optional(),
 });
 
 export async function signUp(formData: FormData): Promise<ActionResult> {
   const ctx = await actionContext("auth.sign_up");
   const parsed = signUpSchema.safeParse(
-    formValues(formData, ["fullName", "email", "password", "universityId", "acceptAgreement", "turnstileToken"]),
+    formValues(formData, ["fullName", "email", "password", "universityId", "acceptAgreement", "turnstileToken", "role"]),
   );
   if (!parsed.success) {
     ctx.done("refused", { error_code: "invalid_input" });
     return fail("invalid_input", "Check the highlighted fields.", { fields: fieldErrors(parsed.error.issues) });
   }
   const input = parsed.data;
+  const role = input.role === "faculty" ? "faculty" : "student";
 
   const turnstile = await verifyTurnstile(input.turnstileToken, ctx.ip);
   if (!turnstile.ok) {
@@ -144,7 +147,7 @@ export async function signUp(formData: FormData): Promise<ActionResult> {
   // Authoritative domain check (the form's check is only for fast feedback; the Auth hook repeats it).
   const domain = emailDomain(input.email);
   const [owners, personal] = await Promise.all([
-    supabase.from("university_domains").select("university_id").eq("domain", domain ?? "").in("kind", ["student", "both"]),
+    supabase.from("university_domains").select("university_id").eq("domain", domain ?? "").in("kind", role === "faculty" ? ["faculty", "both"] : ["student", "both"]),
     supabase.from("personal_email_domains").select("domain").eq("domain", domain ?? "").maybeSingle(),
   ]);
   if (owners.error || personal.error) {
@@ -182,7 +185,7 @@ export async function signUp(formData: FormData): Promise<ActionResult> {
       data: {
         full_name: input.fullName,
         university_id: universityId,
-        role: "student",
+        role,
         agreement_version: agreementVersion ? String(agreementVersion) : undefined,
       },
     },

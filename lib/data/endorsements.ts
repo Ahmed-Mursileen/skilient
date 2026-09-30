@@ -18,6 +18,9 @@ export interface Endorsement {
   hasEvidence: boolean;
   hidden: boolean;
   dateLabel: string;
+  /** A teacher's endorsement (weight 1.5, PRD 5.21); formerFaculty once their role was removed. */
+  faculty: boolean;
+  formerFaculty: boolean;
 }
 
 export interface SkillEndorsements {
@@ -25,6 +28,8 @@ export interface SkillEndorsements {
   skillName: string;
   /** Different teammates whose endorsement shows (hidden ones don't count). */
   endorsers: number;
+  /** A teacher endorsed this skill: it counts as peer-verified on its own. */
+  faculty: boolean;
   items: Endorsement[];
 }
 
@@ -34,7 +39,7 @@ export async function getEndorsements(userId: string): Promise<SkillEndorsements
   if (error) throw new Error(`endorsements: ${error.code}`);
   const bySkill = new Map<string, SkillEndorsements>();
   for (const e of data ?? []) {
-    const group = bySkill.get(e.skill_id) ?? { skillId: e.skill_id, skillName: e.skill_name, endorsers: 0, items: [] };
+    const group = bySkill.get(e.skill_id) ?? { skillId: e.skill_id, skillName: e.skill_name, endorsers: 0, faculty: false, items: [] };
     group.items.push({
       id: e.id,
       endorser: {
@@ -48,11 +53,14 @@ export async function getEndorsements(userId: string): Promise<SkillEndorsements
       hasEvidence: e.has_evidence,
       hidden: e.hidden,
       dateLabel: dayLabel(e.created_at),
+      faculty: e.endorser_kind === "teacher",
+      formerFaculty: e.former_faculty,
     });
     bySkill.set(e.skill_id, group);
   }
   for (const group of bySkill.values()) {
     group.endorsers = new Set(group.items.filter((i) => !i.hidden).map((i) => i.endorser.id)).size;
+    group.faculty = group.items.some((i) => i.faculty && !i.hidden);
   }
   return [...bySkill.values()].sort((a, b) => b.endorsers - a.endorsers || a.skillName.localeCompare(b.skillName));
 }

@@ -442,6 +442,8 @@ export interface Contribution {
   correctedAt: string | null;
   confirmations: number;
   peerVerified: boolean;
+  /** The venture's supervisor confirmed it (PRD 5.21): counts as peer-verified. */
+  facultyConfirmed: boolean;
   confirmedByMe: boolean;
   /** False once the author left or was removed: the entry stays but no longer counts. */
   byMember: boolean;
@@ -456,7 +458,7 @@ export async function getContributions(ventureId: string): Promise<Contribution[
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("contributions_with_status")
-    .select("id, user_id, kind, description, evidence_url, hours, source, created_at, corrected_at, confirmations, peer_verified, confirmed_by_me, by_member, before_venture, skill_ids")
+    .select("id, user_id, kind, description, evidence_url, hours, source, created_at, corrected_at, confirmations, peer_verified, confirmed_by_me, by_member, before_venture, skill_ids, faculty_confirmed")
     .eq("venture_id", ventureId)
     .order("created_at", { ascending: false })
     .limit(300);
@@ -473,6 +475,7 @@ export async function getContributions(ventureId: string): Promise<Contribution[
     correctedAt: c.corrected_at,
     confirmations: c.confirmations ?? 0,
     peerVerified: Boolean(c.peer_verified),
+    facultyConfirmed: Boolean(c.faculty_confirmed),
     confirmedByMe: Boolean(c.confirmed_by_me),
     byMember: Boolean(c.by_member),
     beforeVenture: Boolean(c.before_venture),

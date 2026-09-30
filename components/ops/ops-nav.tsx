@@ -11,6 +11,7 @@ export function OpsNav({ moderator, trust, accounts }: { moderator: boolean; tru
   const items = [
     moderator && { href: "/ops", label: "Reports", active: pathname === "/ops" || pathname.startsWith("/ops/reports") },
     trust && { href: "/ops/evidence", label: "Evidence", active: pathname.startsWith("/ops/evidence") },
+    (accounts || trust) && { href: "/ops/teachers", label: "Teachers", active: pathname.startsWith("/ops/teachers") },
     accounts && { href: "/ops/exam-periods", label: "Exam periods", active: pathname.startsWith("/ops/exam-periods") },
     accounts && { href: "/ops/graduation", label: "Graduation", active: pathname.startsWith("/ops/graduation") },
     { href: "/ops/feedback", label: "Feedback", active: pathname.startsWith("/ops/feedback") },

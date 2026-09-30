@@ -46,7 +46,10 @@ test.describe("Student portal", () => {
     await page.keyboard.press("Tab");
     await page.keyboard.press("Tab");
     await page.keyboard.press("Tab");
-    expect(await page.evaluate(() => !!document.activeElement?.closest("[data-testid=tour-popover]"))).toBe(true);
+    // Focus passes through the trap's guard elements for a moment; it settles back inside the popover.
+    await expect
+      .poll(() => page.evaluate(() => !!document.activeElement?.closest("[data-testid=tour-popover]")), { timeout: 5000 })
+      .toBe(true);
     await page.getByTestId("tour-next").focus();
     await page.keyboard.press("Enter");
     await expect(page.getByTestId("tour-progress")).toHaveText("Step 2 of 9");
