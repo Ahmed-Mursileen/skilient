@@ -1,0 +1,21 @@
+# Phase 5 feasibility spike (decisions.md 2026-10-01): calls /api/cv/spike on the Vercel
+# preview once it is ready and prints the function's own measurements. Removed before merge.
+name: CV PDF spike
+on: deployment_status
+permissions:
+  contents: read
+jobs:
+  spike:
+    if: github.event.deployment_status.state == 'success' && github.event.deployment.environment != 'Production'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call the spike route (first call is the cold start)
+        env:
+          URL: ${{ github.event.deployment_status.environment_url || github.event.deployment_status.target_url }}
+        run: |
+          echo "deployment: $URL"
+          for i in 1 2 3 4 5; do
+            curl -s -w '\nhttp=%{http_code} wall=%{time_total}s\n' --max-time 90 "$URL/api/cv/spike" | head -c 1500
+            echo
+            sleep 2
+          done
