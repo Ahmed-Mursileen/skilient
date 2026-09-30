@@ -51,7 +51,7 @@ Status `founder-verified` = figure and table reference supplied by Ahmed from th
 | Claim (as it may appear) | Value | Source, table, period | Status |
 | --- | --- | --- | --- |
 | Unemployment rate, people whose highest level is a degree | 10.9% (male 7.0%, female 24.1%) | PBS, Labour Force Survey 2024-25 Annual Report, Table 9.7, p.110 (19th ICLS) | founder-verified |
-| Unemployment rate, no education | 4.7% (same table). Degree holders are "more than twice" that (10.9 / 4.7 = 2.3) | same | founder-verified |
+| Unemployment rate, no education | 4.7% (same table). Derived on screen: "2.3×" = 10.9 / 4.7 = 2.32, computed from the two published rates | same | founder-verified (2.3× is derived, say so if asked) |
 | Unemployment rate, master's and above | 11.7% | same | founder-verified |
 | University students | 1.96 million, 2023-24 (table shows 1,964.2 thousand, 2024-25 marked estimated) | Pakistan Economic Survey 2025-26, Ch. 10, Table 10.2 p.172, text p.171 | founder-verified |
 | Universities | 278 (163 public, 115 private) | same Survey §10.5 p.182. Table 10.2 of the same Survey says 239, unreconciled, so show 278 with source or drop it | founder-verified, conflict noted |

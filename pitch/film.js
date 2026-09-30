@@ -2,6 +2,7 @@
 import { W, H, C } from "./lib.js";
 import * as b1 from "./beats/b1-number.js";
 import * as b2 from "./beats/b2-gap.js";
+import * as b3 from "./beats/b3-scale.js";
 
 function placeholder(title, duration) {
   return {
@@ -22,7 +23,7 @@ function placeholder(title, duration) {
 export const beats = [
   { name: "The number", ...b1 },
   { name: "The gap", ...b2 },
-  placeholder("3 The scale", 14),
+  { name: "The scale", ...b3 },
   placeholder("4a Shatter", 16),
   placeholder("4b Signed CV", 16),
   placeholder("5 Why it holds", 16),
