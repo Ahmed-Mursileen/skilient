@@ -22,12 +22,14 @@ function placeholder(title, duration) {
 export const beats = [
   { name: "The number", ...b1 },
   { name: "The gap", ...b2 },
-  placeholder("3 The scale", 18),
-  placeholder("4 Proof", 22),
-  placeholder("5 The loop", 55),
-  placeholder("6 Why it holds", 17),
-  placeholder("7 Traction and discovery", 23),
-  placeholder("8 Close", 15),
+  placeholder("3 The scale", 14),
+  placeholder("4a Shatter", 16),
+  placeholder("4b Signed CV", 16),
+  placeholder("5 Why it holds", 16),
+  placeholder("6a Loop: students", 28),
+  placeholder("6b Loop: universities and recruiters", 27),
+  placeholder("7 Traction and discovery", 20),
+  placeholder("8 Close", 13),
 ];
 
 export const TOTAL = beats.reduce((s, b) => s + b.duration, 0);

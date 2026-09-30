@@ -44,16 +44,31 @@ Status: `verified` (source checked) · `needs-confirm` (Ahmed must confirm) · `
 | Feed ranking uses survey answers (informative, interesting, credible), not likes | `supabase/migrations/20260929040000_feed_ranking.sql` (`feed_score` reads `post_survey_counts`) | verified |
 | Universities will get a dashboard of recruiters' opinions of their students | PRD 5.20 (90-day hire outcome, aggregate only into placement stats) and 5.23 (outcomes for paid licences); NOT built | verified as planned; label "launching" |
 
-## Market (web search only; primary sources blocked by the network policy, so NOT verified)
+## Market (Ahmed's research, primary PDFs read in a separate session; not re-opened here because pbs.gov.pk and finance.gov.pk are behind this environment's network block)
 
-Search summaries conflict, so none of these may appear on screen yet.
+Status `founder-verified` = figure and table reference supplied by Ahmed from the primary document; still cite publisher, table and year on screen.
 
-| Claim | Candidate value | Candidate source | Status |
+| Claim (as it may appear) | Value | Source, table, period | Status |
 | --- | --- | --- | --- |
-| Universities in Pakistan | 262–263 | HEC / Pakistan Economic Survey (search summary) | unverified |
-| Graduates per year | about 445,000 | search summary, source unclear | unverified |
-| Graduate unemployment | 18.3% (LFS 2024–25) vs 31.2% (early 2026) vs 32.8% ages 20–24: sources disagree | PIDE, Dawn, PBS | unverified, conflicting |
-| Employers dissatisfied with graduate skills | 78% (2019 survey), 72% (2025 study) | academic/press, unnamed | unverified |
-| Employers unable to find technical skills | 65% | World Bank (via search summary) | unverified |
+| Unemployment rate, people whose highest level is a degree | 10.9% (male 7.0%, female 24.1%) | PBS, Labour Force Survey 2024-25 Annual Report, Table 9.7, p.110 (19th ICLS) | founder-verified |
+| Unemployment rate, no education | 4.7% (same table). Degree holders are "more than twice" that (10.9 / 4.7 = 2.3) | same | founder-verified |
+| Unemployment rate, master's and above | 11.7% | same | founder-verified |
+| University students | 1.96 million, 2023-24 (table shows 1,964.2 thousand, 2024-25 marked estimated) | Pakistan Economic Survey 2025-26, Ch. 10, Table 10.2 p.172, text p.171 | founder-verified |
+| Universities | 278 (163 public, 115 private) | same Survey §10.5 p.182. Table 10.2 of the same Survey says 239, unreconciled, so show 278 with source or drop it | founder-verified, conflict noted |
+| Graduates in one year | 472,824 (2020-21) | HEC HEDR Annual Report 2022-23, p.19 | Q&A only: pre-2022, never on screen without the year |
 
-Blocked hosts: pide.org.pk, dawn.com, finance.gov.pk. Until these (or the PBS/HEC publications) can be read, the market beat uses only what Ahmed supplies or drops the numbers.
+Rules for the film:
+- Never say "graduate unemployment is rising": PBS shows the degree-holder rate fell from 16.3% (2020-21) to 10.8% (2024-25) on the 13th ICLS.
+- A rate is the unemployed share of the labour force. Do not confuse it with 14.8%, the share of all unemployed people who hold a degree.
+- No primary source shows Pakistani employers screen by CGPA or university name. The film frames this as what a CGPA cannot show or verify, not as a statistic. Beat 2 is an illustration.
+
+Dropped (do not use):
+
+| Figure | Why |
+| --- | --- |
+| 18.3%, 31.2%, 32.8% graduate unemployment | not in any primary source; 18.3 and 31.2 appear in LFS only as unrelated cells |
+| 20-24 graduate unemployment | PBS publishes no 20-24 band (only 15-24: 12.8%) |
+| Naqeebz 78% employers dissatisfied | 2019, login-gated report, secondary source only |
+| World Bank 1.6% "inadequately educated workforce" | single-biggest-obstacle question, not a skills-gap rate |
+| 72% (2025 study), 65% (World Bank via search) | unsourced search summaries |
+| Universities 262-263, graduates about 445,000 | search summaries, superseded |
