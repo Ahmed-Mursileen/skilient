@@ -19,7 +19,7 @@ export interface CvDeps {
 
 export type IssueResult =
   | { status: "issued"; id: string; code: string }
-  | { status: "unchanged" | "exists" | "not_eligible" };
+  | { status: "unchanged" | "exists" | "not_eligible" | "nothing_to_reissue" };
 
 export class NoSigningKey extends Error {}
 
@@ -44,8 +44,11 @@ export async function rotateKey(deps: Pick<CvDeps, "db" | "log">): Promise<{ key
 }
 
 export async function issueCv(deps: Pick<CvDeps, "db" | "log">, userId: string, source: IssueSource): Promise<IssueResult> {
-  const [prep] = await deps.db.query<Prepared>("select * from private.cv_issue_prepare($1)", [userId]);
-  if (!prep) return { status: "not_eligible" };
+  // A re-issue signs the revoked newest version's content again under a new code; every
+  // other source builds a fresh snapshot.
+  const prepare = source === "reissue" ? "private.cv_reissue_prepare" : "private.cv_issue_prepare";
+  const [prep] = await deps.db.query<Prepared>(`select * from ${prepare}($1)`, [userId]);
+  if (!prep) return { status: source === "reissue" ? "nothing_to_reissue" : "not_eligible" };
   if (source === "monthly" && prep.content_hash === prep.latest_content_hash) return { status: "unchanged" };
 
   const [key] = await deps.db.query<{ key_id: string; private_key: string }>("select * from private.cv_active_key()");
@@ -117,8 +120,9 @@ export interface HandlerResult {
 
 /**
  * Two callers: pg_cron and private.cv_rotate_key() with the worker secret (rotate, drain),
- * and the Next server with the signed-in student's access token (ensure: issue their first
- * CV if they have none, and return the newest code).
+ * and the Next server with the signed-in student's access token: ensure (issue their first CV
+ * if they have none), reissue (the revoked newest version's content under a new code) and
+ * refresh (Pro, on demand). Each returns the newest unrevoked code.
  */
 export async function handleCvSign(deps: CvDeps, authorization: string | null, body: unknown): Promise<HandlerResult> {
   const token = authorization?.startsWith("Bearer ") ? authorization.slice(7).trim() : "";
@@ -136,9 +140,24 @@ export async function handleCvSign(deps: CvDeps, authorization: string | null, b
 
   const caller = await deps.verify(token);
   if (!caller) return { status: 401, body: { error: "unauthorized" } };
-  if (action !== "ensure") return { status: 400, body: { error: "invalid_input" } };
-  const result = await issueCv(deps, caller.id, "first");
+  const source: IssueSource | null = action === "ensure" ? "first" : action === "reissue" ? "reissue" : action === "refresh" ? "on_demand" : null;
+  if (!source) return { status: 400, body: { error: "invalid_input" } };
+  let result: IssueResult;
+  try {
+    result = await issueCv(deps, caller.id, source);
+  } catch (error) {
+    // Refusals from cv_issue_commit (Pro only, daily limits, nothing to re-issue).
+    const code = (error as { code?: string })?.code;
+    const refused: Record<string, [number, string]> = {
+      "42501": [403, "forbidden"],
+      "54000": [429, "rate_limited"],
+      "55000": [409, "not_now"],
+    };
+    if (code && refused[code]) return { status: refused[code][0], body: { error: refused[code][1] } };
+    throw error;
+  }
   if (result.status === "not_eligible") return { status: 403, body: { error: "not_eligible" } };
+  if (result.status === "nothing_to_reissue") return { status: 409, body: { error: "not_now" } };
   const [latest] = await deps.db.query<{ code: string }>(
     "select code from public.cv_records where user_id = $1 and revoked_at is null order by version desc limit 1",
     [caller.id],

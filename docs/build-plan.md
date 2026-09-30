@@ -124,13 +124,17 @@ Legend: 📖 = PRD files to read (in `docs/prd/`), ✅ = done-when checks.
 
 📖 `05-18-verified-cv.md`
 
-- [ ] Snapshot builder, RFC 8785 canonical JSON, Ed25519 signing (Vault key), codes, `/verify/[code]` statuses, share links (Spark+), monthly refresh job, PDF export (entitlement stubbed until phase 10), ATS templates
+- [x] Snapshot builder, RFC 8785 canonical JSON, Ed25519 signing (Vault key), codes, `/verify/[code]` statuses, share links (Spark+), monthly refresh job, PDF export (entitlement stubbed until phase 10), ATS templates — *slice 1 (signing core), slices 2-3 (screens, control, PDF)*
 
 ✅ Tampering one byte of a PDF shows Altered · revoked shows Revoked · every template passes the ATS text test · key rotation keeps old CVs valid
 
 *Plan 2026-10-01 (decisions.md): three slices, one PR each: the signing core; screens and control (`/me/cv`, share links, `/verify/[code]`, revocation); PDF export and the five ATS templates (after a Chromium-on-Vercel feasibility spike).*
 
 *Slice 1 (signing core): `signing_keys`, `cv_settings`, `cv_records` with RLS; `private.cv_snapshot()` builds CvSnapshotV1 from verified data only (L2+ skills up to 15, in-progress and completed ventures incl. former-member ones with confirmed work, deliverable counts not links, private repositories unnamed, counted pull requests, 5 evidence-tied endorsements, approved unexpired credentials, department-based summary); the `cv-sign` Edge Function generates keys into Vault (`private.cv_rotate_key()`), signs the RFC 8785 canonical envelope with Ed25519, and drains the monthly `cv-refresh` queue (changed snapshots only; the old version superseded); public keys at `/.well-known/skilient-cv-keys.json`. pgTAP `37_verified_cv`, worker `cv-sign` (rotation keeps old CVs valid, tampering caught, monthly refresh), unit `cv-canonical` (RFC 8785 examples), E2E `cv-keys.spec.ts`. Covers the done-when check "key rotation keeps old CVs valid".*
+
+*Slices 2-3 (one PR, Ahmed 2026-10-01): `/me/cv` (the signed CV as it reads, sections and order, percentile and email switches, visibility, share links for Spark and above shown once, versions with revoke and re-issue, PDF export locked until Pro, view counts); `/cv/[username]?t=` opens the newest version signed-out and never falls back to an older one; `/verify` and `/verify/[code]` re-check the Ed25519 signature and show Valid, Superseded, Outdated, Revoked (code and dates only), Altered (signature or uploaded PDF hash) or Not found, 30 lookups a minute per IP; trust reviewers revoke at `/ops/evidence?tab=cvs`; bans and account deletion revoke by trigger; PDF export through headless Chromium (`/api/cv/pdf`) records each file's hash with a MAC; five single-column templates. pgTAP `38_cv_control`, worker `cv-sign` (re-issue, refresh) and `storage-cleanup`, unit `cv-document` (escaping; web and PDF markup identical), `pnpm test:ats` (every template), E2E `cv.spec.ts` (share, verify, supersede, revoke, Spark and Pro locks, a changed PDF byte shows Altered). The Vercel runtime numbers for the PDF renderer come from `/api/ops/pdf-check` after merge (setup checklist).*
+
+*Phase 5 done-when, all in CI: changing one byte of an exported PDF shows Altered (E2E `cv.spec.ts`); a revoked CV shows Revoked (E2E `cv.spec.ts`, pgTAP `38`); every template passes the ATS text test (`pnpm test:ats`); rotating the key keeps old CVs valid (worker `cv-sign`).*
 
 ## Phase 6 — Student portal and learning layer
 

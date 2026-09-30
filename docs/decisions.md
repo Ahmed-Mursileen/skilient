@@ -1148,3 +1148,51 @@ Append-only. One dated entry per product decision, with the reason. Carried over
   `cv_jobs`, drained by `cv-sign` woken each minute (`cv-worker`); each run is in `job_runs`.
   A "first" issue does nothing once any record exists; a monthly one does nothing when the
   snapshot's hash matches the newest unrevoked version.
+- 2026-10-01 (Ahmed): Slices 2 and 3 ship together in one PR (overrides "one PR per slice" for
+  this phase).
+- 2026-10-01 (phase 5, feasibility spike): Chromium on Vercel. The Vercel preview with
+  `@sparticuz/chromium` 153 + `puppeteer-core` 25 built and deployed, so the function fits the
+  plan's size limit (the package is 67 MB compressed). The preview itself couldn't be called:
+  Vercel Authentication protects preview URLs, and this environment's network blocks
+  `*.vercel.app`. The same Chromium build measured locally: 4.0 s cold (3.7 s unpacking
+  Chromium), 0.4 s warm, 39 KB PDF, 285 MB Node memory. That fits Hobby's 2 GB and 60 s, so the
+  build went ahead. The Vercel numbers come from the staff-only `/api/ops/pdf-check` after merge
+  (setup checklist); if they don't fit, the fallback is a pure-JS PDF library (no Chromium).
+- 2026-10-01 (phase 5): One CV document, two renderers. The PDF prints an HTML string
+  (`lib/cv/document.ts`, every value escaped) and the web pages render a React component
+  (`components/cv/cv-document.tsx`). Both draw one shared view, and a unit test keeps their
+  markup identical for every template. Why: ESLint forbids `dangerouslySetInnerHTML`, and
+  `react-dom/server` can't run inside a Next route handler. The QR code is an `<img>` with a
+  data: URI (CSP allows `img-src data:`). The paper stays light in dark mode, like a printed page.
+- 2026-10-01 (phase 5): PDF export records its SHA-256 only with a MAC from the PDF route:
+  HMAC-SHA256 over export, version, template, paper, hash and size. The key is the Vault secret
+  `cv_export_secret`, copied to Vercel as `CV_EXPORT_SECRET` (a human step). Without it, a
+  student could register the hash of a doctored file through the API, which would defeat the
+  Altered check. The route uploads to `cv-exports/{user}/{export}.pdf` as the student (no
+  service-role key); the upload is allowed only while they hold `cv.pdf_export`, up to 100 files.
+  `record_cv_export` checks the MAC, that the file exists with that size, that the version is
+  the student's and not revoked, and 20 exports a day. Files go after 30 days, and unrecorded
+  uploads after a day (`cv-exports-daily`, through storage-cleanup). Hashes stay for good.
+- 2026-10-01 (phase 5): Five templates: Standard (free), Classic, Compact, Modern and Academic
+  (Pro). All are single-column with the same headings and text; only the CSS differs. Fonts are
+  Spectral 500/600 and Barlow 400/500/600, vendored as woff2 under the SIL OFL in
+  `lib/cv/fonts/` and embedded in each PDF, with ligatures off. The web CV uses Standard for
+  everyone until phase 10. The ATS test (`pnpm test:ats`, run in CI's E2E job) prints every
+  template and checks with `pdf-parse` that the headings are in order and every skill, project
+  title, name and code is there.
+- 2026-10-01 (phase 5): `private.has_entitlement()` is still false for everyone except user ids in
+  `platform_config` `entitlements.test_grants` (`{key: [ids]}`; empty in production). The E2E
+  export test and Ahmed's optional try use it; phase 10 replaces it.
+- 2026-10-01 (phase 5): Share-link views are counted once per viewer per link per day, keyed by
+  an HMAC of the connection (IP and user agent, `IP_HASH_SECRET`), so no IP is stored. Verify
+  lookups count 30 a minute per IP in `rate_limit_events` (scope `cv_verify`); page loads and PDF
+  checks both count.
+- 2026-10-01 (phase 5): The first CV is issued when `/me/cv` first loads, through `cv-sign` with the
+  student's session; if signing fails the page says so. Re-issue (the revoked newest version's
+  content under a new code, 5 a day) and Pro refresh (10 a day, stubbed off) also go through
+  `cv-sign`. Account deletion keeps a revoked, content-wiped record (a trigger before the delete),
+  and a sign-in ban revokes every version and link (a trigger on `banned_until`;
+  `docs/emergency-ban.md` updated). Trust reviewers find CVs by code or username at
+  `/ops/evidence?tab=cvs` and revoke one or all with a reason (audited; the student gets a
+  `cv_revoked` notice, emailed). An upheld ranking flag's page links to each member's CVs.
+  Monthly refreshes send an in-app `cv_refreshed` notice only.

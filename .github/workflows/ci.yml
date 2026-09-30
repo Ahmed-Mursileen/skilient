@@ -108,11 +108,19 @@ jobs:
           echo "GITHUB_APP_SLUG=skilient-e2e" >> "$GITHUB_ENV"
           echo "GITHUB_APP_CLIENT_ID=Iv1.e2e" >> "$GITHUB_ENV"
           echo "GITHUB_WEBHOOK_SECRET=e2e-webhook-signing-value" >> "$GITHUB_ENV"
+          # CV PDF exports: the MAC key the migration generated into the local Vault, and the
+          # address printed in verify links (decisions.md 2026-10-01).
+          echo "CV_EXPORT_SECRET=$(docker exec supabase_db_skilient psql -U postgres -tAc "select decrypted_secret from vault.decrypted_secrets where name = 'cv_export_secret'")" >> "$GITHUB_ENV"
+          echo "NEXT_PUBLIC_SITE_URL=http://127.0.0.1:3100" >> "$GITHUB_ENV"
       - name: Build (gallery enabled)
         run: pnpm build
         env:
           ENABLE_UI_GALLERY: "1"
       - run: pnpm exec playwright install --with-deps chromium
+      - name: Chromium for CV PDFs (the app server and the ATS test)
+        run: echo "CV_CHROMIUM_PATH=$(node -e 'console.log(require("@playwright/test").chromium.executablePath())')" >> "$GITHUB_ENV"
+      - name: ATS text test (every CV template printed and read back)
+        run: pnpm test:ats
       - name: E2E (auth flows, gallery in both themes, axe-core, health)
         run: pnpm test:e2e
         env:

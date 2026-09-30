@@ -1,4 +1,5 @@
-import type { Metadata } from "next";
+import type { Metadata, Route } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { RankingFlagReviewForm } from "@/components/ops/ranking-forms";
 import { TrustClaimButton } from "@/components/ops/trust-forms";
@@ -41,6 +42,29 @@ export default async function OpsRankingFlagPage({ params }: PageProps<"/ops/evi
                 : "More than 150 points in a day that don't come from a completed venture. While open, the published score and tier stay where they were."}
           </p>
         </div>
+
+        {f.status === "upheld" ? (
+          <section aria-labelledby="cv-check-h" className="rounded-lg border-2 border-border-strong bg-bg-subtle p-4" data-testid="cv-check-prompt">
+            <h2 id="cv-check-h" className="text-h4">
+              Check their verified CVs
+            </h2>
+            <p className="mt-1 text-body-sm">
+              This flag is upheld. A CV issued while it stood may show the gain. Look at each student&rsquo;s CVs and revoke any that
+              shouldn&rsquo;t stand (decisions.md 2026-10-01).
+            </p>
+            <ul className="mt-2 flex flex-wrap gap-3 text-body-sm">
+              {f.members
+                .filter((m) => m.username)
+                .map((m) => (
+                  <li key={m.userId}>
+                    <Link href={`/ops/evidence?tab=cvs&q=%40${m.username}` as Route} className="font-semibold underline underline-offset-4">
+                      CVs of @{m.username}
+                    </Link>
+                  </li>
+                ))}
+            </ul>
+          </section>
+        ) : null}
 
         <section aria-labelledby="members-h" className="rounded-lg border border-border-default bg-bg-surface p-4">
           <h2 id="members-h" className="text-h4">

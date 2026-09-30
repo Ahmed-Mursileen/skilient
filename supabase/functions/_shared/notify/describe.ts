@@ -182,6 +182,14 @@ export function describeNotification(n: NotificationInput): NotificationText {
     }
     case "venture_abandoned":
       return { text: `${venture} was closed without finishing.`, href: venturePath, subject: `${venture} was closed` };
+    case "cv_refreshed":
+      return { text: "Your verified CV was refreshed with this month's work. It has a new code.", href: "/me/cv", subject: "Your verified CV was refreshed" };
+    case "cv_revoked":
+      return {
+        text: n.data.count === 1 || n.data.count === undefined ? "Skilient revoked a version of your verified CV." : "Skilient revoked your verified CV.",
+        href: "/me/cv",
+        subject: "Your verified CV was revoked",
+      };
     default:
       return { text: "You have a new notification.", href: "/notifications", subject: "New activity on Skilient" };
   }

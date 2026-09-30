@@ -8,7 +8,10 @@ const nextConfig: NextConfig = {
   typedRoutes: true,
   // CV PDFs (PRD 5.18): Chromium ships as compressed files the package unpacks at run time.
   serverExternalPackages: ["@sparticuz/chromium", "puppeteer-core"],
-  outputFileTracingIncludes: { "/api/cv/**": ["./node_modules/@sparticuz/chromium/bin/**"] },
+  outputFileTracingIncludes: {
+    "/api/cv/**": ["./node_modules/@sparticuz/chromium/bin/**", "./lib/cv/fonts/*.woff2"],
+    "/api/ops/pdf-check": ["./node_modules/@sparticuz/chromium/bin/**", "./lib/cv/fonts/*.woff2"],
+  },
   experimental: {
     // Profile images (PRD 5.4: covers up to 8 MB) are uploaded through a server action.
     serverActions: { bodySizeLimit: "9mb" },
