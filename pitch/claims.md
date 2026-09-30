@@ -15,6 +15,8 @@ Status: `verified` (source checked) · `needs-confirm` (Ahmed must confirm) · `
 | No AI/LLM in the product | rule | `CLAUDE.md` "Never" | verified |
 | Money never buys rank or visibility | rule | `docs/prd/04a` hard rules | verified |
 | Signed CV shows "Altered" if one byte changes; "Revoked" if revoked | tested | `docs/build-plan.md` phase 5 done-when, E2E `cv.spec.ts` | verified |
+| Universities preloaded from the HEC list | 283 (Punjab 104, Sindh 83, KP 47, ICT 27, Balochistan 12, AJK 8; 2 other). Email domain on file for 278, but 273 of those are marked unconfirmed, so never claim "all domains verified" | `supabase/seed/hec_universities.csv` (row count), decisions 2026-09-27 | verified (count) |
+| Closed beta planned at NUTECH; public launch opens every HEC university at once | plan, not done | `docs/decisions.md` 2026-09-25 | verified (planned) |
 | Recruiter, teacher, university portals | NOT built; say "launching" | `docs/build-plan.md` phases 6–9 | verified (unbuilt) |
 | 90-day hire outcome check | designed, not built | `docs/prd/05-20` | verified (designed) |
 
@@ -22,18 +24,25 @@ Status: `verified` (source checked) · `needs-confirm` (Ahmed must confirm) · `
 
 | Claim | Value | Status |
 | --- | --- | --- |
-| Signups | 182 unique (Ahmed said 179) | needs-confirm: which number to say |
+| Signups | 182 unique | verified (Ahmed confirmed 182) |
 | Source | all `landing_page` | verified |
 | Dates | 25 Jun – 17 Aug 2026; 158 on 27 Jun | verified |
 | University-style email | 63 of 182 (35%), 58 at one university (nutech.edu.pk) | verified |
-| Paid vs organic | unknown | needs-confirm |
+| Organic, no paid acquisition | founder-stated (Ahmed, 2026-09-30) | verified by founder |
 | Multi-university reach, growth trend | not supported | dropped |
 
-## Discovery
+## Discovery (ILO SIYB) and what changed
 
-| Claim | Status |
-| --- | --- |
-| Took the platform through ILO's SIYB programme and changed it from what we learned | needs-confirm: Ahmed to list 2–3 concrete changes and OK naming ILO |
+| Claim | Evidence | Status |
+| --- | --- | --- |
+| We took the platform through ILO's SIYB programme and changed it from what we learned | founder-stated (Ahmed, 2026-09-30) | founder-stated and ILO named by Ahmed himself |
+| Skills are proven by understanding, not by detecting AI: a teacher grades the student on their own code, no AI generates questions or grades, "AI-assisted authorship is irrelevant" | PRD 5.5 "Code check"; decisions; `supabase/functions/code-check` | verified |
+| "We remove and punish AI usage in projects" | CONTRADICTS the spec: PRD 5.5 lists "AI-generated-code detection" under *Deliberately excluded*, and anti-gaming flags "hold evidence for review, never penalise". Only upheld reports carry penalties (PRD 5.13). | dropped; say the verified line above instead |
+| Skill confidence is balanced by evidence levels L1–L4 | PRD 5.5, migrations `*_skill_levels.sql` | verified |
+| Skill verification design drew on 30+ research papers | founder-stated; PRD cites a "research blueprint" not in the repo | needs-confirm: Ahmed to supply the list for the Q&A sheet |
+| No likes; the micro-survey replaces them | PRD 5.28, `CLAUDE.md` Never list | verified |
+| Feed ranking uses survey answers (informative, interesting, credible), not likes | `supabase/migrations/20260929040000_feed_ranking.sql` (`feed_score` reads `post_survey_counts`) | verified |
+| Universities will get a dashboard of recruiters' opinions of their students | PRD 5.20 (90-day hire outcome, aggregate only into placement stats) and 5.23 (outcomes for paid licences); NOT built | verified as planned; label "launching" |
 
 ## Market (web search only; primary sources blocked by the network policy, so NOT verified)
 
