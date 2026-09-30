@@ -1,9 +1,10 @@
 // Timeline: a list of beats. seek(ctx, T) paints global time T (seconds).
-import { W, H, C } from "./lib.js";
+import { W, H, C, loadImages } from "./lib.js";
 import * as b1 from "./beats/b1-number.js";
 import * as b2 from "./beats/b2-gap.js";
 import * as b3 from "./beats/b3-scale.js";
 import * as b4a from "./beats/b4a-shatter.js";
+import * as b4b from "./beats/b4b-signed-cv.js";
 
 function placeholder(title, duration) {
   return {
@@ -26,7 +27,7 @@ export const beats = [
   { name: "The gap", ...b2 },
   { name: "The scale", ...b3 },
   { name: "Shatter", ...b4a },
-  placeholder("4b Signed CV", 16),
+  { name: "Signed CV", ...b4b },
   placeholder("5 Why it holds", 16),
   placeholder("6a Loop: students", 28),
   placeholder("6b Loop: universities and recruiters", 27),
@@ -55,3 +56,5 @@ export const beatStarts = (() => {
     return r;
   });
 })();
+
+export const preload = () => loadImages({ cv: "assets/cv.png", cvFoot: "assets/cv-foot.png" });

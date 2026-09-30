@@ -11,7 +11,7 @@
 <body>
 <canvas id="c"></canvas>
 <script type="module">
-import { seek, TOTAL } from "./film.js";
+import { seek, TOTAL, preload } from "./film.js";
 
 const dpr = Number(new URLSearchParams(location.search).get("dpr") || window.devicePixelRatio || 1);
 const canvas = document.getElementById("c");
@@ -31,6 +31,7 @@ await Promise.all(faces.map(async ([family, weight, file]) => {
   document.fonts.add(await f.load());
 }));
 
+await preload();
 window.__total = TOTAL;
 window.seek = (t) => {
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);

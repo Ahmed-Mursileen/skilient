@@ -20,6 +20,16 @@ Status: `verified` (source checked) · `needs-confirm` (Ahmed must confirm) · `
 | Recruiter, teacher, university portals | NOT built; say "launching" | `docs/build-plan.md` phases 6–9 | verified (unbuilt) |
 | 90-day hire outcome check | designed, not built | `docs/prd/05-20` | verified (designed) |
 
+## On-screen demo data (beat 4b)
+
+| Item | Fact | Source | Status |
+| --- | --- | --- | --- |
+| CV document | The product's own renderer (`cvDocumentHtml`, template "standard") with the made-up sample student "Ayesha Khan" (`lib/cv/sample.ts`). Label "sample" whenever shown | `pitch/scripts/cv-html.gen.ts`, `capture-cv.mjs` | verified, sample data |
+| File size, byte values, both SHA-256 values | computed from a real PDF of that sample CV; flipping byte 7 (0x34 to 0x35) gives a different hash | `pitch/assets/cv-facts.js` (generated) | verified (computed) |
+| Verify wording for Altered / Valid / Revoked | copied from `lib/cv/status.ts` | repo | verified |
+| Altered when a file does not match an issued export; Revoked when the student revokes | tested | PRD 5.18, pgTAP 38, E2E `cv.spec.ts` | verified |
+| The sample PDF itself was not issued through the product, so the film says "Sample file" | illustration | n/a | by design |
+
 ## Waitlist (source: uploaded CSV `waitlist_emails_rows.csv`)
 
 | Claim | Value | Status |

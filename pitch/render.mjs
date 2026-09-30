@@ -15,7 +15,7 @@ const args = process.argv.slice(2);
 const flag = (n) => args.includes(`--${n}`);
 const opt = (n, d) => (args.includes(`--${n}`) ? args[args.indexOf(`--${n}`) + 1] : d);
 
-const types = { ".html": "text/html", ".js": "text/javascript", ".woff2": "font/woff2" };
+const types = { ".html": "text/html", ".js": "text/javascript", ".woff2": "font/woff2", ".png": "image/png" };
 const server = http.createServer((req, res) => {
   const url = new URL(req.url, "http://x").pathname;
   const file = url.startsWith("/fonts/")

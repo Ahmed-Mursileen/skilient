@@ -36,3 +36,16 @@ export function shuffled(n, seed) {
   }
   return a;
 }
+
+// Preloaded images (drawImage needs decoded bitmaps; loaded once before the first frame).
+export const images = {};
+export async function loadImages(map) {
+  await Promise.all(
+    Object.entries(map).map(async ([key, src]) => {
+      const img = new Image();
+      img.src = src;
+      await img.decode();
+      images[key] = img;
+    }),
+  );
+}
