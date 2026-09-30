@@ -43,6 +43,20 @@ Status: `verified` (source checked) · `needs-confirm` (Ahmed must confirm) · `
 | Row-level security on every table; a test fails if one is missing | pgTAP `00_rls_everywhere` | verified |
 | 24 lock tiles | illustrative grid, not a table count | illustration |
 
+## Traction and progress (beat 7)
+
+| On-screen statement | Source | Status |
+| --- | --- | --- |
+| 182 joined our waitlist, from our landing page, no paid ads | CSV (182 unique, source `landing_page`); "no paid ads" founder-stated | verified / founder-stated |
+| 1 in 3 used a university email | 63 of 182 = 34.6% | verified (computed) |
+| We took it through ILO's SIYB programme | founder-stated | founder-stated |
+| Change: skills proven by understanding, not claims | PRD 5.5 code check; evidence levels | verified in product |
+| Change: verification designed from 30+ research papers | founder-stated; list not in repo | founder-stated, needs list for Q&A |
+| Change: no likes, one-tap survey ranks posts on quality | PRD 5.28; feed_score | verified in product |
+| Change: recruiter feedback dashboard for universities | PRD 5.20, 5.23; not built | planned, labelled LAUNCHING |
+| 6 of 14 build phases complete (0-5); identity, projects, social, ranking, signed CV | `docs/build-plan.md` status notes | verified |
+| Next: student, teacher, recruiter and university portals | phases 6-9 | verified (roadmap) |
+
 ## Waitlist (source: uploaded CSV `waitlist_emails_rows.csv`)
 
 | Claim | Value | Status |
