@@ -8,6 +8,8 @@ import * as b4b from "./beats/b4b-signed-cv.js";
 import * as b5 from "./beats/b5-why-it-holds.js";
 import * as b6a from "./beats/b6a-loop-students.js";
 import * as b6b from "./beats/b6b-loop-universities-recruiters.js";
+import * as b7 from "./beats/b7-traction.js";
+import * as b8 from "./beats/b8-close.js";
 
 function placeholder(title, duration) {
   return {
@@ -34,8 +36,8 @@ export const beats = [
   { name: "Why it holds", ...b5 },
   { name: "Loop: students", ...b6a },
   { name: "Loop: universities and recruiters", ...b6b },
-  placeholder("7 Traction and discovery", 20),
-  placeholder("8 Close", 13),
+  { name: "Traction and discovery", ...b7 },
+  { name: "Close", ...b8 },
 ];
 
 export const TOTAL = beats.reduce((s, b) => s + b.duration, 0);
@@ -60,4 +62,4 @@ export const beatStarts = (() => {
   });
 })();
 
-export const preload = () => loadImages({ cv: "assets/cv.png", cvFoot: "assets/cv-foot.png" });
+export const preload = () => loadImages({ cv: "assets/cv.png", cvFoot: "assets/cv-foot.png", logo: "assets/logo-reversed.svg" });
