@@ -210,7 +210,9 @@ test.describe("Posts", () => {
     await page.getByTestId("update-images").setInputFiles(await photo());
     await expect(page.getByRole("list", { name: "Images to post" }).getByRole("listitem")).toHaveCount(1);
     await page.getByRole("button", { name: "Post update" }).click();
-    await expect(page.getByText("First prototype wired up.")).toBeVisible();
+    // Nothing shows until the server re-encodes and stores the image, saves the update and
+    // re-renders the page (router.refresh): allow for a loaded CI runner.
+    await expect(page.getByText("First prototype wired up.")).toBeVisible({ timeout: 15_000 });
     await expect(page.locator('img[src*="/post-media/"]').first()).toBeVisible();
   });
 });
