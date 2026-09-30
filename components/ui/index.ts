@@ -14,3 +14,4 @@ export * from "./theme-toggle";
 export * from "./tier-badge";
 export * from "./toast";
 export * from "./verified-stamp";
+export * from "./tooltip";

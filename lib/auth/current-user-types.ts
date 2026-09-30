@@ -8,4 +8,6 @@ export interface CurrentUser {
   universityId: string | null;
   universityName: string | null;
   onboardingComplete: boolean;
+  role: "student" | "faculty" | "recruiter" | "university_admin";
+  status: "active" | "graduate" | "deleting";
 }

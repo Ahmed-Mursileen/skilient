@@ -40,6 +40,8 @@ type ComposerProps = {
   defaultAudience: "university" | "global";
   ventures: { id: string; title: string; visibility: string }[];
   isStaff: boolean;
+  /** A graduate posts to the Global Feed only (PRD 5.25). */
+  graduate?: boolean;
 };
 
 /**
@@ -58,7 +60,7 @@ export function Composer(props: ComposerProps) {
  * Composer (PRD 5.6, 5.28). The text draft saves to this browser as you type (images
  * aren't kept). Every limit is checked again on the server.
  */
-function ComposerForm({ userId, defaultAudience, ventures, isStaff, draft }: ComposerProps & { draft: Draft | null }) {
+function ComposerForm({ userId, defaultAudience, ventures, isStaff, graduate = false, draft }: ComposerProps & { draft: Draft | null }) {
   const router = useRouter();
   const id = useId();
   const draftKey = `sk:draft:${userId}`;
@@ -96,6 +98,8 @@ function ComposerForm({ userId, defaultAudience, ventures, isStaff, draft }: Com
   const allowsImages = kind === "general" || kind === "invite" || kind === "event";
   const selectedVenture = ventures.find((v) => v.id === ventureId);
   const globalAllowed = kind !== "invite" || selectedVenture?.visibility === "public";
+  const universityAllowed = !graduate;
+  const effective: "university" | "global" = graduate ? "global" : globalAllowed ? audience : "university";
 
   async function addFiles(list: FileList | null) {
     if (!list?.length) return;
@@ -118,7 +122,7 @@ function ComposerForm({ userId, defaultAudience, ventures, isStaff, draft }: Com
     e.preventDefault();
     setError(null);
     setNotice(null);
-    const effectiveAudience = globalAllowed ? audience : "university";
+    const effectiveAudience = effective;
     const data: Record<string, unknown> = { type: kind, body, audience: effectiveAudience };
     if (kind === "invite") data.ventureId = ventureId;
     if (kind === "announcement") data.pinDays = pinDays;
@@ -343,12 +347,13 @@ function ComposerForm({ userId, defaultAudience, ventures, isStaff, draft }: Com
                   key={a}
                   type="button"
                   role="radio"
-                  aria-checked={(globalAllowed ? audience : "university") === a}
-                  disabled={a === "global" && !globalAllowed}
+                  aria-checked={effective === a}
+                  disabled={(a === "global" && !globalAllowed) || (a === "university" && !universityAllowed)}
+                  title={a === "university" && !universityAllowed ? "Graduates post to the Global Feed" : undefined}
                   onClick={() => setAudience(a)}
                   className={cn(
                     "h-9 px-3 text-body-sm font-semibold focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-focus-ring disabled:opacity-50",
-                    (globalAllowed ? audience : "university") === a ? "bg-primary-subtle text-text-primary" : "text-text-secondary",
+                    effective === a ? "bg-primary-subtle text-text-primary" : "text-text-secondary",
                   )}
                 >
                   {a === "university" ? "University" : "Global"}

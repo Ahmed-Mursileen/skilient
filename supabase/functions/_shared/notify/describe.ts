@@ -123,6 +123,32 @@ export function describeNotification(n: NotificationInput): NotificationText {
         subject: `Your ${what} was removed from Skilient`,
       };
     }
+    case "feedback_update": {
+      const labels: Record<string, string> = {
+        received: "received",
+        reviewing: "being reviewed",
+        planned: "planned",
+        shipped: "shipped",
+        wont_do: "closed without a change",
+      };
+      const status = labels[str(n.data.status) ?? ""] ?? "updated";
+      return {
+        text: n.data.replied === true ? `Skilient replied to your feedback. It's now ${status}.` : `Your feedback is now ${status}.`,
+        href: "/feedback",
+        subject: "An update on your Skilient feedback",
+      };
+    }
+    case "deletion_requested": {
+      const when = str(n.data.delete_after);
+      const day = when ? new Date(when).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: "Asia/Karachi" }) : "in 14 days";
+      return {
+        text: `Your account will be deleted on ${day}. You can cancel until then.`,
+        href: "/settings/account/delete",
+        subject: "Your Skilient account is scheduled for deletion",
+      };
+    }
+    case "deletion_cancelled":
+      return { text: "Account deletion cancelled. Your account is back as it was.", href: "/settings", subject: "Your Skilient account was not deleted" };
     case "moderation_warning": {
       const what = targetWord(n.data.target_type);
       return {

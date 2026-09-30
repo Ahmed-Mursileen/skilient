@@ -2,6 +2,7 @@ import { Newspaper } from "@phosphor-icons/react/dist/ssr";
 import type { Metadata, Route } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { ProgressCard } from "@/components/home/progress-card";
 import { Composer } from "@/components/posts/composer";
 import { FeedList } from "@/components/posts/feed-list";
 import { FollowedUpdates } from "@/components/posts/followed-updates";
@@ -9,6 +10,7 @@ import { NewPostsPill } from "@/components/posts/new-posts-pill";
 import { PostCard } from "@/components/posts/post-card";
 import { Button, EmptyState } from "@/components/ui";
 import { getCurrentUser } from "@/lib/auth/current-user";
+import { getProgressCard } from "@/lib/data/portal";
 import { FEED_FILTERS, getFeed, getFollowedUpdates, getInvitableVentures, getPinnedAnnouncement, type FeedFilter, type FeedScope } from "@/lib/data/posts";
 import { createClient } from "@/lib/supabase/server";
 import { cn } from "@/lib/cn";
@@ -47,12 +49,13 @@ export default async function FeedPage({ searchParams }: PageProps<"/feed">) {
   const filter: FeedFilter = FEED_FILTERS.includes(sp.filter as FeedFilter) ? (sp.filter as FeedFilter) : "all";
 
   const supabase = await createClient();
-  const [page, pinned, updates, ventures, staff] = await Promise.all([
+  const [page, pinned, updates, ventures, staff, card] = await Promise.all([
     getFeed(tab, filter),
     filter === "all" || filter === "announcements" ? getPinnedAnnouncement() : Promise.resolve(null),
     filter === "all" ? getFollowedUpdates() : Promise.resolve([]),
     getInvitableVentures(user.id),
     supabase.rpc("is_staff").then((r) => r.data === true),
+    getProgressCard(user.id),
   ]);
 
   return (
@@ -77,7 +80,9 @@ export default async function FeedPage({ searchParams }: PageProps<"/feed">) {
         </ul>
       </nav>
 
-      <Composer userId={user.id} defaultAudience={tab} ventures={ventures} isStaff={staff} />
+      <ProgressCard card={card} />
+
+      <Composer userId={user.id} defaultAudience={user.status === "graduate" ? "global" : tab} ventures={ventures} isStaff={staff} graduate={user.status === "graduate"} />
 
       <nav aria-label="Filter posts">
         <ul className="flex gap-2 overflow-x-auto pb-1">

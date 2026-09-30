@@ -81,6 +81,7 @@ test.describe("Ventures", () => {
     await expect(applicantPage.getByRole("article")).toContainText("Waiting");
 
     // The owner accepts on /requests, after reading the answer.
+    await page.goto("/ventures");
     await page.getByRole("link", { name: "Requests", exact: true }).click();
     await expect(page).toHaveURL(/\/requests$/);
     const card = page.getByRole("article", { name: `Application from ${applicant.fullName}` });

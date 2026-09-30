@@ -18,7 +18,7 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("full_name, username, avatar_path, onboarding_complete, university_id, universities(name)")
+    .select("full_name, username, avatar_path, onboarding_complete, university_id, role, status, universities(name)")
     .eq("user_id", user.id)
     .maybeSingle();
 
@@ -31,5 +31,7 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
     universityId: profile?.university_id ?? null,
     universityName: profile?.universities?.name ?? null,
     onboardingComplete: profile?.onboarding_complete ?? false,
+    role: profile?.role ?? "student",
+    status: profile?.status ?? "active",
   };
 });

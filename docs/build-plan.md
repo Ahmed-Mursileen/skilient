@@ -140,8 +140,8 @@ Legend: 📖 = PRD files to read (in `docs/prd/`), ✅ = done-when checks.
 
 📖 `05-25-student-portal.md`, `05-27-…` (tutorial, feedback)
 
-- [ ] Five-area shell (sidebar + bottom tabs from `lib/nav.ts`) with tooltips; progress card; Opportunities hub; Me pages; privacy centre; notification settings; graduate state; account deletion with cooling-off
-- [ ] Guided tour, first-visit tips, getting-started checklist, teaching empty states, feedback centre
+- [x] Five-area shell (sidebar + bottom tabs from `lib/nav.ts`) with tooltips; progress card; Opportunities hub; Me pages; privacy centre; notification settings; graduate state; account deletion with cooling-off
+- [x] Guided tour, first-visit tips, getting-started checklist, teaching empty states, feedback centre
 
 ✅ Every tab and Me page has loading/empty/error states · tour works by keyboard alone · "For you" never orders by sponsorship · a graduate can't post to the University Feed
 

@@ -11,6 +11,7 @@ describe("describeNotification", () => {
       "invite_received", "invite_answered", "ownership_transferred", "member_left", "member_removed",
       "venture_completed", "venture_abandoned", "comment_received", "comment_reply", "comment_mention", "chat_message",
       "content_removed", "moderation_warning", "cv_refreshed", "cv_revoked",
+      "feedback_update", "deletion_requested", "deletion_cancelled",
     ];
     for (const type of types) {
       const d = describeNotification({ ...base, type });

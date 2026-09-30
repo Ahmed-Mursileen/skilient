@@ -61,12 +61,19 @@ export default async function VenturesPage({ searchParams }: PageProps<"/venture
           <h1 className="font-display text-h1">Ventures</h1>
           <p className="mt-1 text-body text-text-secondary">Projects and startups students are building. Join one, or start your own.</p>
         </div>
-        <Button asChild>
-          <Link href={(p.type === "startup" ? "/ventures/new?type=startup" : "/ventures/new") as Route}>
-            <Plus aria-hidden weight="bold" className="size-4" />
-            Start a venture
-          </Link>
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button asChild variant="secondary">
+            <Link href="/requests" aria-label="Requests">
+              Requests
+            </Link>
+          </Button>
+          <Button asChild>
+            <Link href={(p.type === "startup" ? "/ventures/new?type=startup" : "/ventures/new") as Route}>
+              <Plus aria-hidden weight="bold" className="size-4" />
+              Start a venture
+            </Link>
+          </Button>
+        </div>
       </div>
 
       <nav aria-label="Venture type" className="border-b border-border-default">

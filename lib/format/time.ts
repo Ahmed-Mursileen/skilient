@@ -43,3 +43,9 @@ export function ageLabel(iso: string, now: Date = new Date()): string {
 export function dayLabel(iso: string): string {
   return dayOnly.format(new Date(iso));
 }
+
+const pktDay = new Intl.DateTimeFormat("en-CA", { year: "numeric", month: "2-digit", day: "2-digit", timeZone: "Asia/Karachi" });
+/** "2026-10-02": today's date in Pakistan time, for day-long dismissals. */
+export function pktDate(now: Date = new Date()): string {
+  return pktDay.format(now);
+}
