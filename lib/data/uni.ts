@@ -174,7 +174,7 @@ export interface StudentRecord {
 }
 
 export const getSponsorship = () =>
-  rpcJson<{ plan: string; final_year: number; exception: number | null; eligible_final_year: number | null; eligible_all: number | null; active_grants: number; requests: { batch_year: number | null; status: string; review_reason: string | null; created_at: string }[] }>("uni_sponsorship");
+  rpcJson<{ plan: string; final_year: number; exception: number | null; eligible_final_year: number | null; eligible_all: number | null; active_grants: number | null; sponsored_level?: string | null; requests: { batch_year: number | null; status: string; review_reason: string | null; created_at: string }[] }>("uni_sponsorship");
 
 export const getHackathons = () =>
   rpcJson<{ limit: number | null; used: number; teachers: { id: string; name: string; department: string }[]; items: { id: string; title: string; status: string; starts_at: string; ends_at: string; teams: number; judges: string[] | null }[] }>("uni_hackathons");

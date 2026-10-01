@@ -1,4 +1,4 @@
-import { Bell, CaretRight, Certificate, ChatsCircle, EyeSlash, FileText, GithubLogo, ShieldCheck, Trash, UserCircle } from "@phosphor-icons/react/dist/ssr";
+import { Bell, CaretRight, Certificate, ChatsCircle, CreditCard, EyeSlash, FileText, GithubLogo, ShieldCheck, Trash, UserCircle } from "@phosphor-icons/react/dist/ssr";
 import type { Metadata, Route } from "next";
 import Link from "next/link";
 import { ReplayTourButton } from "@/components/learn/replay-tour-button";
@@ -14,6 +14,7 @@ const sections = [
   { href: "/settings/notifications", title: "Notifications", description: "Which notifications also reach your email, and how often.", icon: Bell },
   { href: "/settings/chat", title: "Chat", description: "Read receipts in direct messages.", icon: ChatsCircle },
   { href: "/settings/privacy", title: "Privacy centre", description: "Who sees your profile, CV and record, leaderboards and blocked people.", icon: EyeSlash },
+  { href: "/settings/billing", title: "Billing", description: "Student Pro, your free trial, payments and receipts.", icon: CreditCard },
   { href: "/settings/security", title: "Security", description: "Two-factor, signed-in devices and recent account activity.", icon: ShieldCheck },
   { href: "/settings/account/delete", title: "Delete account", description: "Permanently delete your account after a 14-day cooling-off.", icon: Trash },
 ] as const;
@@ -25,7 +26,8 @@ const recruiterSections = sections.filter((s) => ["/settings/notifications", "/s
 export default async function SettingsPage() {
   const user = await getCurrentUser();
   const recruiter = user?.role === "recruiter";
-  const shown = recruiter ? recruiterSections : sections;
+  // Student Pro is for students; organisations and universities pay at /org/billing and /uni/billing.
+  const shown = recruiter ? recruiterSections : sections.filter((s) => s.href !== "/settings/billing" || user?.role === "student");
   return (
     <main className="mx-auto flex max-w-2xl flex-col gap-6 px-[var(--page-gutter)] py-8">
       <h1 className="font-display text-h1">Settings</h1>

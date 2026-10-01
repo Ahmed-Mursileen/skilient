@@ -15,10 +15,11 @@ create function pg_temp.remember(p_name text, p_value uuid) returns uuid languag
 $$;
 -- What Ahmed does by SQL: give a claimed university a plan.
 create function pg_temp.plan(p_uni uuid, p_plan text) returns void language sql as $$
-  insert into public.platform_config (key, version, value, reason)
-  select 'uni.test_plans', max(version) + 1,
-         (select value from public.platform_config where key = 'uni.test_plans' order by version desc limit 1) || jsonb_build_object(p_uni::text, p_plan),
-         'pgTAP' from public.platform_config where key = 'uni.test_plans';
+  update public.entitlement_grants set revoked_at = now(), revoked_reason = 'pgTAP reset'
+   where subject_type = 'university' and subject_id = p_uni and source = 'admin' and revoked_at is null;
+  insert into public.entitlement_grants (subject_type, subject_id, key, value, source, ends_at, reason)
+  select 'university', p_uni, g.key, g.value, 'admin', now() + interval '1 day', 'pgTAP'
+    from public.plans p cross join lateral jsonb_each(p.grants) g where p.id = 'uni_' || p_plan || '_yearly';
 $$;
 create function pg_temp.letter(p_user uuid) returns text language sql as $$
   insert into storage.objects (bucket_id, name, owner_id, metadata)
@@ -186,11 +187,8 @@ select throws_ok($$ select public.university_student_record('96000000-0000-0000-
 select pg_temp.as_user('96000000-0000-0000-0000-000000000001');
 select is(public.my_record_viewers() ->> 'locked', 'true', 'a student without Pro sees no viewer list');
 reset role;
-insert into public.platform_config (key, version, value, reason)
-select 'entitlements.test_grants', max(version) + 1,
-       (select value from public.platform_config where key = 'entitlements.test_grants' order by version desc limit 1)
-         || '{"privacy.record_viewers": ["96000000-0000-0000-0000-000000000001"]}'::jsonb, 'pgTAP'
-  from public.platform_config where key = 'entitlements.test_grants';
+insert into public.entitlement_grants (subject_type, subject_id, key, value, source, ends_at, reason)
+values ('user', '96000000-0000-0000-0000-000000000001', 'privacy.record_viewers', 'true', 'admin', now() + interval '1 day', 'pgTAP');
 set local role authenticated;
 select pg_temp.as_user('96000000-0000-0000-0000-000000000001');
 select is(jsonb_array_length(public.my_record_viewers() -> 'items'), 3, 'a Pro student sees every view of their record');

@@ -152,8 +152,12 @@ test.describe("University portal", () => {
 
   test("on Growth a record view is logged; a student RSVPs and sees the ecosphere", async ({ browser }) => {
     const db = adminClient();
-    const { data: cfg } = await db.from("platform_config").select("version, value").eq("key", "uni.test_plans").order("version", { ascending: false }).limit(1);
-    await db.from("platform_config").insert({ key: "uni.test_plans", version: (cfg?.[0]?.version ?? 0) + 1, value: { ...(cfg?.[0]?.value as object), [uni.id]: "growth" }, reason: "e2e" });
+    // A staff grant of the Growth licence's entitlements (phase 10 registry).
+    const { data: plan } = await db.from("plans").select("grants").eq("id", "uni_growth_yearly").single();
+    const ends = new Date(Date.now() + 86400_000).toISOString();
+    await db.from("entitlement_grants").insert(
+      Object.entries(plan!.grants as Record<string, unknown>).map(([key, value]) => ({ subject_type: "university", subject_id: uni.id, key, value, source: "admin", ends_at: ends, reason: "e2e" })),
+    );
 
     await ownerPage.goto("/uni/students");
     await axeBothThemes(ownerPage, "students");

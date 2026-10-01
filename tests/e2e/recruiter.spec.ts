@@ -5,7 +5,7 @@ import { adminClient, codeFrom, createStudent, hasBackend, latestEmail, PASSWORD
 /**
  * Phase 8 (PRD 5.20): a recruiter signs up with a company email, turns on two-factor, sets up the
  * organisation and waits for verification; Skilient staff verify it; Explore shows anonymised rows
- * until the full-profile plan is granted (test grants, SQL only); a contact request is answered by the
+ * until the full-profile plan is granted (a staff grant); a contact request is answered by the
  * student, who then chats with the company; jobs need pay, applications move through the pipeline;
  * a student can hide from one company. Key screens are checked with axe in both themes.
  */
@@ -62,13 +62,28 @@ test.describe("Recruiter portal", () => {
     if (error) throw new Error(`profile: ${error.message}`);
   }
 
+  /** Staff grants (phase 10 registry) for named keys; phase 8 names are aliases of the PRD keys. */
   async function grant(orgId: string, keys: string[]) {
     const db = adminClient();
-    const { data } = await db.from("platform_config").select("version").eq("key", "entitlements.test_grants").order("version", { ascending: false }).limit(1);
-    const next = (data?.[0]?.version ?? 0) + 1;
-    const value = Object.fromEntries(keys.map((k) => [k, [orgId]]));
-    const { error } = await db.from("platform_config").insert({ key: "entitlements.test_grants", version: next, value, reason: "e2e" });
+    const ends = new Date(Date.now() + 86400_000).toISOString();
+    const { error } = await db.from("entitlement_grants").insert(
+      keys.map((key) => ({ subject_type: "org", subject_id: orgId, key, value: true, source: "admin", ends_at: ends, reason: "e2e" })),
+    );
     if (error) throw new Error(`grant: ${error.message}`);
+  }
+
+  /** What phase 8's trial allowance gave every organisation: 3 seats, 5 credits a month, shortlists. */
+  async function baseline(domain: string) {
+    const db = adminClient();
+    const { data: org } = await db.from("organizations").select("id").eq("domain", domain).single();
+    const ends = new Date(Date.now() + 86400_000).toISOString();
+    const rows = [
+      { key: "org.seats", value: 3 },
+      { key: "contact.credits", value: 5 },
+      { key: "recruit.shortlists", value: true },
+    ].map((r) => ({ ...r, subject_type: "org", subject_id: org!.id, source: "admin", ends_at: ends, reason: "e2e baseline" }));
+    const { error } = await db.from("entitlement_grants").insert(rows);
+    if (error) throw new Error(`baseline: ${error.message}`);
   }
 
   test("a recruiter signs up with a company email, and webmail is refused", async ({ page }) => {
@@ -150,6 +165,7 @@ test.describe("Recruiter portal", () => {
     await expect(sp.getByTestId("org-case-status")).toHaveText("Verified");
     const { data: org } = await db.from("organizations").select("id").eq("domain", domain).single();
     const orgId = org!.id as string;
+    await baseline(domain);
 
     // --- Explore: anonymised, no names, no links ------------------------------------------
     await rp.goto(`/recruit/search?skills=react:2&city=${city}`);
@@ -291,7 +307,8 @@ test.describe("Recruiter portal", () => {
     await expect(s1page.getByTestId("stage")).toHaveText("Hired");
     await expect(s1page.getByTestId("history").locator("li")).toHaveCount(5);
     const { data: hire } = await db.from("hires").select("kind, fee_status, org_id").eq("org_id", orgId).single();
-    expect(hire).toMatchObject({ kind: "intern", fee_status: "unbilled" });
+    // Explore doesn't waive the hiring fee: it is invoiced at once (phase 10).
+    expect(hire).toMatchObject({ kind: "intern", fee_status: "invoiced" });
 
     // Plan and team pages render for an admin.
     await rp.goto("/org/plan");
@@ -323,6 +340,7 @@ test.describe("Recruiter portal", () => {
     await ap.getByLabel("Your role at the company").fill("Founder");
     await ap.getByRole("button", { name: "Send for verification" }).click();
     await expect(ap.getByTestId("recruit-pending")).toBeVisible();
+    await baseline(domain);
     await ap.goto("/org/members");
     await ap.getByLabel("Work email").fill("someone@gmail.com");
     await ap.getByRole("button", { name: "Send invite" }).click();

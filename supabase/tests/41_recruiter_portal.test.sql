@@ -26,10 +26,26 @@ create function pg_temp.v(p_name text) returns uuid language sql as $$ select cu
 create function pg_temp.remember(p_name text, p_value uuid) returns uuid language sql as $$
   select set_config('test.' || p_name, p_value::text, false)::uuid;
 $$;
--- Test-only entitlement grants (what Ahmed does by SQL): the whole {key: [org ids]} object.
-create function pg_temp.grants(p jsonb) returns void language sql as $$
-  insert into public.platform_config (key, version, value, reason)
-  select 'entitlements.test_grants', max(version) + 1, p, 'pgTAP' from public.platform_config where key = 'entitlements.test_grants';
+-- Staff grants (phase 10 registry): the whole {key: [subject ids]} object replaces the previous pgTAP grants.
+create function pg_temp.grants(p jsonb) returns void language plpgsql as $$
+declare
+  r record;
+begin
+  update public.entitlement_grants set revoked_at = now(), revoked_reason = 'pgTAP reset'
+   where source = 'admin' and reason = 'pgTAP' and revoked_at is null;
+  for r in select k.*, x.id from jsonb_each(p) t cross join lateral jsonb_array_elements_text(t.value) x(id)
+             cross join lateral private.entitlement_key(t.key) k where k.key is not null loop
+    insert into public.entitlement_grants (subject_type, subject_id, key, value, source, ends_at, reason)
+    values (r.subject, r.id::uuid, r.key, case r.kind when 'bool' then 'true'::jsonb else '1'::jsonb end, 'admin', now() + interval '1 day', 'pgTAP');
+  end loop;
+end;
+$$;
+-- What the phase 8 trial allowance gave every verified organisation (3 seats, 5 credits, shortlists).
+create function pg_temp.baseline(p_org uuid) returns void language sql as $$
+  insert into public.entitlement_grants (subject_type, subject_id, key, value, source, ends_at, reason) values
+    ('org', p_org, 'org.seats', '3', 'admin', now() + interval '1 day', 'pgTAP baseline'),
+    ('org', p_org, 'contact.credits', '5', 'admin', now() + interval '1 day', 'pgTAP baseline'),
+    ('org', p_org, 'recruit.shortlists', 'true', 'admin', now() + interval '1 day', 'pgTAP baseline');
 $$;
 grant execute on all functions in schema pg_temp to authenticated, anon;
 
@@ -84,6 +100,7 @@ select lives_ok($$ select public.decide_org(pg_temp.v('orgA'), 'verify', null) $
 select lives_ok($$ select public.decide_org(pg_temp.v('orgB'), 'verify', null) $$, 'and the rival');
 select throws_ok($$ select public.decide_org(pg_temp.v('orgA'), 'verify', null) $$, '55000', null, 'a verified organisation can''t be verified again');
 reset role;
+select pg_temp.baseline(pg_temp.v('orgA')), pg_temp.baseline(pg_temp.v('orgB'));
 select is((select count(*)::integer from public.ops_audit_log where target_type = 'organization' and action = 'org.verify'), 2, 'verification is audited');
 select is((select count(*)::integer from public.notifications where type = 'org_decided' and user_id = '95000000-0000-0000-0000-0000000000a1'), 1,
   'the organisation''s admin is told');
@@ -221,7 +238,7 @@ select lives_ok($$ select pg_temp.remember('req1', public.send_contact_request(p
 select throws_ok($$ select public.send_contact_request(pg_temp.v('s1'), 'React intern', 'We are hiring a React intern for the summer and your verified work caught our eye.') $$,
   '55000', null, 'a second pending request to the same student is refused');
 reset role;
-select is((select used from public.org_quota_usage where org_id = pg_temp.v('orgA') and key = 'contact.credits'), 1, 'a request spends one credit');
+select is((select sum(used)::integer from public.usage_counters where subject_id = pg_temp.v('orgA') and key = 'contact.credits'), 1, 'a request spends one credit');
 select is((select count(*)::integer from public.notifications where user_id = pg_temp.v('s1') and type = 'contact_request' and actor_id is null), 1,
   'the student is told, without naming the recruiter');
 
@@ -237,7 +254,7 @@ select throws_ok($$ select public.send_contact_request(pg_temp.v('s1'), 'React i
   '55000', null, 'a declined student can''t be re-contacted within 90 days');
 reset role;
 select is((select status::text from public.contact_requests where id = pg_temp.v('req1')), 'declined', 'the decline is recorded');
-select is((select used from public.org_quota_usage where org_id = pg_temp.v('orgA') and key = 'contact.credits'), 1, 'and the credit isn''t refunded');
+select is((select sum(used)::integer from public.usage_counters where subject_id = pg_temp.v('orgA') and key = 'contact.credits'), 1, 'and the credit isn''t refunded');
 update public.contact_requests set decided_at = now() - interval '91 days' where id = pg_temp.v('req1');
 set local role authenticated;
 select pg_temp.as_user('95000000-0000-0000-0000-0000000000a1');
@@ -349,7 +366,7 @@ select throws_ok($$ select public.move_application(pg_temp.v('app1'), 'screening
 select lives_ok($$ select public.move_application(pg_temp.v('app1'), 'hired') $$, 'and hires them');
 reset role;
 select is((select kind from public.hires where application_id = pg_temp.v('app1')), 'intern', 'an internship records an intern hire');
-select is((select fee_status from public.hires where application_id = pg_temp.v('app1')), 'unbilled', 'with an unbilled fee marker for phase 10');
+select is((select fee_status from public.hires where application_id = pg_temp.v('app1')), 'invoiced', 'and the hiring fee is invoiced (phase 10)');
 select is((select count(*)::integer from public.notifications where user_id = pg_temp.v('s1') and type = 'application_stage'), 2, 'each stage change notifies the student');
 set local role authenticated;
 select pg_temp.as_user('95000000-0000-0000-0000-00000000000a');

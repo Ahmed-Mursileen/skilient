@@ -329,7 +329,7 @@ const hackSchema = z.object({
 });
 export async function saveHackathon(input: z.input<typeof hackSchema>): Promise<ActionResult<string>> {
   return rpcAction({
-    name: "uni.hackathon",
+    name: "uni.hackathon", entitlement: "uni.hackathons",
     schema: hackSchema,
     input,
     fn: "save_hackathon",
@@ -347,7 +347,7 @@ export async function judgeScore(input: { teamId: string; scores: Record<string,
 const fairSchema = z.object({ id: optUuid, title: text(3, 120, "The title"), description: z.string().trim().max(4000).optional(), startsAt: datetime, endsAt: datetime })
   .refine((v) => v.endsAt > v.startsAt, { message: "The fair ends after it starts.", path: ["endsAt"] });
 export async function saveFair(input: z.input<typeof fairSchema>): Promise<ActionResult<string>> {
-  return rpcAction({ name: "uni.fair", schema: fairSchema, input, fn: "save_job_fair", args: (v) => ({ p_id: v.id, p: { title: v.title, description: v.description ?? "", starts_at: v.startsAt, ends_at: v.endsAt } }), revalidate: ["/uni/fairs"] });
+  return rpcAction({ name: "uni.fair", entitlement: "uni.job_fairs", schema: fairSchema, input, fn: "save_job_fair", args: (v) => ({ p_id: v.id, p: { title: v.title, description: v.description ?? "", starts_at: v.startsAt, ends_at: v.endsAt } }), revalidate: ["/uni/fairs"] });
 }
 export async function setFairStatus(input: { id: string; action: "publish" | "cancel" }): Promise<ActionResult> {
   return rpcAction({ name: "uni.fair_status", schema: z.object({ id: uuid, action: z.enum(["publish", "cancel"]) }), input, fn: "set_job_fair_status", args: (v) => ({ p_id: v.id, p_action: v.action }), revalidate: ["/uni/fairs"] });

@@ -37,7 +37,7 @@ const CV_VISIBILITY = { private: "Only you", link: "Anyone with one of your shar
  * The privacy centre (PRD 5.25, screen spec "Privacy centre"): everything that decides who
  * sees you, in one place. Controls that already have a home (profile, CV) show their current
  * value and link there instead of a second copy; the leaderboard switch and blocked people
- * are here. Viewer names are a Pro feature (billing arrives in phase 10) and university
+ * are here. Viewer names are a Pro feature (cv.viewer_names) and university
  * viewers need a Growth or Campus plan (phase 9), so those show what they will be.
  */
 export default async function PrivacyCentrePage() {

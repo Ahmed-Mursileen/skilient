@@ -5,7 +5,7 @@ import { Button, FieldError } from "@/components/ui";
 import { CV_TEMPLATES, TEMPLATE_INFO, type CvTemplate } from "@/lib/cv/document";
 
 /**
- * ATS PDF export (PRD 5.18, Student Pro; stubbed until phase 10). The route prints the
+ * ATS PDF export (PRD 5.18, Student Pro; entitlement cv.pdf_export). The route prints the
  * current version, records its hash for Altered checks and returns a 60-second download link.
  */
 export function CvExport({ recordId, canExport, canUseTemplates }: { recordId: string; canExport: boolean; canUseTemplates: boolean }) {
