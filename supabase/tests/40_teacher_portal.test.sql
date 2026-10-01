@@ -35,8 +35,8 @@ select is((select role::text from public.profiles where user_id = '94000000-0000
   'a faculty signup creates a faculty profile');
 select ok((select onboarding_complete from public.profiles where user_id = '94000000-0000-0000-0000-0000000000a1'),
   'faculty skip the student onboarding');
-select is(private.validate_signup('x@nutech.edu.pk', 'recruiter'), 'This kind of account can''t sign up here yet.',
-  'recruiters still can''t sign up here');
+select is(private.validate_signup('x@nutech.edu.pk', 'recruiter'), 'Use your company email, not a university one.',
+  'recruiters can''t sign up with a university email');
 select is(private.validate_signup('x@gmail.com', 'faculty'), 'Use your university email.', 'faculty need a university email too');
 
 set local role authenticated;

@@ -75,6 +75,8 @@ jobs:
           cleanup=$(curl -s -o /dev/null -w '%{http_code}' --max-time 30 -X POST http://127.0.0.1:54321/functions/v1/storage-cleanup || true)
           codecheck=$(curl -s -o /dev/null -w '%{http_code}' --max-time 30 -X POST http://127.0.0.1:54321/functions/v1/code-check -H 'content-type: application/json' -d '{}' || true)
           cvsign=$(curl -s -o /dev/null -w '%{http_code}' --max-time 30 -X POST http://127.0.0.1:54321/functions/v1/cv-sign -H 'content-type: application/json' -d '{}' || true)
+          webhooks=$(curl -s -o /dev/null -w '%{http_code}' --max-time 30 -X POST http://127.0.0.1:54321/functions/v1/webhook-worker || true)
+          freeze=$(curl -s -o /dev/null -w '%{http_code}' --max-time 30 -X POST http://127.0.0.1:54321/functions/v1/competition-freeze || true)
           echo "github-worker: $worker $(cat /tmp/worker.txt)"
           echo "github-link: $link"
           echo "notify-worker: $notify"
@@ -82,7 +84,9 @@ jobs:
           echo "storage-cleanup: $cleanup"
           echo "code-check: $codecheck"
           echo "cv-sign: $cvsign"
-          if [ "$worker" != 401 ] || [ "$notify" != 401 ] || [ "$preview" != 401 ] || [ "$cleanup" != 401 ] || [ "$codecheck" != 401 ] || [ "$cvsign" != 401 ] || ! echo "$link" | grep -q '"not_configured"'; then
+          echo "webhook-worker: $webhooks"
+          echo "competition-freeze: $freeze"
+          if [ "$worker" != 401 ] || [ "$notify" != 401 ] || [ "$preview" != 401 ] || [ "$cleanup" != 401 ] || [ "$codecheck" != 401 ] || [ "$cvsign" != 401 ] || [ "$webhooks" != 401 ] || [ "$freeze" != 401 ] || ! echo "$link" | grep -q '"not_configured"'; then
             docker logs supabase_edge_runtime_skilient 2>&1 | tail -60
             exit 1
           fi

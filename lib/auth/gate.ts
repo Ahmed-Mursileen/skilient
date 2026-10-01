@@ -39,7 +39,10 @@ export function homeFor(state: GateState): string {
   if (state.status === "deleting") return DELETE_PATH;
   if (!state.agreement_accepted) return "/agreement";
   if (!state.onboarding_complete) return onboardingPath(state.onboarding_step);
-  // Faculty have no student onboarding: their home is the teacher portal (PRD 5.21).
+  // Faculty have no student onboarding: their home is the teacher portal (PRD 5.21); recruiters'
+  // is the recruiter portal (PRD 5.20), where /recruit sends them on to /org/join until they
+  // belong to an organisation.
+  if (state.role === "recruiter") return "/recruit";
   return state.role === "faculty" ? "/teach" : "/feed";
 }
 
@@ -87,6 +90,14 @@ export function isAuthPage(pathname: string): boolean {
 /** Portals whose roles must use two-factor (PRD 10): refused on an aal1 session. */
 export function requiresTwoFactor(pathname: string): boolean {
   return ["/ops", "/uni", "/recruit", "/org"].some((p) => matches(pathname, p));
+}
+
+/** The only areas a recruiter account uses (PRD 5.20): everything else is for students. */
+const RECRUITER_PREFIXES = ["/recruit", "/org", "/companies", "/chat", "/notifications", "/settings", "/feedback"];
+
+/** Who may open the recruiter portal: recruiter accounts only. */
+function isRecruiterArea(pathname: string): boolean {
+  return matches(pathname, "/recruit") || matches(pathname, "/org");
 }
 
 export interface GateInput {
@@ -148,6 +159,10 @@ export function decideRoute({ pathname, path, signedIn, aal, hasVerifiedFactor, 
     return redirect(onboardingPath(state.onboarding_step));
   }
   if (matches(pathname, "/onboarding") && pathname !== "/onboarding/done") return redirect(homeFor(state));
+
+  // Recruiter accounts stay in their own area; nobody else opens it.
+  if (state.role === "recruiter" && !RECRUITER_PREFIXES.some((p) => matches(pathname, p))) return redirect("/recruit");
+  if (isRecruiterArea(pathname) && state.role !== "recruiter") return redirect(homeFor(state));
 
   return next;
 }

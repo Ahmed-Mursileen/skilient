@@ -148,3 +148,29 @@ describe("faculty (PRD 5.21)", () => {
     expect(decideRoute(at("/teach", { state: faculty }))).toEqual({ type: "next" });
   });
 });
+
+describe("recruiters (PRD 5.20)", () => {
+  const recruiter: GateState = { ...done, role: "recruiter", username: null };
+  it("sends recruiters to the recruiter portal", () => {
+    expect(homeFor(recruiter)).toBe("/recruit");
+    expect(decideRoute(at("/signin", { state: recruiter }))).toEqual({ type: "redirect", to: "/recruit" });
+  });
+  it("keeps recruiters out of the student areas", () => {
+    expect(decideRoute(at("/feed", { state: recruiter }))).toEqual({ type: "redirect", to: "/recruit" });
+    expect(decideRoute(at("/leaderboard", { state: recruiter }))).toEqual({ type: "redirect", to: "/recruit" });
+    expect(decideRoute(at("/explore", { state: recruiter }))).toEqual({ type: "redirect", to: "/recruit" });
+  });
+  it("lets recruiters use the portal, chat, notifications and settings", () => {
+    for (const path of ["/recruit/search", "/org/join", "/companies/acme", "/chat", "/notifications", "/settings/security"]) {
+      expect(decideRoute(at(path, { state: recruiter, aal: "aal2" }))).toEqual({ type: "next" });
+    }
+  });
+  it("requires two-factor for the recruiter portal", () => {
+    expect(decideRoute(at("/recruit", { state: recruiter, aal: "aal1" }))).toEqual({ type: "redirect", to: "/settings/security?required=1" });
+    expect(decideRoute(at("/org/join", { state: recruiter, aal: "aal1" }))).toEqual({ type: "redirect", to: "/settings/security?required=1" });
+  });
+  it("keeps students and faculty out of the recruiter portal", () => {
+    expect(decideRoute(at("/recruit/search", { state: done, aal: "aal2" }))).toEqual({ type: "redirect", to: "/feed" });
+    expect(decideRoute(at("/org/join", { state: { ...done, role: "faculty" }, aal: "aal2" }))).toEqual({ type: "redirect", to: "/teach" });
+  });
+});

@@ -1329,3 +1329,61 @@ Append-only. One dated entry per product decision, with the reason. Carried over
   the faculty engagement panel, the `/uni/people` approval screen and supervised outcomes on a university
   dashboard wait for phase 9. The Phase 4 production check and moving skilient.com stay deferred, as asked;
   neither was run or ticked.
+
+## Phase 8: recruiter portal (decisions)
+
+- 2026-10-03 (phase 8, Ahmed's answers): All plan checks are a fail-closed stub until phase 10. `private.org_entitled(org, key)`
+  is true only for a verified organisation named under a known key in `platform_config` `entitlements.test_grants`
+  (`{key: [org ids]}`; unknown key = denied even if granted; SQL-only, empty in production); `private.consume_quota` and
+  `org.trial_limits` (config: 3 seats, 5 contact credits a month, 1 live job slot) cover the limits; every check is in SQL, never
+  in the browser. Phase 10 replaces the two function bodies and removes the test grants. Known keys: `talent.full_profile`,
+  `saved_searches`, `analytics`, `competitions.create`, `api.access`.
+- 2026-10-03 (phase 8, hires): A hire row stores the organisation, `kind` (`intern` for an internship, `full_time` otherwise), the job
+  type and `hired_at`, with `fee_status = 'unbilled'`, so phase 10 can invoice exactly. Nothing is charged now. The 90-day question
+  (`hire_outcomes`) goes to whoever hired, or an admin, through a notification and the recruiter home.
+- 2026-10-03 (phase 8, Explore vs full): Strictly gated. Contact credits only pay for sending requests; they never reveal an
+  anonymised candidate. Explore rows carry tier, skills with levels, university, department, batch and an activity band: no id,
+  name, photo, username or link, and `talent_index` has no such column at all. Full results, and contact requests (which need an
+  id), need `talent.full_profile`; a student reveals themselves by accepting. The trial allowance may include a few requests so the
+  flow can be tested.
+- 2026-10-03 (phase 8, competitions): Teams submit a GitHub repository URL (no GitHub App provisioning, no fake-GitHub worker).
+  The `competition-freeze` Edge Function records each repository's latest commit at the deadline where GitHub lets it be read
+  (public repositories; an optional `GITHUB_READ_TOKEN` secret raises the rate limit); private or missing ones are recorded as not
+  readable. Repo provisioning by the Skilient GitHub App stays **deferred** (logged here, not ticked). Participants earn L3 evidence
+  in the competition's skills; a winner badge counts as one L4 signal toward the endorsement threshold (a win plus one teammate
+  endorsement), never L4 on its own.
+- 2026-10-03 (phase 8, SSO): Skipped. `/org/plan` says to write to the Skilient team for SSO or an annual invoice.
+- 2026-10-03 (phase 8, notices): Contact requests and application updates are in-app plus the daily digest by default (categories
+  `contact_requests`, `job_updates`, `recruiting`, all `allow_instant`), and a student can switch either to instant email in
+  Settings → Notifications. This changes the 2026-09-28 rule of four instant categories on purpose (Ahmed, 2026-10-03). Notices to
+  students name the company, never the recruiter; a decline tells the recruiter that a student declined, not who. Saved-search
+  matches leave one `saved_search_matches` notice per due search, which the recipient's digest emails.
+- 2026-10-03 (phase 8, two-factor): Recruiters need two-factor at the route (`proxy.ts` for `/recruit` and `/org`) and in SQL
+  (`private.require_org` and `create_organization` read the session's `aal`), so a session without it can read nothing. A
+  recruiter who verifies their email with no authenticator goes straight to Settings → Security. Staff 2FA reset arrives in
+  phase 11; until then `docs/recruiter-2fa-recovery.md` is the manual procedure.
+- 2026-10-03 (phase 8, invites): Invites go to the organisation's own domain only (the cached `personal_email_domains` list and every
+  other domain are refused), expire after 7 days and work once; only the SHA-256 of the 32-byte token is stored. The admin also gets
+  the link on screen in case the email is slow or unconfigured. A recruiter accepts a waiting invite by id from `/org/join` once their
+  email matches. One organisation per account; removing a member keeps their rows (inactive) so notes and shortlists keep an author.
+- 2026-10-03 (phase 8, API): API routes call `anon`-executable SQL functions that take the bearer token and hash it themselves, so a
+  leaked hash can't be replayed and no service-role key is involved. A token shows once, 60 requests a minute per token, and only
+  students with a link (an application, or an accepted request or shortlist entry while visible) are reachable. Webhook URLs must be
+  https and a public host; the worker repeats the link-preview SSRF checks (DNS, no redirects) at every delivery. The signature is
+  `X-Skilient-Signature: t=<unix>,v1=<HMAC-SHA256 of "t.body">`; deliveries retry after 1 minute, 5 minutes, 30 minutes, 2 hours
+  and 12 hours, and a webhook pauses after 30 failures in a row. The secret is a column only the worker can read (shown once).
+- 2026-10-03 (phase 8, visibility): Turning recruiter visibility off removes the student from `talent_index` at once (a trigger, not
+  the 15-minute refresh), hides their shortlist entries ("no longer visible", no name or link) and makes their notes unreachable
+  until visibility returns; the notes themselves are kept. Account deletion anonymises the notes (text removed) and deletes the rest.
+  A student who applied stays visible to that organisation through the application, and one who accepted through the open chat.
+- 2026-10-03 (phase 8, deviations): `talent_index` is a table kept by functions, not a materialised view (a visibility change removes
+  one row instead of refreshing a whole view; the 15-minute job still rebuilds it). The candidate "drawer" is only the page, and
+  shortlist reordering uses move buttons (keyboard-operable) instead of drag; both are cheap to add in the phase 14 design pass. A
+  recruiter conversation is an ordinary DM (`chat_threads.org_id`, `closed_at`) labelled with the company; the student closes it and
+  nobody can write to it then. The candidate page shows a student's skills, ventures and endorsements to a verified organisation
+  that may open them, and links the signed CV only when the student chose CV visibility "Recruiters". Availability, city and remote
+  are new profile fields (Settings → Privacy). Recruiter filters are an allow-list; unknown keys (gender, age, religion, ethnicity,
+  photo) are refused by the database, and every search writes `search_audit`.
+- 2026-10-03 (phase 8, deferred): Company logo upload (a monogram for now), `/org/billing` and invoices (phase 10), the recruiter guided
+  tour, reporting a recruiter (a new report target), account deletion for recruiters, and the hire fee itself (phase 10). The visual
+  design-gate pass and in-browser screenshots are phase 14; this phase ran axe in both themes on every new screen instead.

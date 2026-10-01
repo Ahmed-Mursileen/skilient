@@ -49,9 +49,9 @@ select is(
 );
 select is(pg_temp.hook('ali@nutech.edu.pk', 'google'), '{}'::jsonb, 'a university Google account is allowed');
 select is(
-  pg_temp.hook('ali@nutech.edu.pk', 'email', jsonb_build_object('role', 'recruiter')) -> 'error' ->> 'message',
+  pg_temp.hook('ali@nutech.edu.pk', 'email', jsonb_build_object('role', 'university_admin')) -> 'error' ->> 'message',
   'This kind of account can''t sign up here yet.',
-  'roles other than student are refused in phase 1'
+  'university admins can''t sign up here until phase 9'
 );
 select is(
   pg_temp.hook('ali@nutech.edu.pk', 'email',

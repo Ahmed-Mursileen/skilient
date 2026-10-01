@@ -20,12 +20,28 @@ export function AppHeader() {
   return (
     <header className="border-b border-border-default bg-bg-surface">
       <div className="mx-auto flex h-14 max-w-page items-center justify-between gap-4 px-[var(--page-gutter)]">
-        <Link href={user?.role === "faculty" ? "/teach" : "/feed"} aria-label="Skilient home" className="shrink-0 rounded-sm">
+        <Link href={user?.role === "faculty" ? "/teach" : user?.role === "recruiter" ? "/recruit" : "/feed"} aria-label="Skilient home" className="shrink-0 rounded-sm">
           <Image src="/brand/skilient-icon.svg" alt="" width={28} height={28} className="size-7 dark:hidden" />
           <Image src="/brand/skilient-icon-white.svg" alt="" width={28} height={28} className="hidden size-7 dark:block" />
         </Link>
         {user && focused ? <SignOutButton variant="ghost" size="sm" icon /> : null}
-        {user && !focused ? (
+        {user && !focused && user.role === "recruiter" ? (
+          <nav aria-label="Account" className="-mr-2 flex min-w-0 items-center gap-1 overflow-x-auto pr-2 whitespace-nowrap sm:gap-3 [&>*]:shrink-0">
+            <Link href="/recruit" className="flex items-center gap-2 rounded-md px-2 py-1 hover:bg-bg-subtle">
+              <Avatar name={user.fullName} src={user.avatarUrl} size="sm" />
+              <span className="hidden max-w-[16ch] truncate text-body-sm font-semibold sm:inline" data-testid="current-user-name">
+                {user.fullName}
+              </span>
+            </Link>
+            <ChatNavLink userId={user.id} />
+            <NotificationBell userId={user.id} />
+            <Link href="/settings" className="rounded-md px-2 py-1 text-body-sm text-text-secondary hover:bg-bg-subtle hover:text-text-primary">
+              Settings
+            </Link>
+            <SignOutButton variant="ghost" size="sm" icon />
+          </nav>
+        ) : null}
+        {user && !focused && user.role !== "recruiter" ? (
           // Until the phase 6 shell, the links scroll inside the bar on narrow phones rather than
           // widening the page.
           <nav aria-label="Account" className="-mr-2 flex min-w-0 items-center gap-1 overflow-x-auto pr-2 whitespace-nowrap sm:gap-3 [&>*]:shrink-0">

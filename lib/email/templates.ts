@@ -102,3 +102,15 @@ export function backupCodeUsedEmail(to: string, securityUrl: string, at: Date = 
     text: `${body}\n\nSet up two-factor again: ${securityUrl}\n\nIf this wasn't you, reset your password now.\n`,
   };
 }
+
+/** An organisation admin invites a teammate (PRD 5.20); the link works once and expires in 7 days. */
+export function orgInviteEmail(to: string, d: { orgName: string; role: string; link: string }): Email {
+  const title = `${d.orgName} invited you to Skilient`;
+  const body = `${d.orgName} added you as ${d.role === "admin" ? "an admin" : `a ${d.role}`} on their Skilient recruiter account. Create your account with this work email address to join.`;
+  return {
+    to,
+    subject: title,
+    html: layout(title, p(body) + button(d.link, "Create my account") + p("This link works once and expires in 7 days."), "If you weren't expecting this, you can ignore the email."),
+    text: `${body}\n\nCreate your account: ${d.link}\n\nThis link works once and expires in 7 days.\n`,
+  };
+}

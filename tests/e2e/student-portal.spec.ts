@@ -104,7 +104,10 @@ test.describe("Student portal", () => {
     await axe(page, "opportunities");
     for (const tab of ["jobs", "contact_requests", "applications", "competitions", "job_fairs", "ideas"]) {
       await page.goto(`/opportunities/${tab}`);
-      await expect(page.getByRole("main").getByRole("heading", { level: 3 })).toBeVisible();
+      // Jobs and competitions are shared lists: other accounts' postings may fill them, so either state is right.
+      const shared = tab === "jobs" || tab === "competitions";
+      const state = shared ? page.getByRole("main").getByRole("heading", { level: 3 }).or(page.getByTestId("opportunity-list")) : page.getByRole("main").getByRole("heading", { level: 3 });
+      await expect(state.first()).toBeVisible();
     }
     await page.goto("/opportunities/bogus");
     await expect(page.getByRole("heading", { name: "We couldn't find that page" })).toBeVisible();
