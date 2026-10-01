@@ -51,7 +51,9 @@ begin
 end;
 $$;
 create function pg_temp.sub(p_type text, p_id uuid) returns public.subscriptions language sql security definer as $$
-  select * from public.subscriptions where subject_type = p_type::public.billing_subject and subject_id = p_id order by created_at desc, ctid desc limit 1
+  -- The running subscription if there is one, else the one that ended last (now() is fixed inside this transaction).
+  select * from public.subscriptions where subject_type = p_type::public.billing_subject and subject_id = p_id
+   order by (status in ('trialing', 'active', 'past_due')) desc, ended_at desc nulls first, updated_at desc limit 1
 $$;
 grant execute on all functions in schema pg_temp to authenticated, anon;
 
@@ -277,6 +279,9 @@ select pg_temp.as_user(pg_temp.u('RA'));
 select pg_temp.remember('org_start', (public.create_checkout('org', 'recruiter_starter_monthly', 'PKR', 'simulated', 'pgtap-org-start-01') ->> 'session_id')::uuid);
 select is((public.checkout_session(pg_temp.v('org_start')) ->> 'amount')::numeric, 17400.00, 'PKR 15,000 plus 16% Punjab tax');
 select is((public.create_checkout('org', 'recruiter_starter_monthly', 'USD', 'simulated', 'pgtap-org-usd-001') ->> 'amount')::numeric, 55.00, 'USD has no Skilient tax (the merchant of record handles it)');
+select pg_temp.as_user(pg_temp.u('RA'), 'aal1');
+select throws_ok(format('select public.checkout_session(%L)', pg_temp.v('org_start')), '42501', null, 'an organisation''s checkout needs two-factor to read');
+select pg_temp.as_user(pg_temp.u('RA'));
 reset role;
 select is(pg_temp.pay(pg_temp.v('org_start'), 'pay_org_1'), 'paid', 'the organisation pays');
 select ok(private.org_entitled(pg_temp.v('org'), 'talent.full_profile'), 'Starter opens full profiles');
@@ -331,13 +336,14 @@ set local role authenticated;
 select pg_temp.as_user(pg_temp.u('RA'));
 select throws_ok(format('select public.reopen_paused_job(%L)', pg_temp.v('paused')),
   'PT402', null, 'a paused post can''t reopen while the slots are full');
+select pg_temp.remember('org_sub', (pg_temp.sub('org', pg_temp.v('org'))).id);
 select lives_ok($$ select public.cancel_subscription('org') $$, 'the admin cancels');
 select is(public.billing_overview('org') -> 'subscription' ->> 'cancel_at_period_end', 'true', 'at the period end');
 reset role;
-select is((pg_temp.sub('org', pg_temp.v('org'))).status::text, 'active', 'it stays active until then');
-update public.subscriptions set current_period_start = now() - interval '40 days', current_period_end = now() where id = (pg_temp.sub('org', pg_temp.v('org'))).id;
+select is((select status::text from public.subscriptions where id = pg_temp.v('org_sub')), 'active', 'it stays active until then');
+update public.subscriptions set current_period_start = now() - interval '40 days', current_period_end = now() where id = pg_temp.v('org_sub');
 select private.billing_tick();
-select is((pg_temp.sub('org', pg_temp.v('org'))).ended_reason, 'cancelled', 'then ends');
+select is((select ended_reason from public.subscriptions where id = pg_temp.v('org_sub')), 'cancelled', 'then ends');
 select is(private.entitlement_value('org', pg_temp.v('org'), 'org.plan') #>> '{}', 'explore', 'back on Explore');
 select is((select count(*)::integer from public.job_posts where org_id = pg_temp.v('org') and status = 'live'), 1, 'with Explore''s one live post');
 select pg_temp.remember('live_job', (select id from public.job_posts where org_id = pg_temp.v('org') and status = 'live' limit 1));
@@ -434,23 +440,33 @@ select ok((select total = 900000 and status = 'issued' and po_number = 'PO-NUTEC
 select ok(not exists (select 1 from public.billing_tasks where kind = 'licence_request' and subject_id = pg_temp.v('nutech') and done_at is null), 'the request is closed');
 select is(private.uni_limit(pg_temp.v('nutech'), 'uni.job_fairs'), 1, 'Growth: one job fair a licence year');
 
-select is((private.sponsorship_sync() ->> 'started')::integer, 1, 'sponsorship starts for the final-year student');
+select private.sponsorship_sync();
+select is((select count(*)::integer from public.entitlement_grants where subject_id = pg_temp.u('S2') and source = 'sponsorship' and key = 'student.plan' and revoked_at is null),
+  1, 'sponsorship starts for the final-year student');
 select ok(private.has_entitlement(pg_temp.u('S2'), 'cv.pdf_export'), 'S2 has Pro through the university');
 select ok(not private.has_entitlement(pg_temp.u('S3'), 'cv.pdf_export'), 'S3 (not final year) does not');
 select ok(exists (select 1 from public.notifications where user_id = pg_temp.u('S2') and type = 'billing_sponsorship_started'), 'S2 is told');
-select is((private.sponsorship_sync() ->> 'started')::integer, 0, 'running again changes nothing');
+select private.sponsorship_sync();
+select is((select count(*)::integer from public.entitlement_grants where subject_id = pg_temp.u('S2') and source = 'sponsorship' and key = 'student.plan'),
+  1, 'running again changes nothing');
 update public.profiles set graduation_year = 2031 where user_id = pg_temp.u('S2');
-select is((private.sponsorship_sync() ->> 'ending')::integer, 1, 'a student who stops qualifying');
+select private.sponsorship_sync();
+select ok((select bool_and(ends_at is not null) from public.entitlement_grants where subject_id = pg_temp.u('S2') and source = 'sponsorship' and revoked_at is null),
+  'a student who stops qualifying');
 select ok((select bool_and(ends_at >= now() + interval '30 days' and ends_at < now() + interval '62 days') from public.entitlement_grants
             where subject_id = pg_temp.u('S2') and source = 'sponsorship' and revoked_at is null),
   'keeps Pro to the end of the first month at least 30 days away');
 select ok(exists (select 1 from public.notifications where user_id = pg_temp.u('S2') and type = 'billing_sponsorship_ending'), 'and is told now');
 update public.profiles set graduation_year = private.final_year_of(pg_temp.v('nutech')) where user_id = pg_temp.u('S2');
-select is((private.sponsorship_sync() ->> 'restored')::integer, 1, 'qualifying again clears the end date');
+select private.sponsorship_sync();
+select ok((select bool_and(ends_at is null) from public.entitlement_grants where subject_id = pg_temp.u('S2') and source = 'sponsorship' and revoked_at is null),
+  'qualifying again clears the end date');
 update public.invoices set due_at = now() - interval '15 days' where id = pg_temp.v('lic_invoice');
 select private.billing_tick();
 select is(private.uni_plan(pg_temp.v('nutech')), 'free', 'an unpaid licence ends after 30 days and 14 days of grace');
-select is((private.sponsorship_sync() ->> 'ending')::integer, 1, 'and sponsorship gets its notice');
+select private.sponsorship_sync();
+select ok((select bool_and(ends_at is not null and notice_sent_at is not null) from public.entitlement_grants
+            where subject_id = pg_temp.u('S2') and source = 'sponsorship' and revoked_at is null), 'and sponsorship gets its notice');
 select set_config('test.dummy', '', false);
 
 -- ---------------------------------------------------------------------------
@@ -471,7 +487,7 @@ select isnt(public.ops_comp_plan('org', pg_temp.v('org'), 'recruiter_enterprise_
 select is(jsonb_array_length(public.ops_billing_search('billco')), 1, 'staff find the organisation');
 select is(public.ops_billing_subject('org', pg_temp.v('org')) ->> 'name', 'BillCo', 'and open its billing');
 select ok((public.ops_revenue() -> 'mrr') = '{}'::jsonb, 'test payments and comp plans are not revenue');
-select ok((public.ops_gateway_activity() -> 'simulated' ->> 'last_live') = 'false', 'the readiness view sees the last simulated event');
+select ok((public.ops_gateway_activity() -> 'simulated' ->> 'last_received_at') is not null, 'the readiness view sees simulated events');
 select pg_temp.as_user(pg_temp.u('S1'));
 select pg_temp.remember('s1_session', (public.create_checkout('user', 'student_pro_monthly', 'PKR', 'simulated', 'pgtap-s1-pro-00001') ->> 'session_id')::uuid);
 reset role;

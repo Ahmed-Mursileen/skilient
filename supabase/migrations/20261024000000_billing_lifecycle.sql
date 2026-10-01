@@ -1100,6 +1100,10 @@ begin
   if c.id is null or not (c.created_by = v_me or v_me in (select private.billing_readers(c.subject_type, c.subject_id))) then
     raise exception 'checkout not found' using errcode = 'P0002';
   end if;
+  -- Organisation and university billing needs two-factor here too, not only on /org and /uni.
+  if c.subject_type <> 'user' and coalesce((select auth.jwt() ->> 'aal'), '') <> 'aal2' then
+    raise exception 'turn on two-factor sign-in to pay for your organisation' using errcode = '42501';
+  end if;
   return jsonb_build_object(
     'id', c.id, 'subject_type', c.subject_type, 'purpose', c.purpose, 'change', c.change, 'status',
     case when c.status = 'open' and c.expires_at <= now() then 'expired' else c.status end,
