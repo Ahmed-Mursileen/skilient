@@ -295,33 +295,19 @@ export function seek(ctx, t) {
   ctx.fillRect(0, 0, W, H);
   const idx = Math.min(3, Math.floor(t / CARD));
   const local = t - idx * CARD;
-  const wipe = idx < 3 ? easeInOutCubic(seg(local, 3.5, 4.0)) : 0;
-  const edge = W * wipe;
+  // Slide pacing: cards crossfade through the ink background (no wipe).
+  const p = idx < 3 ? easeInOutCubic(seg(local, 3.4, 4.0)) : 0;
 
-  if (idx < 3 && wipe > 0) {
-    // next card underneath, revealed left to right
+  if (idx < 3 && p > 0) {
     ctx.save();
-    ctx.beginPath();
-    ctx.rect(0, 0, edge, H);
-    ctx.clip();
+    ctx.globalAlpha = 1 - p;
+    CARDS[idx](ctx, local);
+    ctx.restore();
+    ctx.save();
+    ctx.globalAlpha = p;
     CARDS[idx + 1](ctx, 0);
     ctx.restore();
-    ctx.save();
-    ctx.beginPath();
-    ctx.rect(edge, 0, W - edge, H);
-    ctx.clip();
-    CARDS[idx](ctx, local);
-    ctx.restore();
-    ctx.fillStyle = C.vermillion;
-    ctx.fillRect(edge - 5, 0, 10, H);
   } else {
     CARDS[idx](ctx, local);
-  }
-
-  // tail: last card exits into the next beat
-  if (t > 15.4) {
-    const p = easeInOutCubic(seg(t, 15.4, 16));
-    ctx.fillStyle = `rgba(14,13,11,${p})`;
-    ctx.fillRect(0, 0, W, H);
   }
 }

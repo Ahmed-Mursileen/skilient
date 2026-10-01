@@ -43,7 +43,7 @@ function camera(t) {
 function shake(t) {
   const a = seg(t, 2.4, 2.75);
   if (a <= 0 || a >= 1) return [0, 0];
-  const amp = 26 * Math.pow(1 - a, 2);
+  const amp = 0; // slide pacing: no screen shake
   return [Math.sin(a * 61) * amp, Math.cos(a * 47) * amp * 0.7];
 }
 

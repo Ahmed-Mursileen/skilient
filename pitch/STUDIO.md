@@ -8,7 +8,7 @@
 ## Look
 - Banned defaults: centered title on gradient, everything fading in, corner labels and frame borders, glow on UI chrome, generic particle bursts.
 - One display face (Spectral), one UI face (Barlow), one accent (vermillion #C03910) on ink #0E0D0B and paper #F4EFE6. Mono only inside real UI captures.
-- Every 2 to 4 seconds something new must happen on screen.
+- Slide pacing (v2, after feedback that v1 felt like a social clip): one idea per slide; hold every state at least 5 s on screen; one reveal at a time; 1.2 s eased transitions and 0.8 s crossfades between beats; no screen shake, wipes or speeding loops. Motion is only for revealing or clarifying.
 
 ## Sound
 No sound. The file has no audio track.

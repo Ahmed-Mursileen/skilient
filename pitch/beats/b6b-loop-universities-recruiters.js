@@ -148,9 +148,9 @@ function flowPanel(ctx, t) {
 
 const GRAPHICS = [uniPanel, searchPanel, hireCard, flowPanel];
 
-// Cumulative lap fraction for the closing laps: 1.5 s, 1.0 s, 0.6 s.
+// Slide pacing: one slow closing lap (4 s authored, about 6 s on screen), not three speeding ones.
 function lapFraction(t) {
-  const laps = [1.5, 1.0, 0.6];
+  const laps = [4.0];
   let acc = 0;
   let frac = 0;
   for (const d of laps) {
@@ -185,9 +185,9 @@ export function seek(ctx, t) {
   ctx.save();
   ctx.restore();
 
-  // Closing laps: the thread circulates, faster each time, and the ring fills.
+  // Closing lap: the thread circulates once and the ring fills.
   if (laps > 0) {
-    const a = clamp(laps / 3);
+    const a = clamp(laps);
     ring(ctx, -Math.PI / 2, -Math.PI / 2 + TAU, C.vermillion, 10, 0.35 + 0.65 * a);
     const head = -Math.PI / 2 + TAU * laps;
     const hx = RC.x + Math.cos(head) * RC.r;

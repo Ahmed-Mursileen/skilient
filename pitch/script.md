@@ -1,55 +1,114 @@
-# Skilient pitch script (Roman Urdu + English)
+# Skilient pitch script v2 (Roman Urdu + English), 4:30
 
-For the silent 3:00 film (`deliverables/skilient-pitch-film-4k.mp4`). Three speakers, about one minute each. Times are film time; the *(italic marks)* are cues to land a line on, not words to say. Numbers, product terms and names stay in English.
+For the slow, slide-paced film (`deliverables/skilient-pitch-film-4k-v2.mp4`, 4:30). Three speakers, about 90 seconds each. Times are film time; the *(italic marks)* are the moment on screen to land a line on, not words to say. Numbers, product terms and names stay in English.
 
-Speakers: **Huzaifa Khan** (CEO / Founder) 0:00 to 1:00 · **Ahmed Mursileen** (CTO / Co-founder) 1:00 to 2:00 · **Laiba Owais** (CHRO) 2:00 to 3:00.
+Speakers: **Huzaifa Khan** (CEO / Founder) 0:00 to 1:30 · **Ahmed Mursileen** (CTO / Co-founder) 1:30 to 3:02 · **Laiba Owais** (CHRO) 3:02 to 4:30.
 
-Pace: aim for about 2.4 words per second. If you run ahead, stop and let the screen finish; if you fall behind, drop the last sentence of the beat, never the number.
+Pace: calm, about 1.5 to 2.0 words per second, with a pause after every number. Let the screen finish its move before the next sentence. If you fall behind, drop the last sentence of the beat, never the number. (The earlier 3:00 version is `deliverables/skilient-pitch-film-4k.mp4`; its script is in git history.)
 
----
-
-## Segment 1: Huzaifa Khan, 0:00 to 1:00
-
-#### [0:00] Beat 1: The Number (12 s)
-> Yeh 3.41 hai. Ek CGPA. Ek number. *(stamp lands, 0:02.4)* Is ke saath ek student employer ke paas jata hai… aur reject ho jata hai. *(wall of CVs)* Same number. Different people.
-
-#### [0:12] Beat 2: The Gap (18 s)
-> University ke paas sirf CGPA hai: capability nahi dikhti. *(rows appear)* Student wahi number employer ko dikhata hai. *(chips bounce off the gate, 0:14.5 to 0:16.5)* Uske projects, uski team, uska kaam: gate se guzar nahi sakte. Sirf CGPA guzarta hai. *(cutoff, REJECTED)* Employer baqi kuch verify nahi kar sakta.
-
-#### [0:30] Beat 3: The Scale (14 s)
-> Pakistan ki universities mein 1.96 million students hain. *(dots fill, to 0:33; scroll to the bars at 0:34)* Degree holders ki unemployment rate 10.9 percent hai, bina taleem walon ki 4.7: yani 2.3 guna. *(women bar at 0:40)* Female degree holders mein 24.1 percent.
-
-#### [0:44] Beat 4a: Shatter (16 s)
-> Ek number poore insaan ko hold nahi kar sakta. *(3.41 cracks and falls, to 0:47)* Projects jo aap ne ship kiye. *(0:47.6)* Teammates jo gawahi dein. *(0:49)* Peers jo endorse karein. *(0:50.4)* Aur samajh, jo ek insaan ne check ki ho. *(0:51.8)* Isi liye Skilient. Ahmed? *(0:58, hand over)*
 
 ---
 
-## Segment 2: Ahmed Mursileen, 1:00 to 2:00
+## Segment 1: Huzaifa Khan (CEO / Founder), 0:00 to 1:30
 
-#### [1:00] Beat 4b: Signed CV (16 s)
-> Yeh Skilient ka signed CV hai: sample student, made-up. *(1:04.4)* Main sirf ek byte badalta hoon. *(1:05.6)* Fingerprint poora badal gaya, aur verify page kehta hai: Altered. *(1:09.6)* Byte wapas: Valid. *(1:12.5)* Student withdraw kare: Revoked. *(1:14.3)* Har CV, koi bhi check kar sakta hai.
 
-#### [1:16] Beat 5: Why it holds (16 s, four cards of 4 s)
-> *(1:16)* Koi AI grade nahi karta. Insaan, aap ke apne kaam par.
-> *(1:20)* Likes nahi. Survey se post quality par upar jati hai.
-> *(1:24)* Paise se rank nahi milti. Rank sirf verified kaam se.
-> *(1:28)* Har table by default locked. Test guarantee karta hai.
+#### [0:00] Beat 1: The Number (18 s on screen)
 
-#### [1:32] Beat 6a: The loop, students (28 s)
-> *(1:32)* Ab poora loop dekhiye. *(1:34.6, step 1)* Student team ke saath real project complete karta hai. *(1:39, step 2)* Teammates uska kaam confirm karte hain. *(1:43.4, step 3)* Skills evidence se level kamaate hain: L1 se L4. *(1:47.8, step 4)* Tier proof se barhta hai: kabhi khareeda nahi jata. *(1:52.2, step 5)* Aur nateeja: ek CV jo koi bhi check kar sakay. *(1:56.6, thread leaves)* Ab yeh proof university tak jata hai. Laiba?
+> *(0:00.0)* Yeh 3.41 hai. Ek CGPA. Ek number.
+> *(0:03.6)* Is ke saath ek student employer ke paas jata hai… aur reject ho jata hai.
+> *(0:10.8)* Bahut se students ke paas bhi yehi number hai.
+> *(0:15.5)* Same number. Different people.
+
+#### [0:18] Beat 2: The Gap (26 s on screen)
+
+> *(0:18.0)* University ke paas sirf CGPA hai: capability nahi dikhti.
+> *(0:22.3)* Student ke projects, uski team, uska kaam: gate se guzar nahi sakte.
+> *(0:28.4)* Sirf CGPA guzarta hai.
+> *(0:30.6)* Aur shortlist se hamara student bahar ho jata hai.
+> *(0:35.3)* University capability nahi dekh sakti. Employer verify nahi kar sakta.
+
+#### [0:44] Beat 3: The Scale (20 s on screen)
+
+> *(0:44.4)* Pakistan ki universities mein 1.96 million students hain.
+> *(0:49.7)* Unemployment rate dekhiye. Bina taleem walon mein 4.7 percent.
+> *(0:54.3)* Degree holders mein 10.9 percent: 2.3 guna zyada.
+> *(0:58.3)* Aur female degree holders mein 24.1 percent.
+
+#### [1:04] Beat 4a: Shatter (26 s on screen)
+
+> *(1:04.0)* Ek number poore insaan ko hold nahi kar sakta.
+> *(1:08.7)* Yeh toot jaye, to kya nikalta hai?
+> *(1:12.1)* Projects jo aap ne ship kiye.
+> *(1:14.6)* Teammates jo gawahi dein.
+> *(1:17.0)* Peers jo endorse karein.
+> *(1:19.0)* Aur woh samajh, jo ek insaan ne check ki ho.
+> *(1:23.5)* Isi liye hum ne Skilient banaya.
+> *(1:27.1)* Ahmed?
 
 ---
 
-## Segment 3: Laiba Owais, 2:00 to 3:00
+## Segment 2: Ahmed Mursileen (CTO / Co-founder), 1:30 to 3:02
 
-#### [2:00] Beat 6b: The loop, universities and recruiters (27 s)
-> *(2:00.8)* University ko CGPA se aage dikhta hai: department-wise asal capability. *(2:05.4)* Dono portals launching hain, build mein. *(2:07.2)* Recruiter proof par search karta hai: payment par kabhi nahi. *(2:11.8)* Hire ke 90 din baad ek sawal: kya hire expectations par poora utra? *(2:18.2)* Outcome wapas jata hai: student ke tier aur university ke aggregate stats tak. *(2:22.6)* Har taraf agle ko validate karti hai. Proof jo safar karta hai.
 
-#### [2:27] Beat 7: Traction and discovery (20 s)
-> *(2:27)* 182 students ne waitlist join ki: koi paid ad nahi. Har teesra university email se. *(2:34)* ILO ke SIYB se hum ne badla: samajh se proof, 30+ research papers, likes ki jagah survey, university dashboard: launching. *(2:42)* 14 mein se 6 phases tested. Agla: recruiter, teacher, university portals.
+#### [1:30] Beat 4b: Signed CV (26 s on screen)
 
-#### [2:47] Beat 8: Close (13 s)
-> *(2:47)* Aaj CGPA ek number hai. Kal CV proof hoga. *(2:51.4)* Hum hain Huzaifa Khan, Ahmed Mursileen, aur Laiba Owais. *(2:57)* Skilient. Shukriya.
+> *(1:30.0)* Yeh Skilient ka signed CV hai: sample student, made-up.
+> *(1:34.9)* Iska fingerprint SHA-256 hai.
+> *(1:36.5)* Ab main sirf ek byte badalta hoon.
+> *(1:40.1)* Fingerprint poora badal gaya. Verify page: Altered.
+> *(1:43.7)* Ab byte wapas karta hoon.
+> *(1:46.1)* Valid.
+> *(1:48.5)* Student CV withdraw kare, to Revoked.
+> *(1:52.1)* Har CV, koi bhi check kar sakta hai.
+
+#### [1:56] Beat 5: Why it holds (four cards) (26 s on screen)
+
+> *(1:56.2)* Koi AI grade nahi karta. Insaan aap ke apne kaam par sawal poochta hai.
+> *(2:02.7)* Likes nahi. Ek tap ka survey, aur post quality se upar jati hai.
+> *(2:09.2)* Paise se rank nahi milti. Rank sirf verified kaam se milti hai.
+> *(2:15.7)* Har table by default locked, aur ek test guarantee deta hai.
+
+#### [2:22] Beat 6a: The loop, students (40 s on screen)
+
+> *(2:22.4)* Ab poora loop dekhte hain.
+> *(2:25.9)* Pehle student: woh team ke saath real project complete karta hai.
+> *(2:32.1)* Teammates uska kaam confirm karte hain: peer-verified.
+> *(2:38.4)* Skills evidence se level kamaate hain: L1 se L4.
+> *(2:44.7)* Tier proof se barhta hai: kabhi khareeda nahi jata.
+> *(2:51.0)* Aur nateeja: aisa CV, jo koi bhi check kar sakay.
+> *(2:57.3)* Ab yeh proof university tak pohanchta hai.
+> *(3:01.3)* Laiba?
+
+---
+
+## Segment 3: Laiba Owais (CHRO), 3:02 to 4:30
+
+
+#### [3:02] Beat 6b: The loop, universities and recruiters (40 s on screen)
+
+> *(3:03.2)* Ab university ko CGPA se aage dikhta hai: department-wise asal capability.
+> *(3:08.8)* Recruiter aur university portals abhi launching hain: build mein.
+> *(3:13.3)* Recruiter proof par search karta hai, payment par kabhi nahi.
+> *(3:19.6)* Hire ke 90 din baad ek sawal: kya hire expectations par poora utra?
+> *(3:29.3)* Yeh outcome wapas jata hai: student ke tier aur university ke aggregate stats tak.
+> *(3:36.1)* Har taraf agle ko validate karti hai. Proof jo safar karta hai.
+
+#### [3:42] Beat 7: Traction and discovery (30 s on screen)
+
+> *(3:42.4)* Hamari landing page se 182 students ne waitlist join ki: koi paid ad nahi.
+> *(3:49.2)* Har teesra university email se.
+> *(3:52.5)* ILO ke SIYB programme ke baad hum ne badla:
+> *(3:58.5)* samajh se proof, 30+ research papers, likes ki jagah survey.
+> *(4:03.0)* Universities ke liye feedback dashboard: launching.
+> *(4:06.0)* 14 mein se 6 phases complete aur tested. Agla: recruiter, teacher, university portals.
+
+#### [4:12] Beat 8: Close (18 s on screen)
+
+> *(4:12.0)* Aaj CGPA ek number hai.
+> *(4:14.5)* Kal CV proof hoga.
+> *(4:18.1)* Hum hain Huzaifa Khan, Ahmed Mursileen, aur Laiba Owais.
+> *(4:24.5)* Skilient. Shukriya.
+
 
 ---
 
@@ -57,13 +116,14 @@ Pace: aim for about 2.4 words per second. If you run ahead, stop and let the scr
 
 - Say **"launching"**, never "live", for the recruiter, university and teacher portals and the university feedback dashboard.
 - Do **not** say employers screen by CGPA. Say the CGPA shows no capability and **cannot be verified**. No study we found shows employers shortlist by CGPA (see `claims.md`).
-- Say **"ek insaan"** for whoever grades a code check. Do not say "teacher" until the teacher portal ships. Do not say AI is detected or punished: the product tests understanding, and no AI grades anyone.
-- Numbers exactly as on screen: **182** (landing page, organic: founder-stated), **1.96 million**, **10.9** vs **4.7**, **24.1**, **6 of 14**, **30+** research papers (founder-supplied list). "2.3 guna" is our own division of 10.9 by 4.7; say so if asked.
+- Say **"insaan"** for whoever grades a code check. Do not say "teacher" for grading until the teacher portal ships. Do not say AI is detected or punished: the product tests understanding and no AI grades anyone.
+- Numbers exactly as on screen: **182** (landing page, organic: founder-stated), **1.96 million**, **4.7** and **10.9** ("2.3 guna" is our own division of 10.9 by 4.7; say so if asked), **24.1**, **6 of 14**, **30+** research papers (founder-supplied list).
 - "Unemployment rate" means the unemployed share of the labour force, not of the whole population.
 - The sample CV is made up. Do not quote prices, do not name a university, do not show email addresses.
 - If a judge asks anything beyond the script, answer from `qa.md`.
 
 ## Handovers
 
-- **1:00**: Huzaifa ends with "Ahmed?" as the dot sits alone; the signed CV slides in on the next beat.
-- **2:00**: Ahmed ends with "Laiba?" as the thread reaches Universities. The screen does not cut; Laiba picks up on the same ring.
+- **1:30**: Huzaifa ends on "Ahmed?" about 1:27 as the screen settles on a single dot; the signed CV fades in on the next beat.
+- **3:02**: Ahmed ends on "Laiba?" about 3:01 as the thread reaches Universities. There is no fade here: Laiba picks up on the same ring.
+

@@ -11,7 +11,7 @@ const PCT = 22; // px per percentage point
 
 function text(ctx, str, x, y, font, color, align = "left", alpha = 1) {
   ctx.save();
-  ctx.globalAlpha = alpha;
+  ctx.globalAlpha *= alpha;
   ctx.fillStyle = color;
   ctx.font = font;
   ctx.textAlign = align;
@@ -32,15 +32,16 @@ export function seek(ctx, t) {
   ctx.fillStyle = C.ink;
   ctx.fillRect(0, 0, W, H);
 
-  // Scroll from stage A (enrolment) down to stage B (unemployment).
+  // Crossfade from stage A (enrolment) to stage B (unemployment).
   const scroll = easeInOutCubic(seg(t, 3.7, 4.7));
-  const offA = -H * scroll;
-  const offB = H * (1 - scroll);
+  const offA = 0;
+  const offB = 0;
 
   // ---- Stage A: 1.96 million
   if (scroll < 1) {
     ctx.save();
     ctx.translate(0, offA);
+    ctx.globalAlpha = 1 - scroll;
     const rule = easeOutCubic(seg(t, 0.0, 0.9));
     ctx.fillStyle = C.vermillion;
     ctx.fillRect(960 - 840 * rule, 712, 1680 * rule, 8);
@@ -77,6 +78,7 @@ export function seek(ctx, t) {
   if (scroll > 0) {
     ctx.save();
     ctx.translate(0, offB);
+    ctx.globalAlpha = scroll;
     const base = 880;
     const exit = easeInOutCubic(seg(t, 12.3, 13.5));
     const fadeB = 1 - seg(t, 12.2, 12.9);
@@ -93,9 +95,10 @@ export function seek(ctx, t) {
     bar(ctx, 300, 240, base, 4.7, gA, C.paper, "No education", 4.7, fadeB);
     // Degree bar: full until the split, then it becomes an outline.
     if (t < 9.6) {
-      ctx.globalAlpha = 1 - split;
+      const a0 = ctx.globalAlpha;
+      ctx.globalAlpha = a0 * (1 - split);
       bar(ctx, 680, 240, base, 10.9, gB, C.paper, "Degree", 10.9, fadeB);
-      ctx.globalAlpha = 1;
+      ctx.globalAlpha = a0;
     } else if (gB > 0.02) {
       const hh = 10.9 * PCT * gB;
       ctx.strokeStyle = "rgba(244,239,230,0.45)";
