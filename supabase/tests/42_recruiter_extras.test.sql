@@ -26,11 +26,29 @@ create function pg_temp.v(p_name text) returns uuid language sql as $$ select cu
 create function pg_temp.remember(p_name text, p_value uuid) returns uuid language sql as $$
   select set_config('test.' || p_name, p_value::text, false)::uuid;
 $$;
-create function pg_temp.grants(p jsonb) returns void language sql as $$
-  insert into public.platform_config (key, version, value, reason)
-  select 'entitlements.test_grants', max(version) + 1, p, 'pgTAP' from public.platform_config where key = 'entitlements.test_grants';
+-- Staff grants (phase 10 registry): the whole {key: [subject ids]} object replaces the previous pgTAP grants.
+create function pg_temp.grants(p jsonb) returns void language plpgsql as $$
+declare
+  r record;
+begin
+  update public.entitlement_grants set revoked_at = now(), revoked_reason = 'pgTAP reset'
+   where source = 'admin' and reason = 'pgTAP' and revoked_at is null;
+  for r in select k.*, x.id from jsonb_each(p) t cross join lateral jsonb_array_elements_text(t.value) x(id)
+             cross join lateral private.entitlement_key(t.key) k where k.key is not null loop
+    insert into public.entitlement_grants (subject_type, subject_id, key, value, source, ends_at, reason)
+    values (r.subject, r.id::uuid, r.key, case r.kind when 'bool' then 'true'::jsonb else '1'::jsonb end, 'admin', now() + interval '1 day', 'pgTAP');
+  end loop;
+end;
+$$;
+-- What the phase 8 trial allowance gave every verified organisation (3 seats, 5 credits, shortlists).
+create function pg_temp.baseline(p_org uuid) returns void language sql as $$
+  insert into public.entitlement_grants (subject_type, subject_id, key, value, source, ends_at, reason) values
+    ('org', p_org, 'org.seats', '3', 'admin', now() + interval '1 day', 'pgTAP baseline'),
+    ('org', p_org, 'contact.credits', '5', 'admin', now() + interval '1 day', 'pgTAP baseline'),
+    ('org', p_org, 'recruit.shortlists', 'true', 'admin', now() + interval '1 day', 'pgTAP baseline');
 $$;
 grant execute on all functions in schema pg_temp to authenticated, anon;
+select pg_temp.baseline('96000000-0000-0000-0000-0000000000e1');
 
 -- Set up the organisation directly (the creation flow is covered in file 41).
 insert into public.organizations (id, slug, name, domain, website, industry, size, city, signer_role, status, created_by) values
@@ -53,7 +71,7 @@ update public.profiles set recruiter_visible = true where user_id in ('96000000-
 set local role authenticated;
 select pg_temp.as_user('96000000-0000-0000-0000-0000000000a3');
 select throws_ok($$ select public.talent_explore('{}') $$, '42501', null, 'a billing seat can''t search talent');
-select is((public.org_plan() ->> 'seats_used')::integer, 3, 'but sees the plan');
+select is((public.org_plan() ->> 'seats_used')::integer, 2, 'but sees the plan (a billing member takes no seat)');
 select throws_ok($$ select public.org_members_list() $$, '42501', null, 'and can''t manage the team');
 select pg_temp.as_user('96000000-0000-0000-0000-0000000000a2');
 select throws_ok($$ select public.org_members_list() $$, '42501', null, 'a recruiter seat can''t manage the team either');
