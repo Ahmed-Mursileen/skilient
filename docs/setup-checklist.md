@@ -125,6 +125,66 @@ Claude Code can't create these accounts or keys. Do them before (or alongside) p
   the app carry skilient.vercel.app links and are test-only. Remove the grant afterwards the same way
   with `'{}'::jsonb` as the value.
 
+## Phase 8
+
+Recruiter portal (decisions.md 2026-10-03). Nothing here is needed to merge; it is how you try the portal on the live project.
+
+- [ ] **Create a test recruiter.** Use a company email you control: not Gmail, Outlook or another webmail address, and not a university
+  address (the signup refuses both). Then:
+  1. Open `/signup/recruiter` (or the "Hiring?" link on `/signup`), sign up, and enter the 6-digit code from the email.
+  2. You land on **Settings → Security**: choose **Set up two-factor**, scan the code, confirm, and save the backup codes. The
+     recruiter portal needs two-factor and shows nothing without it.
+  3. Open `/recruit`: it sends you to `/org/join`. Fill in the company (the website's domain must match your email's domain, for
+     example `https://www.yourcompany.com` for `you@yourcompany.com`) and send it for verification. You can build the company page
+     meanwhile; search, contact requests and jobs stay locked until it is verified.
+- [ ] **Verify the company** with your own staff account (staff roles and two-factor are already on, phase 4): open `/ops/orgs`,
+  choose the company, and press **Verify**. Reload `/recruit` as the recruiter: the banner is gone.
+- [ ] **Give the company test entitlements** (billing is phase 10; until then this is how Explore turns into full results). In the
+  Supabase **SQL editor** run the statement below. Find the company id first:
+
+  ```sql
+  select id, name, domain, status from public.organizations order by created_at desc;
+  ```
+
+  Then, with that id in place of `<org id>`:
+
+  ```sql
+  insert into public.platform_config (key, version, value, reason)
+  select 'entitlements.test_grants', c.version + 1,
+         c.value || jsonb_build_object(
+           'talent.full_profile', jsonb_build_array('<org id>'),
+           'saved_searches',      jsonb_build_array('<org id>'),
+           'analytics',           jsonb_build_array('<org id>'),
+           'competitions.create', jsonb_build_array('<org id>'),
+           'api.access',          jsonb_build_array('<org id>')),
+         'Ahmed testing phase 8 recruiter features'
+    from public.platform_config c
+   where c.key = 'entitlements.test_grants'
+   order by c.version desc
+   limit 1;
+  ```
+
+  The insert returns no rows. It keeps any other grants already there (for example the CV ones). Check it:
+
+  ```sql
+  select value from public.platform_config where key = 'entitlements.test_grants' order by version desc limit 1;
+  ```
+
+  (the company id should appear under all five keys). `/org/plan` on the company shows "Included" for each. Unknown keys are
+  denied, and a grant only counts for a **verified** company. To see company names in "Which companies viewed my profile" as a
+  student, add `'privacy.viewer_names', jsonb_build_array('<student user id>')` to the same `jsonb_build_object`. To remove the
+  grants, run the same statement with `c.value - 'talent.full_profile' - 'saved_searches' - 'analytics' - 'competitions.create' -
+  'api.access'` in place of the `||` expression. Phase 10 deletes this mechanism.
+- [ ] **Try it as a student**: with a test student, turn on **recruiter visibility** (Settings → Profile), set availability and city
+  (Settings → Privacy), then search for them from the company's **Talent** page. Without the grant the rows are anonymised; with it
+  they have names and links.
+- [ ] **Optional: `GITHUB_READ_TOKEN`** (Supabase → Edge Functions → Secrets), a read-only fine-grained token with no repository access
+  (public data only). Without it the `competition-freeze` function reads public repositories unauthenticated (60 requests an hour per
+  address), which is enough for a few teams.
+- [ ] **Teammate invites** email through Resend (`RESEND_API_KEY` and `EMAIL_FROM` in Vercel are already set for the app's security
+  notices). Without them the admin still sees the invite link on screen.
+- [ ] **If a recruiter loses their authenticator**, follow `docs/recruiter-2fa-recovery.md` (the staff reset is phase 11).
+
 ## Before phase 10 ⏳
 
 - [ ] **Company registration** (needed by payment gateways).

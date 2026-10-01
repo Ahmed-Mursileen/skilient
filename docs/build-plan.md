@@ -157,8 +157,8 @@ Legend: 📖 = PRD files to read (in `docs/prd/`), ✅ = done-when checks.
 
 📖 `05-20-recruiter-portal.md`
 
-- [ ] Recruiter signup + `/org/join` + staff verification; 2FA required
-- [ ] Talent index + search (Explore anonymised, full with entitlement); candidate view; contact requests; jobs + pipeline; hires + 90-day outcome; competitions; shortlists; analytics; API + webhooks
+- [x] Recruiter signup + `/org/join` + staff verification; 2FA required
+- [x] Talent index + search (Explore anonymised, full with entitlement); candidate view; contact requests; jobs + pipeline; hires + 90-day outcome; competitions; shortlists; analytics; API + webhooks *(deferrals in decisions.md 2026-10-03: GitHub App repo provisioning, SSO, logo upload, billing pages, recruiter tour, reporting a recruiter)*
 
 ✅ Explore can't return names or photos even via direct view queries · protected attributes aren't filterable · salary-less posts refused · declined students can't be re-contacted for 90 days
 

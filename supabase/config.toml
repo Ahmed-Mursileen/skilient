@@ -422,6 +422,12 @@ verify_jwt = false
 [functions.storage-cleanup]
 verify_jwt = false
 
+[functions.webhook-worker]
+verify_jwt = false
+
+[functions.competition-freeze]
+verify_jwt = false
+
 [analytics]
 enabled = true
 port = 54327

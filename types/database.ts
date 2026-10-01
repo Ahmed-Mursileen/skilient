@@ -68,6 +68,82 @@ isOneToOne: false
                   Relationships: [
                     
                   ]
+                },"api_tokens": {
+                  Row: {
+                    "created_at": string,"created_by": string | null,"id": string,"last_used_at": string | null,"name": string,"org_id": string,"revoked_at": string | null,"token_hash": string
+                  }
+                  Insert: {
+                    "created_at"?: string,"created_by"?: string | null,"id"?: string,"last_used_at"?: string | null,"name": string,"org_id": string,"revoked_at"?: string | null,"token_hash": string
+                  }
+                  Update: {
+                    "created_at"?: string,"created_by"?: string | null,"id"?: string,"last_used_at"?: string | null,"name"?: string,"org_id"?: string,"revoked_at"?: string | null,"token_hash"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "api_tokens_org_id_fkey"
+      columns: ["org_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"api_webhook_deliveries": {
+                  Row: {
+                    "attempt": number,"created_at": string,"delivered_at": string | null,"event": string,"id": number,"last_error": string | null,"last_status": number | null,"next_attempt_at": string,"payload": NonNullable<Json>,"status": string,"webhook_id": string
+                  }
+                  Insert: {
+                    "attempt"?: number,"created_at"?: string,"delivered_at"?: string | null,"event": string,"id"?: never,"last_error"?: string | null,"last_status"?: number | null,"next_attempt_at"?: string,"payload": NonNullable<Json>,"status"?: string,"webhook_id": string
+                  }
+                  Update: {
+                    "attempt"?: number,"created_at"?: string,"delivered_at"?: string | null,"event"?: string,"id"?: never,"last_error"?: string | null,"last_status"?: number | null,"next_attempt_at"?: string,"payload"?: NonNullable<Json>,"status"?: string,"webhook_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "api_webhook_deliveries_webhook_id_fkey"
+      columns: ["webhook_id"]
+isOneToOne: false
+      referencedRelation: "api_webhooks"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"api_webhooks": {
+                  Row: {
+                    "active": boolean,"consecutive_failures": number,"created_at": string,"created_by": string | null,"events": (string)[],"id": string,"org_id": string,"secret": string,"url": string
+                  }
+                  Insert: {
+                    "active"?: boolean,"consecutive_failures"?: number,"created_at"?: string,"created_by"?: string | null,"events": (string)[],"id"?: string,"org_id": string,"secret": string,"url": string
+                  }
+                  Update: {
+                    "active"?: boolean,"consecutive_failures"?: number,"created_at"?: string,"created_by"?: string | null,"events"?: (string)[],"id"?: string,"org_id"?: string,"secret"?: string,"url"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "api_webhooks_org_id_fkey"
+      columns: ["org_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"application_events": {
+                  Row: {
+                    "actor_id": string | null,"application_id": string,"at": string,"id": number,"reject_reason": string | null,"stage": Database["public"]['Enums']["application_stage"]
+                  }
+                  Insert: {
+                    "actor_id"?: string | null,"application_id": string,"at"?: string,"id"?: never,"reject_reason"?: string | null,"stage": Database["public"]['Enums']["application_stage"]
+                  }
+                  Update: {
+                    "actor_id"?: string | null,"application_id"?: string,"at"?: string,"id"?: never,"reject_reason"?: string | null,"stage"?: Database["public"]['Enums']["application_stage"]
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "application_events_application_id_fkey"
+      columns: ["application_id"]
+isOneToOne: false
+      referencedRelation: "job_applications"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"application_messages": {
                   Row: {
                     "body": string,"created_at": string,"id": number,"sender_id": string,"thread_id": string
@@ -208,16 +284,22 @@ isOneToOne: false
                   ]
                 },"chat_threads": {
                   Row: {
-                    "created_at": string,"dm_key": string | null,"id": string,"last_message_at": string | null,"type": Database["public"]['Enums']["chat_thread_type"],"venture_id": string | null
+                    "closed_at": string | null,"created_at": string,"dm_key": string | null,"id": string,"last_message_at": string | null,"org_id": string | null,"type": Database["public"]['Enums']["chat_thread_type"],"venture_id": string | null
                   }
                   Insert: {
-                    "created_at"?: string,"dm_key"?: string | null,"id"?: string,"last_message_at"?: string | null,"type": Database["public"]['Enums']["chat_thread_type"],"venture_id"?: string | null
+                    "closed_at"?: string | null,"created_at"?: string,"dm_key"?: string | null,"id"?: string,"last_message_at"?: string | null,"org_id"?: string | null,"type": Database["public"]['Enums']["chat_thread_type"],"venture_id"?: string | null
                   }
                   Update: {
-                    "created_at"?: string,"dm_key"?: string | null,"id"?: string,"last_message_at"?: string | null,"type"?: Database["public"]['Enums']["chat_thread_type"],"venture_id"?: string | null
+                    "closed_at"?: string | null,"created_at"?: string,"dm_key"?: string | null,"id"?: string,"last_message_at"?: string | null,"org_id"?: string | null,"type"?: Database["public"]['Enums']["chat_thread_type"],"venture_id"?: string | null
                   }
                   Relationships: [
                     {
+      foreignKeyName: "chat_threads_org_id_fkey"
+      columns: ["org_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    },{
       foreignKeyName: "chat_threads_venture_id_fkey"
       columns: ["venture_id"]
 isOneToOne: false
@@ -266,6 +348,138 @@ isOneToOne: false
       columns: ["skill_id"]
 isOneToOne: false
       referencedRelation: "skills"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"company_blocks": {
+                  Row: {
+                    "created_at": string,"org_id": string,"student_id": string
+                  }
+                  Insert: {
+                    "created_at"?: string,"org_id": string,"student_id": string
+                  }
+                  Update: {
+                    "created_at"?: string,"org_id"?: string,"student_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "company_blocks_org_id_fkey"
+      columns: ["org_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"competition_awards": {
+                  Row: {
+                    "competition_id": string,"created_at": string,"kind": string,"skill_id": string,"student_id": string
+                  }
+                  Insert: {
+                    "competition_id": string,"created_at"?: string,"kind": string,"skill_id": string,"student_id": string
+                  }
+                  Update: {
+                    "competition_id"?: string,"created_at"?: string,"kind"?: string,"skill_id"?: string,"student_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "competition_awards_competition_id_fkey"
+      columns: ["competition_id"]
+isOneToOne: false
+      referencedRelation: "competitions"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "competition_awards_skill_id_fkey"
+      columns: ["skill_id"]
+isOneToOne: false
+      referencedRelation: "skills"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"competition_team_members": {
+                  Row: {
+                    "competition_id": string,"created_at": string,"status": string,"student_id": string,"team_id": string
+                  }
+                  Insert: {
+                    "competition_id": string,"created_at"?: string,"status"?: string,"student_id": string,"team_id": string
+                  }
+                  Update: {
+                    "competition_id"?: string,"created_at"?: string,"status"?: string,"student_id"?: string,"team_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "competition_team_members_competition_id_fkey"
+      columns: ["competition_id"]
+isOneToOne: false
+      referencedRelation: "competitions"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "competition_team_members_team_id_fkey"
+      columns: ["team_id"]
+isOneToOne: false
+      referencedRelation: "competition_teams"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"competition_teams": {
+                  Row: {
+                    "competition_id": string,"created_at": string,"feedback": string | null,"frozen_checked_at": string | null,"frozen_note": string | null,"frozen_sha": string | null,"id": string,"lead_id": string,"name": string,"placement": number | null,"repo_url": string | null,"scores": Json | null,"submitted_at": string | null,"total": number | null
+                  }
+                  Insert: {
+                    "competition_id": string,"created_at"?: string,"feedback"?: string | null,"frozen_checked_at"?: string | null,"frozen_note"?: string | null,"frozen_sha"?: string | null,"id"?: string,"lead_id": string,"name": string,"placement"?: number | null,"repo_url"?: string | null,"scores"?: Json | null,"submitted_at"?: string | null,"total"?: number | null
+                  }
+                  Update: {
+                    "competition_id"?: string,"created_at"?: string,"feedback"?: string | null,"frozen_checked_at"?: string | null,"frozen_note"?: string | null,"frozen_sha"?: string | null,"id"?: string,"lead_id"?: string,"name"?: string,"placement"?: number | null,"repo_url"?: string | null,"scores"?: Json | null,"submitted_at"?: string | null,"total"?: number | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "competition_teams_competition_id_fkey"
+      columns: ["competition_id"]
+isOneToOne: false
+      referencedRelation: "competitions"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"competitions": {
+                  Row: {
+                    "brief": string,"brief_template": string | null,"created_at": string,"created_by": string | null,"eligible_universities": (string)[],"ends_at": string,"id": string,"min_tier": Database["public"]['Enums']["ranking_tier"] | null,"org_id": string,"prize": string,"review_note": string | null,"reviewed_at": string | null,"reviewed_by": string | null,"role": string,"rubric": NonNullable<Json>,"skills": NonNullable<Json>,"starts_at": string,"status": Database["public"]['Enums']["competition_status"],"team_size": number,"title": string,"winner_team_id": string | null
+                  }
+                  Insert: {
+                    "brief": string,"brief_template"?: string | null,"created_at"?: string,"created_by"?: string | null,"eligible_universities"?: (string)[],"ends_at": string,"id"?: string,"min_tier"?: Database["public"]['Enums']["ranking_tier"] | null,"org_id": string,"prize": string,"review_note"?: string | null,"reviewed_at"?: string | null,"reviewed_by"?: string | null,"role": string,"rubric": NonNullable<Json>,"skills"?: NonNullable<Json>,"starts_at": string,"status"?: Database["public"]['Enums']["competition_status"],"team_size"?: number,"title": string,"winner_team_id"?: string | null
+                  }
+                  Update: {
+                    "brief"?: string,"brief_template"?: string | null,"created_at"?: string,"created_by"?: string | null,"eligible_universities"?: (string)[],"ends_at"?: string,"id"?: string,"min_tier"?: Database["public"]['Enums']["ranking_tier"] | null,"org_id"?: string,"prize"?: string,"review_note"?: string | null,"reviewed_at"?: string | null,"reviewed_by"?: string | null,"role"?: string,"rubric"?: NonNullable<Json>,"skills"?: NonNullable<Json>,"starts_at"?: string,"status"?: Database["public"]['Enums']["competition_status"],"team_size"?: number,"title"?: string,"winner_team_id"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "competitions_org_id_fkey"
+      columns: ["org_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"contact_requests": {
+                  Row: {
+                    "closed_at": string | null,"created_at": string,"decided_at": string | null,"decline_reason": string | null,"expires_at": string,"id": string,"message": string,"org_id": string,"recruiter_id": string | null,"role_title": string,"status": Database["public"]['Enums']["contact_status"],"student_id": string,"thread_id": string | null
+                  }
+                  Insert: {
+                    "closed_at"?: string | null,"created_at"?: string,"decided_at"?: string | null,"decline_reason"?: string | null,"expires_at": string,"id"?: string,"message": string,"org_id": string,"recruiter_id"?: string | null,"role_title": string,"status"?: Database["public"]['Enums']["contact_status"],"student_id": string,"thread_id"?: string | null
+                  }
+                  Update: {
+                    "closed_at"?: string | null,"created_at"?: string,"decided_at"?: string | null,"decline_reason"?: string | null,"expires_at"?: string,"id"?: string,"message"?: string,"org_id"?: string,"recruiter_id"?: string | null,"role_title"?: string,"status"?: Database["public"]['Enums']["contact_status"],"student_id"?: string,"thread_id"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "contact_requests_org_id_fkey"
+      columns: ["org_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "contact_requests_thread_id_fkey"
+      columns: ["thread_id"]
+isOneToOne: false
+      referencedRelation: "chat_threads"
       referencedColumns: ["id"]
     }
                   ]
@@ -780,6 +994,113 @@ isOneToOne: false
       referencedColumns: ["repo_id"]
     }
                   ]
+                },"hire_outcomes": {
+                  Row: {
+                    "answer": string | null,"answered_at": string | null,"answered_by": string | null,"asked_at": string,"hire_id": string
+                  }
+                  Insert: {
+                    "answer"?: string | null,"answered_at"?: string | null,"answered_by"?: string | null,"asked_at"?: string,"hire_id": string
+                  }
+                  Update: {
+                    "answer"?: string | null,"answered_at"?: string | null,"answered_by"?: string | null,"asked_at"?: string,"hire_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "hire_outcomes_hire_id_fkey"
+      columns: ["hire_id"]
+isOneToOne: true
+      referencedRelation: "hires"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"hires": {
+                  Row: {
+                    "application_id": string | null,"fee_status": string,"hired_at": string,"hired_by": string | null,"id": string,"job_id": string | null,"job_type": string,"kind": string,"org_id": string,"student_id": string | null
+                  }
+                  Insert: {
+                    "application_id"?: string | null,"fee_status"?: string,"hired_at"?: string,"hired_by"?: string | null,"id"?: string,"job_id"?: string | null,"job_type": string,"kind": string,"org_id": string,"student_id"?: string | null
+                  }
+                  Update: {
+                    "application_id"?: string | null,"fee_status"?: string,"hired_at"?: string,"hired_by"?: string | null,"id"?: string,"job_id"?: string | null,"job_type"?: string,"kind"?: string,"org_id"?: string,"student_id"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "hires_application_id_fkey"
+      columns: ["application_id"]
+isOneToOne: true
+      referencedRelation: "job_applications"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "hires_job_id_fkey"
+      columns: ["job_id"]
+isOneToOne: false
+      referencedRelation: "job_posts"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "hires_org_id_fkey"
+      columns: ["org_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"job_applications": {
+                  Row: {
+                    "applied_at": string,"cv_code": string | null,"id": string,"job_id": string,"note": string | null,"reject_reason": string | null,"stage": Database["public"]['Enums']["application_stage"],"stage_changed_at": string,"student_id": string
+                  }
+                  Insert: {
+                    "applied_at"?: string,"cv_code"?: string | null,"id"?: string,"job_id": string,"note"?: string | null,"reject_reason"?: string | null,"stage"?: Database["public"]['Enums']["application_stage"],"stage_changed_at"?: string,"student_id": string
+                  }
+                  Update: {
+                    "applied_at"?: string,"cv_code"?: string | null,"id"?: string,"job_id"?: string,"note"?: string | null,"reject_reason"?: string | null,"stage"?: Database["public"]['Enums']["application_stage"],"stage_changed_at"?: string,"student_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "job_applications_job_id_fkey"
+      columns: ["job_id"]
+isOneToOne: false
+      referencedRelation: "job_posts"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"job_invites": {
+                  Row: {
+                    "at": string,"invited_by": string | null,"job_id": string,"student_id": string
+                  }
+                  Insert: {
+                    "at"?: string,"invited_by"?: string | null,"job_id": string,"student_id": string
+                  }
+                  Update: {
+                    "at"?: string,"invited_by"?: string | null,"job_id"?: string,"student_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "job_invites_job_id_fkey"
+      columns: ["job_id"]
+isOneToOne: false
+      referencedRelation: "job_posts"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"job_posts": {
+                  Row: {
+                    "closed_at": string | null,"created_at": string,"created_by": string | null,"currency": string,"deadline": string,"description": string,"id": string,"location": string | null,"min_skill_levels": NonNullable<Json>,"min_tier": Database["public"]['Enums']["ranking_tier"] | null,"openings": number,"org_id": string,"pay_period": string,"published_at": string | null,"remote": boolean,"salary_max": number,"salary_min": number,"status": Database["public"]['Enums']["job_status"],"title": string,"type": string,"updated_at": string
+                  }
+                  Insert: {
+                    "closed_at"?: string | null,"created_at"?: string,"created_by"?: string | null,"currency"?: string,"deadline": string,"description": string,"id"?: string,"location"?: string | null,"min_skill_levels"?: NonNullable<Json>,"min_tier"?: Database["public"]['Enums']["ranking_tier"] | null,"openings"?: number,"org_id": string,"pay_period"?: string,"published_at"?: string | null,"remote"?: boolean,"salary_max": number,"salary_min": number,"status"?: Database["public"]['Enums']["job_status"],"title": string,"type": string,"updated_at"?: string
+                  }
+                  Update: {
+                    "closed_at"?: string | null,"created_at"?: string,"created_by"?: string | null,"currency"?: string,"deadline"?: string,"description"?: string,"id"?: string,"location"?: string | null,"min_skill_levels"?: NonNullable<Json>,"min_tier"?: Database["public"]['Enums']["ranking_tier"] | null,"openings"?: number,"org_id"?: string,"pay_period"?: string,"published_at"?: string | null,"remote"?: boolean,"salary_max"?: number,"salary_min"?: number,"status"?: Database["public"]['Enums']["job_status"],"title"?: string,"type"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "job_posts_org_id_fkey"
+      columns: ["org_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"job_runs": {
                   Row: {
                     "created_at": string,"error": string | null,"finished_at": string | null,"id": string,"job": string,"meta": NonNullable<Json>,"rows": number | null,"started_at": string,"status": Database["public"]['Enums']["job_run_status"]
@@ -1017,6 +1338,114 @@ isOneToOne: false
                   }
                   Update: {
                     "action"?: string,"after"?: Json | null,"before"?: Json | null,"created_at"?: string,"id"?: string,"reason"?: string,"staff_id"?: string,"target_id"?: string,"target_type"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"org_events": {
+                  Row: {
+                    "actor_id": string | null,"at": string,"id": number,"kind": string,"org_id": string,"student_id": string | null
+                  }
+                  Insert: {
+                    "actor_id"?: string | null,"at"?: string,"id"?: never,"kind": string,"org_id": string,"student_id"?: string | null
+                  }
+                  Update: {
+                    "actor_id"?: string | null,"at"?: string,"id"?: never,"kind"?: string,"org_id"?: string,"student_id"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "org_events_org_id_fkey"
+      columns: ["org_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"org_invites": {
+                  Row: {
+                    "created_at": string,"email": string,"expires_at": string,"id": string,"invited_by": string | null,"org_id": string,"revoked_at": string | null,"role": Database["public"]['Enums']["org_role"],"token_hash": string,"used_at": string | null
+                  }
+                  Insert: {
+                    "created_at"?: string,"email": string,"expires_at": string,"id"?: string,"invited_by"?: string | null,"org_id": string,"revoked_at"?: string | null,"role": Database["public"]['Enums']["org_role"],"token_hash": string,"used_at"?: string | null
+                  }
+                  Update: {
+                    "created_at"?: string,"email"?: string,"expires_at"?: string,"id"?: string,"invited_by"?: string | null,"org_id"?: string,"revoked_at"?: string | null,"role"?: Database["public"]['Enums']["org_role"],"token_hash"?: string,"used_at"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "org_invites_org_id_fkey"
+      columns: ["org_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"org_members": {
+                  Row: {
+                    "created_at": string,"invited_by": string | null,"org_id": string,"role": Database["public"]['Enums']["org_role"],"status": string,"user_id": string
+                  }
+                  Insert: {
+                    "created_at"?: string,"invited_by"?: string | null,"org_id": string,"role": Database["public"]['Enums']["org_role"],"status"?: string,"user_id": string
+                  }
+                  Update: {
+                    "created_at"?: string,"invited_by"?: string | null,"org_id"?: string,"role"?: Database["public"]['Enums']["org_role"],"status"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "org_members_org_id_fkey"
+      columns: ["org_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"org_quota_usage": {
+                  Row: {
+                    "key": string,"org_id": string,"period": string,"used": number
+                  }
+                  Insert: {
+                    "key": string,"org_id": string,"period": string,"used"?: number
+                  }
+                  Update: {
+                    "key"?: string,"org_id"?: string,"period"?: string,"used"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "org_quota_usage_org_id_fkey"
+      columns: ["org_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"org_spam_reviews": {
+                  Row: {
+                    "declined": number,"id": string,"note": string | null,"opened_at": string,"org_id": string,"rate": number,"requests": number,"resolved_at": string | null,"resolved_by": string | null,"status": string
+                  }
+                  Insert: {
+                    "declined": number,"id"?: string,"note"?: string | null,"opened_at"?: string,"org_id": string,"rate": number,"requests": number,"resolved_at"?: string | null,"resolved_by"?: string | null,"status"?: string
+                  }
+                  Update: {
+                    "declined"?: number,"id"?: string,"note"?: string | null,"opened_at"?: string,"org_id"?: string,"rate"?: number,"requests"?: number,"resolved_at"?: string | null,"resolved_by"?: string | null,"status"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "org_spam_reviews_org_id_fkey"
+      columns: ["org_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"organizations": {
+                  Row: {
+                    "about": string | null,"city": string,"created_at": string,"created_by": string | null,"domain": string,"id": string,"industry": string,"linkedin_url": string | null,"locations": (string)[],"name": string,"registration_number": string | null,"signer_role": string,"size": string,"slug": string,"status": Database["public"]['Enums']["org_status"],"status_reason": string | null,"updated_at": string,"verified_at": string | null,"verified_by": string | null,"website": string
+                  }
+                  Insert: {
+                    "about"?: string | null,"city": string,"created_at"?: string,"created_by"?: string | null,"domain": string,"id"?: string,"industry": string,"linkedin_url"?: string | null,"locations"?: (string)[],"name": string,"registration_number"?: string | null,"signer_role": string,"size": string,"slug": string,"status"?: Database["public"]['Enums']["org_status"],"status_reason"?: string | null,"updated_at"?: string,"verified_at"?: string | null,"verified_by"?: string | null,"website": string
+                  }
+                  Update: {
+                    "about"?: string | null,"city"?: string,"created_at"?: string,"created_by"?: string | null,"domain"?: string,"id"?: string,"industry"?: string,"linkedin_url"?: string | null,"locations"?: (string)[],"name"?: string,"registration_number"?: string | null,"signer_role"?: string,"size"?: string,"slug"?: string,"status"?: Database["public"]['Enums']["org_status"],"status_reason"?: string | null,"updated_at"?: string,"verified_at"?: string | null,"verified_by"?: string | null,"website"?: string
                   }
                   Relationships: [
                     
@@ -1280,15 +1709,34 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
-                },"profiles": {
+                },"profile_views": {
                   Row: {
-                    "avatar_path": string | null,"bio": string | null,"campus": string | null,"chat_read_receipts": boolean,"cover_path": string | null,"created_at": string,"delete_after": string | null,"department": string | null,"full_name": string,"graduated_at": string | null,"graduation_year": number | null,"leaderboard_opt_out": boolean,"looking_for": (Database["public"]['Enums']["looking_for_option"])[],"onboarding_complete": boolean,"programme": string | null,"recruiter_visible": boolean,"role": Database["public"]['Enums']["account_role"],"status": Database["public"]['Enums']["account_status"],"university_id": string | null,"updated_at": string,"user_id": string,"username": string | null,"visibility": Database["public"]['Enums']["profile_visibility"]
+                    "at": string,"day": string,"id": number,"org_id": string,"student_id": string,"viewer_id": string | null
                   }
                   Insert: {
-                    "avatar_path"?: string | null,"bio"?: string | null,"campus"?: string | null,"chat_read_receipts"?: boolean,"cover_path"?: string | null,"created_at"?: string,"delete_after"?: string | null,"department"?: string | null,"full_name": string,"graduated_at"?: string | null,"graduation_year"?: number | null,"leaderboard_opt_out"?: boolean,"looking_for"?: (Database["public"]['Enums']["looking_for_option"])[],"onboarding_complete"?: boolean,"programme"?: string | null,"recruiter_visible"?: boolean,"role"?: Database["public"]['Enums']["account_role"],"status"?: Database["public"]['Enums']["account_status"],"university_id"?: string | null,"updated_at"?: string,"user_id": string,"username"?: string | null,"visibility"?: Database["public"]['Enums']["profile_visibility"]
+                    "at"?: string,"day"?: string,"id"?: never,"org_id": string,"student_id": string,"viewer_id"?: string | null
                   }
                   Update: {
-                    "avatar_path"?: string | null,"bio"?: string | null,"campus"?: string | null,"chat_read_receipts"?: boolean,"cover_path"?: string | null,"created_at"?: string,"delete_after"?: string | null,"department"?: string | null,"full_name"?: string,"graduated_at"?: string | null,"graduation_year"?: number | null,"leaderboard_opt_out"?: boolean,"looking_for"?: (Database["public"]['Enums']["looking_for_option"])[],"onboarding_complete"?: boolean,"programme"?: string | null,"recruiter_visible"?: boolean,"role"?: Database["public"]['Enums']["account_role"],"status"?: Database["public"]['Enums']["account_status"],"university_id"?: string | null,"updated_at"?: string,"user_id"?: string,"username"?: string | null,"visibility"?: Database["public"]['Enums']["profile_visibility"]
+                    "at"?: string,"day"?: string,"id"?: never,"org_id"?: string,"student_id"?: string,"viewer_id"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "profile_views_org_id_fkey"
+      columns: ["org_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"profiles": {
+                  Row: {
+                    "availability": (string)[],"avatar_path": string | null,"bio": string | null,"campus": string | null,"chat_read_receipts": boolean,"city": string | null,"cover_path": string | null,"created_at": string,"delete_after": string | null,"department": string | null,"full_name": string,"graduated_at": string | null,"graduation_year": number | null,"leaderboard_opt_out": boolean,"looking_for": (Database["public"]['Enums']["looking_for_option"])[],"onboarding_complete": boolean,"programme": string | null,"recruiter_visible": boolean,"remote_ok": boolean,"role": Database["public"]['Enums']["account_role"],"status": Database["public"]['Enums']["account_status"],"university_id": string | null,"updated_at": string,"user_id": string,"username": string | null,"visibility": Database["public"]['Enums']["profile_visibility"]
+                  }
+                  Insert: {
+                    "availability"?: (string)[],"avatar_path"?: string | null,"bio"?: string | null,"campus"?: string | null,"chat_read_receipts"?: boolean,"city"?: string | null,"cover_path"?: string | null,"created_at"?: string,"delete_after"?: string | null,"department"?: string | null,"full_name": string,"graduated_at"?: string | null,"graduation_year"?: number | null,"leaderboard_opt_out"?: boolean,"looking_for"?: (Database["public"]['Enums']["looking_for_option"])[],"onboarding_complete"?: boolean,"programme"?: string | null,"recruiter_visible"?: boolean,"remote_ok"?: boolean,"role"?: Database["public"]['Enums']["account_role"],"status"?: Database["public"]['Enums']["account_status"],"university_id"?: string | null,"updated_at"?: string,"user_id": string,"username"?: string | null,"visibility"?: Database["public"]['Enums']["profile_visibility"]
+                  }
+                  Update: {
+                    "availability"?: (string)[],"avatar_path"?: string | null,"bio"?: string | null,"campus"?: string | null,"chat_read_receipts"?: boolean,"city"?: string | null,"cover_path"?: string | null,"created_at"?: string,"delete_after"?: string | null,"department"?: string | null,"full_name"?: string,"graduated_at"?: string | null,"graduation_year"?: number | null,"leaderboard_opt_out"?: boolean,"looking_for"?: (Database["public"]['Enums']["looking_for_option"])[],"onboarding_complete"?: boolean,"programme"?: string | null,"recruiter_visible"?: boolean,"remote_ok"?: boolean,"role"?: Database["public"]['Enums']["account_role"],"status"?: Database["public"]['Enums']["account_status"],"university_id"?: string | null,"updated_at"?: string,"user_id"?: string,"username"?: string | null,"visibility"?: Database["public"]['Enums']["profile_visibility"]
                   }
                   Relationships: [
                     {
@@ -1426,6 +1874,44 @@ isOneToOne: false
                   Relationships: [
                     
                   ]
+                },"recruiter_notes": {
+                  Row: {
+                    "author_id": string | null,"body": string,"created_at": string,"id": string,"org_id": string,"student_id": string | null
+                  }
+                  Insert: {
+                    "author_id"?: string | null,"body": string,"created_at"?: string,"id"?: string,"org_id": string,"student_id"?: string | null
+                  }
+                  Update: {
+                    "author_id"?: string | null,"body"?: string,"created_at"?: string,"id"?: string,"org_id"?: string,"student_id"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "recruiter_notes_org_id_fkey"
+      columns: ["org_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"recruiter_shortlists": {
+                  Row: {
+                    "created_at": string,"created_by": string | null,"id": string,"name": string,"org_id": string
+                  }
+                  Insert: {
+                    "created_at"?: string,"created_by"?: string | null,"id"?: string,"name": string,"org_id": string
+                  }
+                  Update: {
+                    "created_at"?: string,"created_by"?: string | null,"id"?: string,"name"?: string,"org_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "recruiter_shortlists_org_id_fkey"
+      columns: ["org_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"report_cases": {
                   Row: {
                     "claimed_at": string | null,"claimed_by": string | null,"id": string,"last_reported_at": string,"opened_at": string,"owner_id": string | null,"reports": number,"resolution_reason": string | null,"resolved_at": string | null,"resolved_by": string | null,"snapshot": NonNullable<Json>,"soft_signal": boolean,"status": Database["public"]['Enums']["report_case_status"],"target_id": string,"target_type": Database["public"]['Enums']["report_target"]
@@ -1534,6 +2020,44 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"saved_searches": {
+                  Row: {
+                    "created_at": string,"filters": NonNullable<Json>,"frequency": string,"id": string,"last_run_at": string,"name": string,"org_id": string,"user_id": string
+                  }
+                  Insert: {
+                    "created_at"?: string,"filters": NonNullable<Json>,"frequency": string,"id"?: string,"last_run_at"?: string,"name": string,"org_id": string,"user_id": string
+                  }
+                  Update: {
+                    "created_at"?: string,"filters"?: NonNullable<Json>,"frequency"?: string,"id"?: string,"last_run_at"?: string,"name"?: string,"org_id"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "saved_searches_org_id_fkey"
+      columns: ["org_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"search_audit": {
+                  Row: {
+                    "at": string,"filters": NonNullable<Json>,"id": number,"mode": string,"org_id": string,"result_count": number,"user_id": string | null
+                  }
+                  Insert: {
+                    "at"?: string,"filters": NonNullable<Json>,"id"?: never,"mode": string,"org_id": string,"result_count": number,"user_id"?: string | null
+                  }
+                  Update: {
+                    "at"?: string,"filters"?: NonNullable<Json>,"id"?: never,"mode"?: string,"org_id"?: string,"result_count"?: number,"user_id"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "search_audit_org_id_fkey"
+      columns: ["org_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"security_events": {
                   Row: {
                     "created_at": string,"id": string,"ip_hash": string | null,"kind": string,"meta": NonNullable<Json>,"user_agent": string | null,"user_id": string
@@ -1546,6 +2070,25 @@ isOneToOne: false
                   }
                   Relationships: [
                     
+                  ]
+                },"shortlist_items": {
+                  Row: {
+                    "added_by": string | null,"created_at": string,"hidden": boolean,"id": string,"position": number,"shortlist_id": string,"student_id": string
+                  }
+                  Insert: {
+                    "added_by"?: string | null,"created_at"?: string,"hidden"?: boolean,"id"?: string,"position"?: number,"shortlist_id": string,"student_id": string
+                  }
+                  Update: {
+                    "added_by"?: string | null,"created_at"?: string,"hidden"?: boolean,"id"?: string,"position"?: number,"shortlist_id"?: string,"student_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "shortlist_items_shortlist_id_fkey"
+      columns: ["shortlist_id"]
+isOneToOne: false
+      referencedRelation: "recruiter_shortlists"
+      referencedColumns: ["id"]
+    }
                   ]
                 },"signing_keys": {
                   Row: {
@@ -1648,6 +2191,25 @@ isOneToOne: false
                   }
                   Relationships: [
                     
+                  ]
+                },"talent_index": {
+                  Row: {
+                    "availability": (string)[],"checked_skills": (string)[],"city": string | null,"department": string | null,"first_indexed_at": string,"graduation_year": number | null,"last_active_at": string | null,"looking_for": (string)[],"refreshed_at": string,"remote_ok": boolean,"skills": NonNullable<Json>,"student_id": string,"tier": Database["public"]['Enums']["ranking_tier"] | null,"university_id": string
+                  }
+                  Insert: {
+                    "availability"?: (string)[],"checked_skills"?: (string)[],"city"?: string | null,"department"?: string | null,"first_indexed_at"?: string,"graduation_year"?: number | null,"last_active_at"?: string | null,"looking_for"?: (string)[],"refreshed_at"?: string,"remote_ok"?: boolean,"skills"?: NonNullable<Json>,"student_id": string,"tier"?: Database["public"]['Enums']["ranking_tier"] | null,"university_id": string
+                  }
+                  Update: {
+                    "availability"?: (string)[],"checked_skills"?: (string)[],"city"?: string | null,"department"?: string | null,"first_indexed_at"?: string,"graduation_year"?: number | null,"last_active_at"?: string | null,"looking_for"?: (string)[],"refreshed_at"?: string,"remote_ok"?: boolean,"skills"?: NonNullable<Json>,"student_id"?: string,"tier"?: Database["public"]['Enums']["ranking_tier"] | null,"university_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "talent_index_university_id_fkey"
+      columns: ["university_id"]
+isOneToOne: false
+      referencedRelation: "universities"
+      referencedColumns: ["id"]
+    }
                   ]
                 },"teacher_concentration_flags": {
                   Row: {
@@ -2112,7 +2674,10 @@ isOneToOne: false
                 }
           }
           Functions: {
-            "add_application_message":
+            "accept_org_invite":
+{ Args: { "p_id": string }; Returns: string
+                           },
+"add_application_message":
 { Args: { "p_body": string,"p_thread": string }; Returns: number
                            },
 "add_comment":
@@ -2121,22 +2686,55 @@ isOneToOne: false
 "add_exam_period":
 { Args: { "p_ends": string,"p_reason": string,"p_starts": string,"p_university": string }; Returns: string
                            },
+"add_note":
+{ Args: { "p_body": string,"p_student": string }; Returns: string
+                           },
+"add_to_shortlist":
+{ Args: { "p_list": string,"p_student": string }; Returns: string
+                           },
 "add_venture_deliverable":
 { Args: { "p_label": string,"p_url": string,"p_venture": string }; Returns: string
                            },
+"answer_hire_outcome":
+{ Args: { "p_answer": string,"p_hire": string }; Returns: undefined
+                           },
 "answer_survey":
 { Args: { "p_answer": boolean,"p_latency_ms": number,"p_post": string }; Returns: undefined
+                           },
+"api_candidate":
+{ Args: { "p_candidate": string,"p_token": string }; Returns: Json
+                           },
+"api_job_applications":
+{ Args: { "p_job": string,"p_token": string }; Returns: Json
+                           },
+"api_settings":
+{ Args: Record<PropertyKey, never>; Returns: Json
+                           },
+"api_shortlist_candidates":
+{ Args: { "p_list": string,"p_token": string }; Returns: Json
+                           },
+"api_shortlists":
+{ Args: { "p_token": string }; Returns: Json
+                           },
+"application_get":
+{ Args: { "p_id": string }; Returns: Json
                            },
 "application_people":
 { Args: { "p_ids": (string)[] }; Returns: {
               "full_name": string,"user_id": string,"username": string
             }[]
                            },
+"apply_to_job":
+{ Args: { "p_job": string,"p_note"?: string }; Returns: string
+                           },
 "apply_to_venture":
 { Args: { "p_answers"?: (string)[],"p_message": string,"p_role"?: string,"p_venture": string }; Returns: string
                            },
 "approve_teacher":
 { Args: { "p_user": string }; Returns: undefined
+                           },
+"block_company":
+{ Args: { "p_org": string }; Returns: undefined
                            },
 "block_user":
 { Args: { "p_username": string }; Returns: undefined
@@ -2145,6 +2743,9 @@ isOneToOne: false
 { Args: { "p_before"?: string,"p_limit"?: number,"p_my_university"?: boolean,"p_open_roles"?: boolean,"p_status"?: Database["public"]['Enums']["venture_status"],"p_type": Database["public"]['Enums']["venture_type"] }; Returns: {
               "created_at": string,"id": string,"members": number,"open_slots": number,"owner_name": string,"owner_username": string,"skill_ids": (string)[],"stage": Database["public"]['Enums']["venture_stage"],"status": Database["public"]['Enums']["venture_status"],"summary": string,"team_size": number,"title": string,"type": Database["public"]['Enums']["venture_type"],"university_name": string,"visibility": Database["public"]['Enums']["venture_visibility"]
             }[]
+                           },
+"bulk_move_applications":
+{ Args: { "p_ids": (string)[],"p_reason"?: string,"p_stage": Database["public"]['Enums']["application_stage"] }; Returns: number
                            },
 "cancel_account_deletion":
 { Args: Record<PropertyKey, never>; Returns: undefined
@@ -2170,6 +2771,12 @@ isOneToOne: false
 "claim_review_flag":
 { Args: { "p_claim": boolean,"p_flag": number }; Returns: undefined
                            },
+"close_contact_chat":
+{ Args: { "p_id": string }; Returns: undefined
+                           },
+"close_job":
+{ Args: { "p_id": string }; Returns: undefined
+                           },
 "close_review_request":
 { Args: { "p_request": string }; Returns: undefined
                            },
@@ -2188,6 +2795,18 @@ isOneToOne: false
               "blocker": string,"check_id": string,"status": Database["public"]['Enums']["code_check_status"]
             }[]
                            },
+"company_page":
+{ Args: { "p_slug": string }; Returns: Json
+                           },
+"competition_manage":
+{ Args: { "p_id": string }; Returns: Json
+                           },
+"competition_public":
+{ Args: { "p_id": string }; Returns: Json
+                           },
+"competitions_for_org":
+{ Args: Record<PropertyKey, never>; Returns: Json
+                           },
 "complete_onboarding":
 { Args: Record<PropertyKey, never>; Returns: boolean
                            },
@@ -2197,8 +2816,14 @@ isOneToOne: false
 "correct_contribution":
 { Args: { "p_description": string,"p_evidence_url"?: string,"p_hours"?: number,"p_kind": Database["public"]['Enums']["contribution_kind"],"p_original": string,"p_skill_ids"?: (string)[] }; Returns: string
                            },
+"create_api_token":
+{ Args: { "p_name": string,"p_token_hash": string }; Returns: string
+                           },
 "create_mfa_backup_codes":
 { Args: Record<PropertyKey, never>; Returns: (string)[]
+                           },
+"create_organization":
+{ Args: { "p": Json }; Returns: string
                            },
 "create_post":
 { Args: { "p": Json }; Returns: string
@@ -2206,8 +2831,17 @@ isOneToOne: false
 "create_share_link":
 { Args: { "p_days": number,"p_label": string,"p_token_hash": string }; Returns: string
                            },
+"create_shortlist":
+{ Args: { "p_name": string }; Returns: string
+                           },
+"create_team":
+{ Args: { "p_competition": string,"p_name": string }; Returns: string
+                           },
 "create_venture":
 { Args: { "p": Json }; Returns: string
+                           },
+"create_webhook":
+{ Args: { "p_events": (string)[],"p_url": string }; Returns: Json
                            },
 "credential_case":
 { Args: { "p_id": string }; Returns: {
@@ -2232,6 +2866,9 @@ isOneToOne: false
 "decide_application":
 { Args: { "p_accept": boolean,"p_thread": string }; Returns: Database["public"]['Enums']["application_status"]
                            },
+"decide_org":
+{ Args: { "p_action": string,"p_org": string,"p_reason": string }; Returns: undefined
+                           },
 "delete_comment":
 { Args: { "p_comment": string }; Returns: undefined
                            },
@@ -2244,14 +2881,26 @@ isOneToOne: false
 "delete_mfa_backup_codes":
 { Args: Record<PropertyKey, never>; Returns: undefined
                            },
+"delete_note":
+{ Args: { "p_id": string }; Returns: undefined
+                           },
 "delete_post":
 { Args: { "p_post": string }; Returns: (string)[]
+                           },
+"delete_saved_search":
+{ Args: { "p_id": string }; Returns: undefined
+                           },
+"delete_shortlist":
+{ Args: { "p_id": string }; Returns: undefined
                            },
 "delete_venture_role":
 { Args: { "p_role": string,"p_venture": string }; Returns: undefined
                            },
 "delete_venture_update":
 { Args: { "p_update": string }; Returns: boolean
+                           },
+"delete_webhook":
+{ Args: { "p_id": string }; Returns: undefined
                            },
 "disconnect_github":
 { Args: Record<PropertyKey, never>; Returns: boolean
@@ -2301,6 +2950,9 @@ isOneToOne: false
               "body": string,"claimed_by_me": boolean,"claimed_by_name": string,"created_at": string,"id": string,"status": Database["public"]['Enums']["feedback_status"],"student_name": string,"student_username": string,"type": Database["public"]['Enums']["feedback_type"]
             }[]
                            },
+"finish_competition":
+{ Args: { "p_id": string }; Returns: undefined
+                           },
 "follow_venture":
 { Args: { "p_follow": boolean,"p_venture": string }; Returns: boolean
                            },
@@ -2337,6 +2989,9 @@ isOneToOne: false
 "hide_post":
 { Args: { "p_hide": boolean,"p_post": string }; Returns: undefined
                            },
+"hires_list":
+{ Args: Record<PropertyKey, never>; Returns: Json
+                           },
 "hook_before_user_created":
 { Args: { "event": Json }; Returns: Json
                            },
@@ -2349,8 +3004,17 @@ isOneToOne: false
 "import_faculty_csv":
 { Args: { "p_rows": Json,"p_university": string }; Returns: number
                            },
+"invite_org_member":
+{ Args: { "p_email": string,"p_role": Database["public"]['Enums']["org_role"],"p_token_hash": string }; Returns: string
+                           },
 "invite_supervisor":
 { Args: { "p_teacher": string,"p_venture": string }; Returns: undefined
+                           },
+"invite_team_member":
+{ Args: { "p_team": string,"p_username": string }; Returns: undefined
+                           },
+"invite_to_apply":
+{ Args: { "p_job": string,"p_students": (string)[] }; Returns: number
                            },
 "invite_to_venture":
 { Args: { "p_username": string,"p_venture": string }; Returns: string
@@ -2358,11 +3022,23 @@ isOneToOne: false
 "is_staff":
 { Args: { "p_role"?: Database["public"]['Enums']["staff_role"] }; Returns: boolean
                            },
+"job_applicants":
+{ Args: { "p_job": string }; Returns: Json
+                           },
+"job_get":
+{ Args: { "p_id": string }; Returns: Json
+                           },
+"job_public":
+{ Args: { "p_id": string }; Returns: Json
+                           },
 "job_run_finish":
 { Args: { "p_error"?: string,"p_id": string,"p_rows"?: number,"p_status": Database["public"]['Enums']["job_run_status"] }; Returns: undefined
                            },
 "job_run_start":
 { Args: { "p_job": string,"p_meta"?: Json }; Returns: string
+                           },
+"jobs_for_org":
+{ Args: Record<PropertyKey, never>; Returns: Json
                            },
 "leaderboard":
 { Args: { "p_after"?: number,"p_batch"?: number,"p_department"?: string,"p_scope"?: string }; Returns: {
@@ -2404,11 +3080,17 @@ isOneToOne: false
 "mfa_backup_codes_remaining":
 { Args: Record<PropertyKey, never>; Returns: number
                            },
+"move_application":
+{ Args: { "p_id": string,"p_reason"?: string,"p_stage": Database["public"]['Enums']["application_stage"] }; Returns: undefined
+                           },
 "mute_thread":
 { Args: { "p_hours": number,"p_thread": string }; Returns: undefined
                            },
 "mute_user":
 { Args: { "p_mute": boolean,"p_username": string }; Returns: undefined
+                           },
+"my_blocked_companies":
+{ Args: Record<PropertyKey, never>; Returns: Json
                            },
 "my_blocks":
 { Args: Record<PropertyKey, never>; Returns: {
@@ -2424,6 +3106,9 @@ isOneToOne: false
 { Args: { "p_id": string }; Returns: {
               "answers": Json,"category": Database["public"]['Enums']["skill_category"],"deadline_at": string,"end_line": number,"feedback": string,"graded_at": string,"id": string,"path": string,"prompt": string,"requested_at": string,"rubric": Json,"skill_id": string,"skill_name": string,"snippet_served": boolean,"start_line": number,"started_at": string,"status": Database["public"]['Enums']["code_check_status"],"submitted_at": string,"unavailable_reason": string
             }[]
+                           },
+"my_contact_requests":
+{ Args: Record<PropertyKey, never>; Returns: Json
                            },
 "my_feedback":
 { Args: Record<PropertyKey, never>; Returns: {
@@ -2463,6 +3148,18 @@ isOneToOne: false
               "actor_avatar_path": string,"actor_name": string,"actor_username": string,"category": string,"created_at": string,"data": Json,"entity_id": string,"entity_type": string,"id": string,"read_at": string,"type": string
             }[]
                            },
+"my_org":
+{ Args: Record<PropertyKey, never>; Returns: Json
+                           },
+"my_org_invites":
+{ Args: Record<PropertyKey, never>; Returns: Json
+                           },
+"my_profile_viewers":
+{ Args: Record<PropertyKey, never>; Returns: Json
+                           },
+"my_recruiter_prefs":
+{ Args: Record<PropertyKey, never>; Returns: Json
+                           },
 "my_score":
 { Args: Record<PropertyKey, never>; Returns: Json
                            },
@@ -2487,6 +3184,9 @@ isOneToOne: false
 "next_best_action":
 { Args: Record<PropertyKey, never>; Returns: Json
                            },
+"notes_for":
+{ Args: { "p_student": string }; Returns: Json
+                           },
 "open_shared_cv":
 { Args: { "p_token_hash": string,"p_viewer_key": string }; Returns: {
               "code": string,"expires_at": string,"issued_at": string,"key_id": string,"signature": string,"snapshot": Json,"snapshot_hash": string,"state": string,"username": string
@@ -2505,15 +3205,33 @@ isOneToOne: false
 "ops_case":
 { Args: { "p_case": string }; Returns: Json
                            },
+"ops_competitions":
+{ Args: { "p_status"?: string }; Returns: Json
+                           },
 "ops_cv_records":
 { Args: { "p_query": string }; Returns: {
               "code": string,"full_name": string,"id": string,"issued_at": string,"revoked_at": string,"revoked_reason": string,"superseded": boolean,"user_id": string,"username": string,"version": number
             }[]
                            },
+"ops_org_case":
+{ Args: { "p_org": string }; Returns: Json
+                           },
+"ops_org_reputation":
+{ Args: { "p_org": string }; Returns: Json
+                           },
+"ops_orgs":
+{ Args: { "p_status"?: string }; Returns: Json
+                           },
 "ops_queue":
 { Args: { "p_status"?: string }; Returns: {
               "claimed_by_me": boolean,"claimed_by_name": string,"excerpt": string,"id": string,"last_reported_at": string,"opened_at": string,"owner_name": string,"reasons": (Database["public"]['Enums']["report_reason"])[],"reports": number,"soft_signal": boolean,"status": Database["public"]['Enums']["report_case_status"],"target_type": Database["public"]['Enums']["report_target"]
             }[]
+                           },
+"ops_resolve_spam_review":
+{ Args: { "p_action": string,"p_id": string,"p_reason": string }; Returns: undefined
+                           },
+"ops_review_competition":
+{ Args: { "p_approve": boolean,"p_id": string,"p_reason": string }; Returns: undefined
                            },
 "ops_revoke_cv":
 { Args: { "p_all": boolean,"p_reason": string,"p_record": string }; Returns: number
@@ -2521,8 +3239,32 @@ isOneToOne: false
 "ops_set_final_year_batch":
 { Args: { "p_batch": number,"p_reason": string,"p_university": string }; Returns: undefined
                            },
+"ops_spam_reviews":
+{ Args: { "p_status"?: string }; Returns: Json
+                           },
 "ops_universities":
 { Args: Record<PropertyKey, never>; Returns: Json
+                           },
+"org_activity":
+{ Args: { "p_limit"?: number }; Returns: Json
+                           },
+"org_analytics":
+{ Args: { "p_days"?: number }; Returns: Json
+                           },
+"org_contact_requests":
+{ Args: Record<PropertyKey, never>; Returns: Json
+                           },
+"org_invite_preview":
+{ Args: { "p_token_hash": string }; Returns: Json
+                           },
+"org_members_list":
+{ Args: Record<PropertyKey, never>; Returns: Json
+                           },
+"org_plan":
+{ Args: Record<PropertyKey, never>; Returns: Json
+                           },
+"org_response_stats":
+{ Args: { "p_org": string }; Returns: Json
                            },
 "pending_friend_request_count":
 { Args: Record<PropertyKey, never>; Returns: number
@@ -2565,6 +3307,9 @@ isOneToOne: false
               "id": string,"is_owner": boolean,"joined_at": string,"status": Database["public"]['Enums']["venture_status"],"team_role": Database["public"]['Enums']["venture_team_role"],"title": string,"type": Database["public"]['Enums']["venture_type"]
             }[]
                            },
+"publish_job":
+{ Args: { "p_id": string }; Returns: undefined
+                           },
 "ranking_flag_case":
 { Args: { "p_id": string }; Returns: Json
                            },
@@ -2593,14 +3338,32 @@ isOneToOne: false
 "record_views":
 { Args: { "p_ids": (string)[] }; Returns: number
                            },
+"recruit_candidate":
+{ Args: { "p_student": string }; Returns: Json
+                           },
+"recruit_candidate_for_code":
+{ Args: { "p_code": string }; Returns: string
+                           },
 "remove_exam_period":
 { Args: { "p_id": string,"p_reason": string }; Returns: undefined
+                           },
+"remove_from_shortlist":
+{ Args: { "p_item": string }; Returns: undefined
+                           },
+"remove_org_member":
+{ Args: { "p_user": string }; Returns: undefined
                            },
 "remove_venture_deliverable":
 { Args: { "p_deliverable": string }; Returns: boolean
                            },
 "remove_venture_member":
 { Args: { "p_member": string,"p_venture": string }; Returns: undefined
+                           },
+"rename_shortlist":
+{ Args: { "p_id": string,"p_name": string }; Returns: undefined
+                           },
+"reorder_shortlist":
+{ Args: { "p_items": (string)[],"p_list": string }; Returns: undefined
                            },
 "request_account_deletion":
 { Args: Record<PropertyKey, never>; Returns: string
@@ -2623,6 +3386,9 @@ isOneToOne: false
 "resolve_review_flag":
 { Args: { "p_flag": number,"p_note": string,"p_upheld": boolean }; Returns: boolean
                            },
+"respond_contact_request":
+{ Args: { "p_accept": boolean,"p_id": string,"p_reason"?: string }; Returns: string
+                           },
 "respond_feedback":
 { Args: { "p_id": string,"p_reply": string,"p_status": Database["public"]['Enums']["feedback_status"] }; Returns: undefined
                            },
@@ -2634,6 +3400,9 @@ isOneToOne: false
                            },
 "respond_supervision":
 { Args: { "p_accept": boolean,"p_venture": string }; Returns: undefined
+                           },
+"respond_team_invite":
+{ Args: { "p_accept": boolean,"p_team": string }; Returns: undefined
                            },
 "restart_tour":
 { Args: { "p_tour": string }; Returns: undefined
@@ -2665,11 +3434,17 @@ isOneToOne: false
 "review_teacher_flag":
 { Args: { "p_id": string,"p_reason": string,"p_upheld": boolean }; Returns: undefined
                            },
+"revoke_api_token":
+{ Args: { "p_id": string }; Returns: undefined
+                           },
 "revoke_cv":
 { Args: { "p_record": string }; Returns: undefined
                            },
 "revoke_invite":
 { Args: { "p_invite": string }; Returns: boolean
+                           },
+"revoke_org_invite":
+{ Args: { "p_id": string }; Returns: undefined
                            },
 "revoke_share_link":
 { Args: { "p_id": string }; Returns: undefined
@@ -2683,11 +3458,23 @@ isOneToOne: false
 "save_code_check":
 { Args: { "p_answers": Json,"p_id": string,"p_submit"?: boolean }; Returns: Database["public"]['Enums']["code_check_status"]
                            },
+"save_competition":
+{ Args: { "p": Json,"p_id": string }; Returns: string
+                           },
 "save_cv_settings":
 { Args: { "p_sections": (string)[],"p_show_email": boolean,"p_show_percentile": boolean,"p_visibility": Database["public"]['Enums']["cv_visibility"] }; Returns: undefined
                            },
 "save_idea":
 { Args: { "p": Json,"p_id": string }; Returns: string
+                           },
+"save_job":
+{ Args: { "p": Json,"p_id": string }; Returns: string
+                           },
+"save_recruiter_prefs":
+{ Args: { "p_availability": (string)[],"p_city": string,"p_remote": boolean }; Returns: undefined
+                           },
+"save_search":
+{ Args: { "p_filters": Json,"p_frequency": string,"p_name": string }; Returns: string
                            },
 "save_teacher_settings":
 { Args: { "p_cap": number,"p_digest": boolean,"p_opt_in": boolean,"p_skills": (string)[] }; Returns: undefined
@@ -2697,6 +3484,12 @@ isOneToOne: false
                            },
 "save_venture_role":
 { Args: { "p_role"?: string,"p_skill_ids": (string)[],"p_slots": number,"p_title": string,"p_venture": string }; Returns: string
+                           },
+"saved_searches_list":
+{ Args: Record<PropertyKey, never>; Returns: Json
+                           },
+"score_team":
+{ Args: { "p_feedback"?: string,"p_scores": Json,"p_team": string }; Returns: undefined
                            },
 "search_chats":
 { Args: { "p_q": string,"p_thread"?: string }; Returns: {
@@ -2708,6 +3501,9 @@ isOneToOne: false
               "avatar_path": string,"department": string,"friendship": string,"full_name": string,"graduation_year": number,"skills": (string)[],"university": string,"user_id": string,"username": string
             }[]
                            },
+"search_talent":
+{ Args: { "p_filters": Json,"p_offset"?: number }; Returns: Json
+                           },
 "search_ventures":
 { Args: { "p_offset"?: number,"p_q": string,"p_skill"?: string,"p_type": Database["public"]['Enums']["venture_type"],"p_university"?: string }; Returns: {
               "created_at": string,"id": string,"members": number,"open_slots": number,"owner_name": string,"owner_username": string,"skill_ids": (string)[],"stage": Database["public"]['Enums']["venture_stage"],"status": Database["public"]['Enums']["venture_status"],"summary": string,"team_size": number,"title": string,"type": Database["public"]['Enums']["venture_type"],"university_name": string,"visibility": Database["public"]['Enums']["venture_visibility"]
@@ -2718,6 +3514,9 @@ isOneToOne: false
                            },
 "see_tip":
 { Args: { "p_tip": string }; Returns: undefined
+                           },
+"send_contact_request":
+{ Args: { "p_message": string,"p_role": string,"p_student": string }; Returns: string
                            },
 "send_friend_request":
 { Args: { "p_username": string }; Returns: {
@@ -2742,6 +3541,9 @@ isOneToOne: false
 "set_notification_pref":
 { Args: { "p_category": string,"p_channel": Database["public"]['Enums']["email_channel"] }; Returns: undefined
                            },
+"set_org_member_role":
+{ Args: { "p_role": Database["public"]['Enums']["org_role"],"p_user": string }; Returns: undefined
+                           },
 "set_read_receipts":
 { Args: { "p_on": boolean }; Returns: undefined
                            },
@@ -2750,6 +3552,12 @@ isOneToOne: false
                            },
 "set_venture_questions":
 { Args: { "p_questions": (string)[],"p_venture": string }; Returns: undefined
+                           },
+"shortlist_get":
+{ Args: { "p_list": string }; Returns: Json
+                           },
+"shortlists_list":
+{ Args: Record<PropertyKey, never>; Returns: Json
                            },
 "signin_failed":
 { Args: { "p_email": string,"p_ip_hash": string }; Returns: Json
@@ -2774,11 +3582,17 @@ isOneToOne: false
               "bucket": string,"bytes": number,"objects": number,"quota_bytes": number
             }[]
                            },
+"submit_competition":
+{ Args: { "p_id": string }; Returns: undefined
+                           },
 "submit_credential":
 { Args: { "p": Json }; Returns: string
                            },
 "submit_feedback":
 { Args: { "p_body": string,"p_device": string,"p_page": string,"p_screenshot": string,"p_type": Database["public"]['Enums']["feedback_type"],"p_version": string }; Returns: string
+                           },
+"submit_repo":
+{ Args: { "p_team": string,"p_url": string }; Returns: undefined
                            },
 "submit_report":
 { Args: { "p_detail"?: string,"p_messages"?: (string)[],"p_reason": Database["public"]['Enums']["report_reason"],"p_target": string,"p_type": Database["public"]['Enums']["report_target"] }; Returns: undefined
@@ -2799,6 +3613,12 @@ isOneToOne: false
 { Args: { "p_ids": (string)[] }; Returns: {
               "answered_at": string,"can_change": boolean,"dimension": string,"my_answer": boolean,"post_id": string,"public_line": Json,"question": string,"question_id": number
             }[]
+                           },
+"talent_explore":
+{ Args: { "p_filters": Json,"p_offset"?: number }; Returns: Json
+                           },
+"talent_facets":
+{ Args: Record<PropertyKey, never>; Returns: Json
                            },
 "teacher_claim_code_check":
 { Args: { "p_claim": boolean,"p_id": string }; Returns: undefined
@@ -2892,6 +3712,9 @@ isOneToOne: false
 "transition_venture":
 { Args: { "p_to": Database["public"]['Enums']["venture_status"],"p_venture": string }; Returns: undefined
                            },
+"unblock_company":
+{ Args: { "p_org": string }; Returns: undefined
+                           },
 "unblock_user":
 { Args: { "p_username": string }; Returns: undefined
                            },
@@ -2903,6 +3726,9 @@ isOneToOne: false
                            },
 "unread_notification_count":
 { Args: Record<PropertyKey, never>; Returns: number
+                           },
+"update_company_page":
+{ Args: { "p": Json }; Returns: undefined
                            },
 "update_venture":
 { Args: { "p": Json,"p_venture": string }; Returns: undefined
@@ -2947,10 +3773,13 @@ isOneToOne: false
                            },
 "withdraw_application":
 { Args: { "p_thread": string }; Returns: boolean
+                           },
+"withdraw_job_application":
+{ Args: { "p_id": string }; Returns: undefined
                            }
           }
           Enums: {
-            "account_role": "student"|"faculty"|"recruiter"|"university_admin","account_status": "active"|"graduate"|"deleting","anti_gaming_kind": "ring"|"rapid_gain","application_status": "pending"|"accepted"|"declined"|"withdrawn"|"closed","chat_thread_type": "dm"|"group","code_check_status": "preparing"|"ready"|"in_progress"|"submitted"|"passed"|"failed"|"unavailable"|"expired","contribution_kind": "code"|"design"|"research"|"docs"|"management"|"other","contribution_source": "manual"|"github","credential_status": "pending"|"approved"|"rejected"|"expired","cv_visibility": "private"|"link"|"recruiters","domain_kind": "student"|"faculty"|"both","email_channel": "instant_email"|"digest"|"off","feedback_status": "received"|"reviewing"|"planned"|"shipped"|"wont_do","feedback_type": "bug"|"idea"|"confusing"|"praise","friend_request_status": "pending"|"accepted"|"declined","github_commit_status": "pending"|"counted"|"held"|"excluded","github_repo_kind": "owned"|"collaborator"|"fork"|"template","idea_audience": "university"|"global","idea_difficulty": "intro"|"intermediate"|"advanced","idea_status": "open"|"closed","job_run_status": "running"|"succeeded"|"failed","looking_for_option": "internship"|"job"|"teammates"|"project"|"mentorship","post_audience": "university"|"global","post_stage": "seed"|"limited"|"full"|"global_boost"|"demoted"|"held","post_type": "general"|"invite"|"announcement"|"event"|"poll"|"shipped","profile_visibility": "friends"|"university"|"global","ranking_adjustment_kind": "penalty"|"rapid_gain","ranking_tier": "raw"|"spark"|"flare"|"shine"|"radiant"|"luminary","report_case_status": "open"|"dismissed"|"removed"|"warned","report_reason": "spam"|"harassment"|"inappropriate"|"misinformation"|"impersonation"|"other","report_target": "post"|"comment"|"message"|"profile"|"venture","review_flag_kind": "burst"|"backdating"|"cross_account_duplicate","review_flag_status": "open"|"cleared"|"upheld","review_request_status": "open"|"submitted"|"declined"|"expired"|"cancelled","rsvp_status": "going"|"interested","sanction_kind": "warn"|"suspend"|"ban"|"throttle","skill_category": "language"|"framework"|"library"|"tool"|"platform"|"practice","staff_role": "moderator"|"trust_reviewer"|"accounts"|"super_admin","supervisor_status": "invited"|"active"|"ended","sync_status": "queued"|"running"|"done"|"failed"|"cancelled","teacher_status": "pending"|"approved"|"revoked","venture_invite_status": "pending"|"accepted"|"declined"|"revoked","venture_stage": "idea"|"prototype"|"launched"|"revenue","venture_status": "recruiting"|"in_progress"|"completed"|"abandoned","venture_team_role": "lead"|"developer"|"designer"|"researcher"|"other","venture_type": "project"|"startup","venture_visibility": "public"|"university"|"unlisted"
+            "account_role": "student"|"faculty"|"recruiter"|"university_admin","account_status": "active"|"graduate"|"deleting","anti_gaming_kind": "ring"|"rapid_gain","application_stage": "applied"|"screening"|"interview"|"offer"|"hired"|"rejected"|"withdrawn","application_status": "pending"|"accepted"|"declined"|"withdrawn"|"closed","chat_thread_type": "dm"|"group","code_check_status": "preparing"|"ready"|"in_progress"|"submitted"|"passed"|"failed"|"unavailable"|"expired","competition_status": "draft"|"in_review"|"rejected"|"approved"|"live"|"frozen"|"judged","contact_status": "pending"|"accepted"|"declined"|"expired","contribution_kind": "code"|"design"|"research"|"docs"|"management"|"other","contribution_source": "manual"|"github","credential_status": "pending"|"approved"|"rejected"|"expired","cv_visibility": "private"|"link"|"recruiters","domain_kind": "student"|"faculty"|"both","email_channel": "instant_email"|"digest"|"off","feedback_status": "received"|"reviewing"|"planned"|"shipped"|"wont_do","feedback_type": "bug"|"idea"|"confusing"|"praise","friend_request_status": "pending"|"accepted"|"declined","github_commit_status": "pending"|"counted"|"held"|"excluded","github_repo_kind": "owned"|"collaborator"|"fork"|"template","idea_audience": "university"|"global","idea_difficulty": "intro"|"intermediate"|"advanced","idea_status": "open"|"closed","job_run_status": "running"|"succeeded"|"failed","job_status": "draft"|"live"|"closed","looking_for_option": "internship"|"job"|"teammates"|"project"|"mentorship","org_role": "admin"|"recruiter"|"billing","org_status": "pending"|"verified"|"suspended"|"rejected","post_audience": "university"|"global","post_stage": "seed"|"limited"|"full"|"global_boost"|"demoted"|"held","post_type": "general"|"invite"|"announcement"|"event"|"poll"|"shipped","profile_visibility": "friends"|"university"|"global","ranking_adjustment_kind": "penalty"|"rapid_gain","ranking_tier": "raw"|"spark"|"flare"|"shine"|"radiant"|"luminary","report_case_status": "open"|"dismissed"|"removed"|"warned","report_reason": "spam"|"harassment"|"inappropriate"|"misinformation"|"impersonation"|"other","report_target": "post"|"comment"|"message"|"profile"|"venture","review_flag_kind": "burst"|"backdating"|"cross_account_duplicate","review_flag_status": "open"|"cleared"|"upheld","review_request_status": "open"|"submitted"|"declined"|"expired"|"cancelled","rsvp_status": "going"|"interested","sanction_kind": "warn"|"suspend"|"ban"|"throttle","skill_category": "language"|"framework"|"library"|"tool"|"platform"|"practice","staff_role": "moderator"|"trust_reviewer"|"accounts"|"super_admin","supervisor_status": "invited"|"active"|"ended","sync_status": "queued"|"running"|"done"|"failed"|"cancelled","teacher_status": "pending"|"approved"|"revoked","venture_invite_status": "pending"|"accepted"|"declined"|"revoked","venture_stage": "idea"|"prototype"|"launched"|"revenue","venture_status": "recruiting"|"in_progress"|"completed"|"abandoned","venture_team_role": "lead"|"developer"|"designer"|"researcher"|"other","venture_type": "project"|"startup","venture_visibility": "public"|"university"|"unlisted"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -3070,7 +3899,7 @@ export const Constants = {
           }
         },"public": {
           Enums: {
-            "account_role": ["student", "faculty", "recruiter", "university_admin"],"account_status": ["active", "graduate", "deleting"],"anti_gaming_kind": ["ring", "rapid_gain"],"application_status": ["pending", "accepted", "declined", "withdrawn", "closed"],"chat_thread_type": ["dm", "group"],"code_check_status": ["preparing", "ready", "in_progress", "submitted", "passed", "failed", "unavailable", "expired"],"contribution_kind": ["code", "design", "research", "docs", "management", "other"],"contribution_source": ["manual", "github"],"credential_status": ["pending", "approved", "rejected", "expired"],"cv_visibility": ["private", "link", "recruiters"],"domain_kind": ["student", "faculty", "both"],"email_channel": ["instant_email", "digest", "off"],"feedback_status": ["received", "reviewing", "planned", "shipped", "wont_do"],"feedback_type": ["bug", "idea", "confusing", "praise"],"friend_request_status": ["pending", "accepted", "declined"],"github_commit_status": ["pending", "counted", "held", "excluded"],"github_repo_kind": ["owned", "collaborator", "fork", "template"],"idea_audience": ["university", "global"],"idea_difficulty": ["intro", "intermediate", "advanced"],"idea_status": ["open", "closed"],"job_run_status": ["running", "succeeded", "failed"],"looking_for_option": ["internship", "job", "teammates", "project", "mentorship"],"post_audience": ["university", "global"],"post_stage": ["seed", "limited", "full", "global_boost", "demoted", "held"],"post_type": ["general", "invite", "announcement", "event", "poll", "shipped"],"profile_visibility": ["friends", "university", "global"],"ranking_adjustment_kind": ["penalty", "rapid_gain"],"ranking_tier": ["raw", "spark", "flare", "shine", "radiant", "luminary"],"report_case_status": ["open", "dismissed", "removed", "warned"],"report_reason": ["spam", "harassment", "inappropriate", "misinformation", "impersonation", "other"],"report_target": ["post", "comment", "message", "profile", "venture"],"review_flag_kind": ["burst", "backdating", "cross_account_duplicate"],"review_flag_status": ["open", "cleared", "upheld"],"review_request_status": ["open", "submitted", "declined", "expired", "cancelled"],"rsvp_status": ["going", "interested"],"sanction_kind": ["warn", "suspend", "ban", "throttle"],"skill_category": ["language", "framework", "library", "tool", "platform", "practice"],"staff_role": ["moderator", "trust_reviewer", "accounts", "super_admin"],"supervisor_status": ["invited", "active", "ended"],"sync_status": ["queued", "running", "done", "failed", "cancelled"],"teacher_status": ["pending", "approved", "revoked"],"venture_invite_status": ["pending", "accepted", "declined", "revoked"],"venture_stage": ["idea", "prototype", "launched", "revenue"],"venture_status": ["recruiting", "in_progress", "completed", "abandoned"],"venture_team_role": ["lead", "developer", "designer", "researcher", "other"],"venture_type": ["project", "startup"],"venture_visibility": ["public", "university", "unlisted"]
+            "account_role": ["student", "faculty", "recruiter", "university_admin"],"account_status": ["active", "graduate", "deleting"],"anti_gaming_kind": ["ring", "rapid_gain"],"application_stage": ["applied", "screening", "interview", "offer", "hired", "rejected", "withdrawn"],"application_status": ["pending", "accepted", "declined", "withdrawn", "closed"],"chat_thread_type": ["dm", "group"],"code_check_status": ["preparing", "ready", "in_progress", "submitted", "passed", "failed", "unavailable", "expired"],"competition_status": ["draft", "in_review", "rejected", "approved", "live", "frozen", "judged"],"contact_status": ["pending", "accepted", "declined", "expired"],"contribution_kind": ["code", "design", "research", "docs", "management", "other"],"contribution_source": ["manual", "github"],"credential_status": ["pending", "approved", "rejected", "expired"],"cv_visibility": ["private", "link", "recruiters"],"domain_kind": ["student", "faculty", "both"],"email_channel": ["instant_email", "digest", "off"],"feedback_status": ["received", "reviewing", "planned", "shipped", "wont_do"],"feedback_type": ["bug", "idea", "confusing", "praise"],"friend_request_status": ["pending", "accepted", "declined"],"github_commit_status": ["pending", "counted", "held", "excluded"],"github_repo_kind": ["owned", "collaborator", "fork", "template"],"idea_audience": ["university", "global"],"idea_difficulty": ["intro", "intermediate", "advanced"],"idea_status": ["open", "closed"],"job_run_status": ["running", "succeeded", "failed"],"job_status": ["draft", "live", "closed"],"looking_for_option": ["internship", "job", "teammates", "project", "mentorship"],"org_role": ["admin", "recruiter", "billing"],"org_status": ["pending", "verified", "suspended", "rejected"],"post_audience": ["university", "global"],"post_stage": ["seed", "limited", "full", "global_boost", "demoted", "held"],"post_type": ["general", "invite", "announcement", "event", "poll", "shipped"],"profile_visibility": ["friends", "university", "global"],"ranking_adjustment_kind": ["penalty", "rapid_gain"],"ranking_tier": ["raw", "spark", "flare", "shine", "radiant", "luminary"],"report_case_status": ["open", "dismissed", "removed", "warned"],"report_reason": ["spam", "harassment", "inappropriate", "misinformation", "impersonation", "other"],"report_target": ["post", "comment", "message", "profile", "venture"],"review_flag_kind": ["burst", "backdating", "cross_account_duplicate"],"review_flag_status": ["open", "cleared", "upheld"],"review_request_status": ["open", "submitted", "declined", "expired", "cancelled"],"rsvp_status": ["going", "interested"],"sanction_kind": ["warn", "suspend", "ban", "throttle"],"skill_category": ["language", "framework", "library", "tool", "platform", "practice"],"staff_role": ["moderator", "trust_reviewer", "accounts", "super_admin"],"supervisor_status": ["invited", "active", "ended"],"sync_status": ["queued", "running", "done", "failed", "cancelled"],"teacher_status": ["pending", "approved", "revoked"],"venture_invite_status": ["pending", "accepted", "declined", "revoked"],"venture_stage": ["idea", "prototype", "launched", "revenue"],"venture_status": ["recruiting", "in_progress", "completed", "abandoned"],"venture_team_role": ["lead", "developer", "designer", "researcher", "other"],"venture_type": ["project", "startup"],"venture_visibility": ["public", "university", "unlisted"]
           }
         }
 } as const

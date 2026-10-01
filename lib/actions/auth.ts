@@ -33,6 +33,8 @@ type Supabase = Awaited<ReturnType<typeof createClient>>;
 /** Messages the before-user-created hook returns (supabase/migrations/*_identity.sql). */
 const HOOK_MESSAGES = new Set([
   "Use your university email.",
+  "Use your work email.",
+  "Use your company email, not a university one.",
   "Your university isn't on Skilient yet.",
   "That university doesn't use this email domain.",
   "Use your university Google account.",
@@ -77,6 +79,8 @@ async function destinationAfterSignIn(supabase: Supabase, next: string | null): 
   const state = await gateState(supabase);
   if (!state) return "/feed";
   const home = homeFor(state);
+  // A recruiter without two-factor goes straight to turning it on (PRD 5.20): the portal needs it.
+  if (home === "/recruit" && aal?.currentLevel !== "aal2") return "/settings/security?required=1";
   // `next` wins once nothing is left to do first; the agreement screen carries it along.
   if (next && home === "/feed") return next;
   if (next && home === "/agreement") return `/agreement?next=${encodeURIComponent(next)}`;
@@ -215,6 +219,109 @@ export async function signUp(formData: FormData): Promise<ActionResult> {
   }
 
   // PRD 5.2: an empty identities array means the address is already registered.
+  if (data.user && data.user.identities?.length === 0) {
+    ctx.done("refused", { error_code: "already_registered" });
+    return fail("already_registered", "This email is already registered. Sign in instead.");
+  }
+
+  await setPendingVerification(input.email);
+  ctx.done("ok", { user_id: data.user?.id });
+  redirect("/signup/verify");
+}
+
+// ---------------------------------------------------------------------------
+// Recruiter sign up (PRD 5.20): a company email, never a webmail or university address
+// ---------------------------------------------------------------------------
+
+const recruiterSignUpSchema = z.object({
+  fullName: z.string().trim().min(2, "Enter your name (2 to 60 characters).").max(60, "Keep your name under 60 characters."),
+  email: emailSchema,
+  password: passwordSchema,
+  acceptAgreement: z.literal("on", { error: "Accept the User Agreement and Privacy Notice to continue." }),
+  turnstileToken: z.string().max(4096).optional(),
+});
+
+export async function signUpRecruiter(formData: FormData): Promise<ActionResult> {
+  const ctx = await actionContext("auth.sign_up_recruiter");
+  const parsed = recruiterSignUpSchema.safeParse(formValues(formData, ["fullName", "email", "password", "acceptAgreement", "turnstileToken"]));
+  if (!parsed.success) {
+    ctx.done("refused", { error_code: "invalid_input" });
+    return fail("invalid_input", "Check the highlighted fields.", { fields: fieldErrors(parsed.error.issues) });
+  }
+  const input = parsed.data;
+
+  const turnstile = await verifyTurnstile(input.turnstileToken, ctx.ip);
+  if (!turnstile.ok) {
+    ctx.done("refused", { error_code: `turnstile_${turnstile.reason}` });
+    return fail("captcha", "Complete the check that you're human, then try again.", { requestId: ctx.requestId });
+  }
+
+  const supabase = await createClient();
+  if (!(await networkAllowed(supabase, ctx))) {
+    ctx.done("refused", { error_code: "network_rate_limited" });
+    return fail("rate_limited", NETWORK_BUSY);
+  }
+
+  // The form's check is only for fast feedback; the Auth hook repeats it.
+  const domain = emailDomain(input.email);
+  const [personal, university] = await Promise.all([
+    supabase.from("personal_email_domains").select("domain").eq("domain", domain ?? "").maybeSingle(),
+    supabase.from("university_domains").select("domain").eq("domain", domain ?? "").limit(1),
+  ]);
+  if (personal.error || university.error) {
+    ctx.done("error", { error_code: "domain_lookup_failed" });
+    return fail("unavailable", UNAVAILABLE, { requestId: ctx.requestId });
+  }
+  if (personal.data) {
+    ctx.done("refused", { error_code: "personal_email" });
+    return fail("personal_email", "Use your work email.", { fields: { email: "Use your work email: webmail addresses can't create a recruiter account." } });
+  }
+  if (university.data.length > 0) {
+    ctx.done("refused", { error_code: "university_email" });
+    return fail("university_email", "Use your company email, not a university one.", { fields: { email: "Use your company email, not a university one." } });
+  }
+
+  if (await isBreachedPassword(input.password)) {
+    ctx.done("refused", { error_code: "breached_password" });
+    return fail("breached_password", BREACHED, { fields: { password: BREACHED } });
+  }
+
+  const agreementVersion = await currentAgreementVersion(supabase);
+  const { data, error } = await supabase.auth.signUp({
+    email: input.email,
+    password: input.password,
+    options: {
+      emailRedirectTo: `${ctx.origin}/auth/confirm`,
+      data: {
+        full_name: input.fullName,
+        role: "recruiter",
+        agreement_version: agreementVersion ? String(agreementVersion) : undefined,
+      },
+    },
+  });
+
+  if (error) {
+    const code = authCode(error);
+    if (HOOK_MESSAGES.has(error.message)) {
+      ctx.done("refused", { error_code: "hook_refused" });
+      return fail("refused", error.message, { fields: { email: error.message } });
+    }
+    if (code === "weak_password") {
+      ctx.done("refused", { error_code: code });
+      const message = error.message.includes("pwned") || error.message.toLowerCase().includes("leak") ? BREACHED : "Choose a stronger password.";
+      return fail(code, message, { fields: { password: message } });
+    }
+    if (code === "over_email_send_rate_limit" || code === "over_request_rate_limit") {
+      ctx.done("refused", { error_code: code });
+      return fail("rate_limited", "Too many attempts. Wait a few minutes and try again.");
+    }
+    if (code === "user_already_exists" || code === "email_exists") {
+      ctx.done("refused", { error_code: "already_registered" });
+      return fail("already_registered", "This email is already registered. Sign in instead.");
+    }
+    ctx.done("error", { error_code: code });
+    return fail("unavailable", UNAVAILABLE, { requestId: ctx.requestId });
+  }
   if (data.user && data.user.identities?.length === 0) {
     ctx.done("refused", { error_code: "already_registered" });
     return fail("already_registered", "This email is already registered. Sign in instead.");

@@ -238,6 +238,12 @@ export function SignupForm({ siteKey, agreement, role = "student" }: { siteKey: 
                 Sign up as faculty
               </Link>
             </p>
+            <p className="text-center text-body-sm text-text-muted">
+              Hiring?{" "}
+              <Link href="/signup/recruiter" className="font-semibold text-text-primary underline underline-offset-4">
+                Create a recruiter account
+              </Link>
+            </p>
           </div>
         </>
       )}

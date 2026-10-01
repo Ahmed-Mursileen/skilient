@@ -249,6 +249,71 @@ export function describeNotification(n: NotificationInput): NotificationText {
         href: "/me/cv",
         subject: "Your verified CV was revoked",
       };
+    // Recruiting (PRD 5.20). Notices to students name the company, never the recruiter.
+    case "contact_request": {
+      const org = str(n.data.org_name) ?? "A company";
+      const role = str(n.data.role_title) ?? "a role";
+      return { text: `${org} would like to talk to you about ${role}.`, href: `/opportunities/contact-requests/${n.entityId}`, subject: `${org} wants to talk to you on Skilient` };
+    }
+    case "contact_accepted": {
+      const threadId = str(n.data.thread_id);
+      return { text: `A student accepted your request about ${str(n.data.role_title) ?? "the role"}. Say hello.`, href: threadId ? `/chat/${threadId}` : "/recruit/contacts", subject: "A student accepted your contact request" };
+    }
+    case "contact_declined":
+      return { text: `A student declined your request about ${str(n.data.role_title) ?? "the role"}. You can ask again after 90 days.`, href: "/recruit/contacts", subject: "An update on your contact request" };
+    case "saved_search_matches": {
+      const count = typeof n.data.count === "number" ? n.data.count : 1;
+      const name = str(n.data.name) ?? "your saved search";
+      return { text: `${count} new ${count === 1 ? "student matches" : "students match"} ${name}.`, href: "/recruit/search", subject: `${count} new matches for ${name}` };
+    }
+    case "org_decided": {
+      const org = str(n.data.org_name) ?? "Your organisation";
+      const status = str(n.data.status);
+      const reason = str(n.data.reason);
+      if (status === "verified") return { text: `${org} is verified. Talent search, contact requests and jobs are open.`, href: "/recruit", subject: `${org} is verified on Skilient` };
+      return { text: `${org} is ${status === "suspended" ? "suspended" : "not verified"}${reason ? `: ${reason}` : ""}.`, href: "/recruit", subject: `An update on ${org}` };
+    }
+    case "org_member_joined":
+      return { text: "A teammate accepted your invitation and joined your organisation.", href: "/org/members", subject: "A teammate joined your organisation" };
+    case "org_spam_review":
+      return { text: "Your organisation's contact requests are under review.", href: "/recruit", subject: "A review of your contact requests" };
+    case "job_application_received": {
+      const job = str(n.data.job_title) ?? "your job";
+      return { text: `A student applied to ${job}.`, href: "/recruit/jobs", subject: `New application to ${job}` };
+    }
+    case "application_stage": {
+      const job = str(n.data.job_title) ?? "a job";
+      const org = str(n.data.org_name) ?? "The company";
+      const stage = str(n.data.stage);
+      const reason = str(n.data.reason);
+      const href = `/opportunities/applications/${n.entityId}`;
+      if (stage === "rejected") return { text: `${org} didn't take your application for ${job} forward.${reason ? ` ${reason}` : ""}`, href, subject: `An update on your application to ${job}` };
+      if (stage === "hired") return { text: `${org} hired you for ${job}. Congratulations.`, href, subject: `${org} hired you` };
+      return { text: `Your application to ${job} at ${org} moved to ${stage ?? "the next stage"}.`, href, subject: `Your application to ${job} moved to ${stage ?? "the next stage"}` };
+    }
+    case "job_invite": {
+      const job = str(n.data.job_title) ?? "a job";
+      const org = str(n.data.org_name) ?? "A company";
+      return { text: `${org} invited you to apply for ${job}.`, href: `/opportunities/jobs/${n.entityId}`, subject: `${org} invited you to apply` };
+    }
+    case "hire_outcome_due":
+      return { text: "Is a hire from three months ago meeting expectations? Answer in one tap.", href: "/recruit", subject: "One question about your hire" };
+    case "competition_decided": {
+      const title = str(n.data.title) ?? "Your competition";
+      return n.data.approved === true
+        ? { text: `${title} was approved and opens on its start date.`, href: `/recruit/competitions/${n.entityId}`, subject: `${title} was approved` }
+        : { text: `${title} needs changes${str(n.data.reason) ? `: ${str(n.data.reason)}` : ""}.`, href: `/recruit/competitions/${n.entityId}`, subject: `${title} needs changes` };
+    }
+    case "team_invite": {
+      const title = str(n.data.title) ?? "a competition";
+      return { text: `${who} invited you to team ${str(n.data.team) ?? ""} for ${title}.`.replace(/\s+/g, " "), href: `/competitions/${n.entityId}`, subject: `${who} invited you to a competition team` };
+    }
+    case "competition_result": {
+      const title = str(n.data.title) ?? "the competition";
+      return n.data.winner === true
+        ? { text: `Your team won ${title}. The winner badge counts toward L4, and your submission earned L3 evidence.`, href: `/competitions/${n.entityId}`, subject: `You won ${title}` }
+        : { text: `Results are in for ${title}. Your submission earned L3 evidence.`, href: `/competitions/${n.entityId}`, subject: `Results for ${title}` };
+    }
     default:
       return { text: "You have a new notification.", href: "/notifications", subject: "New activity on Skilient" };
   }

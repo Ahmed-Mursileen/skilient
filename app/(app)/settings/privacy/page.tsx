@@ -4,11 +4,14 @@ import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
 import { FirstVisitTip } from "@/components/learn/first-visit-tip";
 import { LeaderboardToggle } from "@/components/ranking/leaderboard-toggle";
+import { RecruiterPrefsForm } from "@/components/recruit/student-controls";
 import { ConfirmAction } from "@/components/ventures/confirm-action";
+import { unblockCompany } from "@/lib/actions/opportunities";
 import { unblockUser } from "@/lib/actions/friends";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { getCvViewsLast30Days } from "@/lib/data/cv";
 import { getBlocks } from "@/lib/data/friends";
+import { getBlockedCompanies, getProfileViewers, getRecruiterPrefs } from "@/lib/data/opportunities";
 import { VISIBILITY } from "@/lib/profile/options";
 import { createClient } from "@/lib/supabase/server";
 
@@ -38,12 +41,15 @@ export default async function PrivacyCentrePage() {
   const user = await getCurrentUser();
   if (!user) redirect("/signin?next=/settings/privacy");
   const supabase = await createClient();
-  const [{ data: profile }, { data: cv }, { count: links }, views, blocks] = await Promise.all([
+  const [{ data: profile }, { data: cv }, { count: links }, views, blocks, companies, viewers, prefs] = await Promise.all([
     supabase.from("profiles").select("leaderboard_opt_out, visibility, recruiter_visible, looking_for").eq("user_id", user.id).maybeSingle(),
     supabase.from("cv_settings").select("visibility").eq("user_id", user.id).maybeSingle(),
     supabase.from("cv_share_links").select("id", { count: "exact", head: true }).eq("user_id", user.id).is("revoked_at", null),
     getCvViewsLast30Days(user.id),
     getBlocks(),
+    getBlockedCompanies(),
+    getProfileViewers(),
+    getRecruiterPrefs(),
   ]);
   const visibility = VISIBILITY.find((o) => o.value === profile?.visibility) ?? VISIBILITY[0];
   const looking = (profile?.looking_for ?? []) as string[];
@@ -72,12 +78,48 @@ export default async function PrivacyCentrePage() {
             : "Recruiters can't find you in search. You can still apply to jobs."}
           {looking.length ? ` You're looking for: ${looking.join(", ")}.` : ""}
         </p>
-        <p className="px-5 text-body-sm text-text-secondary">Blocking a company arrives when recruiters join; until then no company can see you.</p>
-        <p className="px-5 pb-4 text-body-sm">
+        <p className="px-5 text-body-sm text-text-secondary">
+          Turning it off removes you from every recruiter search within a day. Recruiters never see your gender, age, religion, ethnicity or photo, and you can hide from a single company below.
+        </p>
+        <p className="px-5 text-body-sm">
           <Link href="/settings/profile" className="font-semibold underline underline-offset-4">
             Change recruiter visibility and your looking-for line
           </Link>
         </p>
+        <div className="px-5 pb-4">
+          <RecruiterPrefsForm availability={prefs.availability} city={prefs.city ?? ""} remote={prefs.remote_ok} visible={prefs.recruiter_visible} />
+        </div>
+      </Section>
+
+      <Section id="company-views-h" title="Which companies viewed my profile">
+        <p className="px-5 text-body-sm text-text-secondary" data-testid="company-views">
+          {viewers.companies_30d} {viewers.companies_30d === 1 ? "company" : "companies"} looked at your profile in the last 30 days ({viewers.views_30d} {viewers.views_30d === 1 ? "view" : "views"}).
+          {viewers.names_visible ? "" : " Their names are a Pro feature."}
+        </p>
+        {viewers.companies && viewers.companies.length > 0 ? (
+          <ul className="px-5 pb-4 text-body-sm">
+            {viewers.companies.map((c) => (
+              <li key={c.id}><Link href={`/companies/${c.slug}` as Route} className="font-semibold underline underline-offset-4">{c.name}</Link></li>
+            ))}
+          </ul>
+        ) : (
+          <p className="pb-4" />
+        )}
+      </Section>
+
+      <Section id="company-blocks-h" title="Blocked companies">
+        {companies.length ? (
+          <ul className="divide-y divide-border-muted" data-testid="blocked-companies">
+            {companies.map((c) => (
+              <li key={c.id} className="flex items-center justify-between gap-3 px-5 py-3">
+                <Link href={`/companies/${c.slug}` as Route} className="min-w-0 truncate text-body font-semibold underline-offset-4 hover:underline">{c.name}</Link>
+                <ConfirmAction action={unblockCompany.bind(null, c.id)} label="Unblock" ariaLabel={`Unblock ${c.name}`} variant="secondary" />
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="px-5 pb-4 text-body-sm text-text-secondary">You haven&apos;t blocked a company. Open a company page and choose Block to hide yourself from everyone who works there.</p>
+        )}
       </Section>
 
       <Section id="leaderboard-h" title="Leaderboards">

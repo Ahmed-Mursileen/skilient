@@ -1,5 +1,5 @@
 import { CheckCircle, ClockCounterClockwise, Prohibit, Question, Warning } from "@phosphor-icons/react/dist/ssr";
-import type { Metadata } from "next";
+import type { Metadata, Route } from "next";
 import Link from "next/link";
 import { CvPaper } from "@/components/cv/cv-paper";
 import { PdfCheck } from "@/components/cv/pdf-check";
@@ -7,6 +7,7 @@ import { PublicFrame } from "@/components/cv/public-frame";
 import { siteUrl } from "@/lib/cv/site";
 import { STATUS_TEXT, type VerifyStatus } from "@/lib/cv/status";
 import { verifyCode } from "@/lib/data/cv";
+import { getCandidateForCode } from "@/lib/data/recruit";
 import { cn } from "@/lib/cn";
 import { formatCode } from "@/supabase/functions/_shared/cv/sign.ts";
 
@@ -98,6 +99,8 @@ export default async function VerifyPage({ params, searchParams }: PageProps<"/v
     );
   }
 
+  // A signed-in recruiter whose organisation may open this student gets the contact entry point (PRD 5.20).
+  const candidateId = result.status === "valid" || result.status === "superseded" ? await getCandidateForCode(result.code) : null;
   return (
     <PublicFrame>
       <StatusCard status={result.status}>
@@ -128,6 +131,17 @@ export default async function VerifyPage({ params, searchParams }: PageProps<"/v
           ) : null}
         </dl>
       </StatusCard>
+      {candidateId ? (
+        <div className="rounded-lg border border-border-default bg-bg-surface p-5" data-testid="recruiter-contact">
+          <p className="text-body">
+            You&apos;re signed in as a recruiter.{" "}
+            <Link href={`/recruit/candidates/${candidateId}` as Route} className="font-semibold underline underline-offset-4">
+              Open this candidate to shortlist or contact them
+            </Link>
+            .
+          </p>
+        </div>
+      ) : null}
       <div className="rounded-lg border border-border-default bg-bg-surface p-5">
         <PdfCheck code={result.code} />
       </div>

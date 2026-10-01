@@ -14,6 +14,9 @@ describe("describeNotification", () => {
       "feedback_update", "deletion_requested", "deletion_cancelled",
       "teacher_decided", "supervision_requested", "supervision_answered", "supervisor_comment",
       "supervisor_confirmed", "review_requested", "review_reminder", "review_received", "review_expired",
+      "contact_request", "contact_accepted", "contact_declined", "saved_search_matches", "org_decided", "org_member_joined",
+      "org_spam_review", "job_application_received", "application_stage", "job_invite", "hire_outcome_due",
+      "competition_decided", "team_invite", "competition_result",
     ];
     for (const type of types) {
       const d = describeNotification({ ...base, type });
@@ -22,6 +25,18 @@ describe("describeNotification", () => {
       expect(d.subject.length, type).toBeGreaterThan(5);
       expect(d.text, type).not.toMatch(/—/); // no em-dashes in UI copy (screen spec)
     }
+  });
+
+  it("tells a student which company wrote, never which recruiter", () => {
+    const d = describeNotification({ ...base, type: "contact_request", actorName: null, entityId: "r1", data: { org_name: "Acme", role_title: "React intern" } });
+    expect(d.text).toBe("Acme would like to talk to you about React intern.");
+    expect(d.href).toBe("/opportunities/contact-requests/r1");
+  });
+
+  it("gives a rejected applicant a generic reason", () => {
+    const d = describeNotification({ ...base, type: "application_stage", actorName: null, entityId: "a1", data: { job_title: "Intern", org_name: "Acme", stage: "rejected", reason: "The position has been filled." } });
+    expect(d.text).toContain("The position has been filled.");
+    expect(d.href).toBe("/opportunities/applications/a1");
   });
 
   it("names what was moderated, never who", () => {

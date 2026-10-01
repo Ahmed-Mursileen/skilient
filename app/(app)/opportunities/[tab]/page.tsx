@@ -32,7 +32,7 @@ const EMPTY: Record<OpportunityTab, { icon: ReactNode; title: string; descriptio
   contact_requests: {
     icon: <EnvelopeSimple aria-hidden className="size-8" />,
     title: "No requests from recruiters",
-    description: "When a recruiter wants to talk to you, the request lands here and you accept or decline. Recruiters only see what your privacy settings allow.",
+    description: "When a recruiter wants to talk to you, the request lands here and you accept or decline; the ones you answered stay here as a record of every company that contacted you. Recruiters only see what your privacy settings allow.",
     action: { label: "Review who can find you", href: "/settings/privacy" },
   },
   applications: {
