@@ -34,8 +34,9 @@ async function record(db: Db, eventId: string, type: string, payload: unknown, e
   await db.query("select private.record_billing_event('worker', $1, $2, $3::jsonb, $4::jsonb, $5::boolean)", [
     eventId,
     type,
-    JSON.stringify(payload),
-    JSON.stringify(event),
+    // postgres.js serialises objects for jsonb parameters itself; a pre-stringified value would be stored as a JSON string.
+    payload ?? {},
+    event,
     live,
   ]);
 }
@@ -89,7 +90,7 @@ export async function runBillingWorker(opts: {
         });
         if (res.status === "failed") throw new Error(res.error ?? "refund failed");
         if (res.status === "succeeded") {
-          await record(db, `refund:${job.idempotency_key}`, "payment.refunded", res, {
+          await record(db, job.idempotency_key, "payment.refunded", res, {
             gateway: job.gateway,
             payment_id: job.gateway_payment_id,
             amount: Number(job.amount),
@@ -103,7 +104,7 @@ export async function runBillingWorker(opts: {
     } catch (e) {
       out.errors++;
       const message = e instanceof Error ? e.message : String(e);
-      await db.query("select private.billing_job_failed($1::bigint, $2::integer, $3::jsonb, $4)", [row.msg_id, row.read_ct, JSON.stringify(job), message]);
+      await db.query("select private.billing_job_failed($1::bigint, $2::integer, $3::jsonb, $4)", [row.msg_id, row.read_ct, job, message]);
       log("billing.job", { outcome: "error", kind: job.kind, gateway: job.gateway, error: message.slice(0, 200) });
     }
   }

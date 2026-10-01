@@ -1637,11 +1637,16 @@ begin
     if c.id is null then
       raise exception 'event % names an unknown checkout session', ev.event_id;
     end if;
-    if c.gateway <> v_gateway or c.live <> ev.live then
+    if c.gateway <> v_gateway or (c.gateway = 'simulated' and ev.live) then
       -- Not retryable: kept for staff, never applied.
       update public.billing_webhook_events set processed_at = now(), outcome = 'session_mismatch',
              error = 'the event''s gateway or mode does not match its checkout session' where id = ev.id;
       return 'session_mismatch';
+    end if;
+    -- A real gateway's sandbox is a test too: the verified event decides whether money really moved.
+    if c.live <> ev.live then
+      update public.checkout_sessions set live = ev.live where id = c.id;
+      c.live := ev.live;
     end if;
   end if;
   if e ->> 'subscription_id' is not null then
@@ -1889,7 +1894,7 @@ begin
     'kind', 'charge', 'subscription_id', s.id, 'gateway', s.gateway, 'live', s.live,
     'saved_method_ref', s.saved_method_ref, 'customer_ref', s.gateway_customer_ref, 'subscription_ref', s.gateway_subscription_ref,
     'amount', (v_quote ->> 'total')::numeric, 'currency', s.currency,
-    'idempotency_key', 'renew:' || s.id::text || ':' || extract(epoch from s.current_period_end)::bigint::text || ':' || s.retry_count::text,
+    'idempotency_key', 'renew:' || s.id::text || ':' || to_char(s.current_period_end at time zone 'UTC', 'YYYYMMDDHH24MISSUS') || ':' || s.retry_count::text,
     'simulate_fail', s.simulate_fail_next));
 end;
 $$;
