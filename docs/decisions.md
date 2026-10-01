@@ -1519,3 +1519,85 @@ Append-only. One dated entry per product decision, with the reason. Carried over
     students once Skilient verifies the organisation.
   - Admin actions go to `university_audit_log` (readable by the owner and admins in Settings → Admins); staff actions stay in
     `ops_audit_log` (append-only, `on delete restrict`), which would otherwise block deleting a former admin's account.
+
+## Phase 10: billing (decisions)
+
+- 2026-10-05 (phase 10, Ahmed's answers): All 28 planning defaults approved ("proceed with default"): Safepay first for PKR,
+  Paddle Billing as the USD merchant of record (confirm it accepts a Pakistani seller before signing); students and universities pay
+  in PKR, organisations in PKR or USD; USD placeholders are PKR ÷ 280 (Starter $55, Growth $160, sponsored post $18, credit $1.10);
+  prices from the PRD, seeded by migration, recruiter yearly = 10× monthly; Enterprise and university licences are staff-applied;
+  no recruiter trial (Explore = 1 seat, 0 credits, 1 live post); the phase 8/9 keys are aliases of the PRD keys and shortlists and
+  notes need Starter; test grants migrated and retired; faculty at Growth/Campus get the post survey; upgrade credit = unused fraction
+  of the period's price, downgrades and yearly → monthly at renewal; billing emails always instant; invoices rendered on demand;
+  tax only on organisation and university PKR invoices, rates entered by accounts staff; company details in `billing.company`;
+  hiring fees with a 14-day dispute and a contact-request block after 30 days unpaid; credits 5–100 for 90 days, sponsored posts
+  14 days; final year by the phase 6 rule; sponsorship ends at the end of the first month at least 30 days away; two-factor for
+  organisation admin and billing members, the university owner and accounts staff; one accounts staff member may act, audited;
+  revenue as numbers and tables; B6 deferred.
+- 2026-10-05 (phase 10, simulated gateway rule): `BILLING_GATEWAY_LOCAL` / `BILLING_GATEWAY_MOR` choose `simulated`, `safepay` or
+  `paddle`. Outside Vercel production the simulated gateway always runs (with `SIMULATED_GATEWAY_SECRET`). In production it runs only
+  while no real adapter's keys are set, unless `BILLING_ALLOW_SIMULATED=1`, and then only for staff and the user ids in
+  `platform_config` `billing.simulated_testers` (`may_use_simulated()`). The webhook route refuses `simulated` whenever the rule says
+  no. Everything it creates has `live = false`: payments, subscriptions, add-on orders, and invoices in the `TEST-YYYY-NNNNNN` series
+  watermarked TEST; revenue counts live payments only. Staff test tools (`ops_simulate`: end the period, fail the next charge, retry
+  now, end the grace period) refuse any live subscription.
+- 2026-10-05 (phase 10, deviation): **The simulated result is a real HTTP webhook.** The checkout page's server action signs the event
+  and POSTs it to `/api/billing/webhook/simulated` (with Vercel's automation-bypass header on protected previews) instead of calling
+  the handler in-process as planned: storing an event needs the service role, which CLAUDE.md keeps out of server actions. Same
+  verify → store → queue path as Safepay and Paddle.
+- 2026-10-05 (phase 10, deviation): **No `pending` subscription state.** A checkout is a `checkout_sessions` row (amount, tax and
+  currency fixed by SQL from `plans` and config, idempotency key per click); the subscription is created or changed only when the
+  verified payment event is applied. Webhooks are stored in `billing_webhook_events` (gateway + event id unique), not
+  `webhook_events`, to keep them apart from the recruiter API's webhooks.
+- 2026-10-05 (phase 10, deviation): **Where the jobs run.** Queued events are applied by SQL (`billing-events`, pg_cron every 10 s)
+  because applying needs no outside call; the `billing-worker` Edge Function only calls gateways (renewal charges on saved cards,
+  refunds) and records each outcome as an event of gateway `worker`. `billing-tick` (every 5 min) ends trials and periods, queues
+  renewals and retries (days 1, 3, 6), expires after 7 days' grace, lapses unpaid licences 14 days after their due date, sends
+  prepaid reminders (7, 3, 1 days), expires abandoned checkouts, flags overdue hiring fees and opens 45-day offer follow-ups.
+  `sponsorship-sync` runs nightly at 01:15 PKT after graduate-rollover. There is no `quota-reset` job: a new period is a new
+  `usage_counters` row (PRD 4b.4).
+- 2026-10-05 (phase 10, deviation): **Quotas are spent inside the paid SQL write.** `consume_quota` runs in the same transaction as
+  the contact request, so a failed write never spends a credit; the TS layer has `getEntitlements` and `requireEntitlement` only
+  (`release_quota` exists in SQL). Every paid action first calls `require_entitlement(key)`, which refuses with SQLSTATE `PT402`
+  (HTTP 402 through PostgREST) and the action returns `payment_required`; the upgrade sheet opens on that code. Purchased credits
+  are spent after the period's allowance, oldest-expiring first.
+- 2026-10-05 (phase 10, deviation): **Invoices.** Numbers come from a gapless counter per series and year (`SKL`, `TEST`, `SKL-CN`,
+  `TEST-CN`), never reused; an issued invoice can't change or be deleted (trigger; content hash printed); voids issue a credit note.
+  PDFs are rendered on demand by the CV Chromium from the immutable row; nothing is stored in Storage (Free-plan space). An invoice
+  is DRAFT while `billing.company` lacks legal name, NTN or address (or STRN when it carries tax) or the province has no tax rate.
+  Hiring-fee and licence invoices are TEST until `billing.live_mode` is turned on (the setup checklist's last step). USD payments
+  get no Skilient invoice; the merchant of record's invoice number is stored on the payment.
+- 2026-10-05 (phase 10, gateways as built): Safepay and Paddle adapters are implemented from public docs and SDKs and tested with
+  fixtures built from them (`tests/fixtures/billing/README.md`): Paddle `Paddle-Signature ts:body` HMAC-SHA256 with rotation,
+  Safepay `X-SFPY-SIGNATURE` HMAC-SHA512 of the `data` object. Not confirmable without a sandbox, so marked `CONFIRM` in code:
+  Safepay event names and fields, wallets on hosted checkout, its refund API and saved cards. Until confirmed, **Safepay payments
+  save no card** (every Safepay plan is a prepaid period with reminders, never auto-debited) and Safepay refunds are done in its
+  dashboard. **Paddle renews its own subscriptions**: the worker's charge for a Paddle subscription is `deferred` and the renewal
+  arrives as `transaction.completed` (origin `subscription_recurring`), matched by Paddle's subscription id, never by the first
+  checkout's session. A verified event's live flag decides whether money really moved (sandbox = test), except that a simulated
+  session can never be completed by a live event.
+- 2026-10-05 (phase 10, entitlements as built): Keys and free values in `entitlement_keys`; `privacy.viewer_names`, `seats`,
+  `saved_searches`, `analytics`, `competitions.create` are aliases of `cv.viewer_names`, `org.seats`, `recruit.saved_searches`,
+  `recruit.analytics`, `competitions.run`. `uni.dashboard` is an enum (none, summary, full, accreditation) and `uni.dashboard_full`
+  means "full or above"; `uni.benchmark` moved from Campus to Growth and up (answer 12). `uni.plan`, `org.plan`, `student.plan`
+  enums name the level. `has_entitlement` for a number means "more than the free value". Shortlist and note *writes* need
+  `recruit.shortlists`; reads stay open so nothing is lost after a downgrade. Fairs and hackathons now count per licence year
+  (from the licence's start), replacing the rolling 365 days. The phase 8 `org_quota_usage` counters moved to `usage_counters`.
+  No production test grants existed; the migration still copies any into 30-day admin grants and adds an empty final version of
+  `entitlements.test_grants`, `uni.test_plans` and `org.trial_limits` (platform_config is append-only).
+- 2026-10-05 (phase 10, organisations): Billing-only members take no seat and see Plan and Billing only. At a seat downgrade the kept
+  list must include an admin; without a choice, admins then the most recently signed-in members keep seats; the rest become
+  `inactive` (they can't open the portal until reactivated; their notes and shortlists stay). A PKR checkout needs the province
+  first (it sets the tax). Live posts over the limit pause (new job status `paused`, newest first) and reopen from Billing when a
+  slot is free. Dropping below Growth revokes API tokens and pauses webhooks. Hires recorded before phase 10 are waived ("recorded
+  before billing launched"). The 45-day offer follow-up is built; the "student says hired at X" trigger waits for that field.
+- 2026-10-05 (phase 10, sponsored posts): `job_posts.sponsored_until` drives the "Sponsored" label on the Jobs tab
+  (`opportunities()` returns it). pgTAP 39's check that "For you" has no sponsorship input now asserts no ORDER BY in the function
+  mentions sponsorship (the label itself has to read the column).
+- 2026-10-05 (phase 10, licences): Staff issue a licence with a PO number at `/ops/billing`; it is active on issue, invoiced on 30-day
+  terms (bank transfer with the reference, or a pay link) and lapses 14 days after an unpaid due date. A renewal can be issued in a
+  licence's last 60 days and starts when the current year ends. Owners ask for a licence at `/uni/billing` (a staff task).
+- 2026-10-05 (phase 10, deferred): **B6** (real PKR and USD test transactions) waits for the merchant accounts; the checklist is in
+  `docs/setup-checklist.md` "B6". Also deferred: a PayFast adapter, recording a dashboard-made Safepay refund from `/ops/billing`
+  (until Safepay's refund API is confirmed staff refund there and void or credit by hand), accreditation report templates, and the
+  visual design-gate pass (phase 14; this phase ran axe in both themes on every new screen).

@@ -77,6 +77,7 @@ jobs:
           cvsign=$(curl -s -o /dev/null -w '%{http_code}' --max-time 30 -X POST http://127.0.0.1:54321/functions/v1/cv-sign -H 'content-type: application/json' -d '{}' || true)
           webhooks=$(curl -s -o /dev/null -w '%{http_code}' --max-time 30 -X POST http://127.0.0.1:54321/functions/v1/webhook-worker || true)
           freeze=$(curl -s -o /dev/null -w '%{http_code}' --max-time 30 -X POST http://127.0.0.1:54321/functions/v1/competition-freeze || true)
+          billing=$(curl -s -o /dev/null -w '%{http_code}' --max-time 30 -X POST http://127.0.0.1:54321/functions/v1/billing-worker || true)
           echo "github-worker: $worker $(cat /tmp/worker.txt)"
           echo "github-link: $link"
           echo "notify-worker: $notify"
@@ -86,7 +87,8 @@ jobs:
           echo "cv-sign: $cvsign"
           echo "webhook-worker: $webhooks"
           echo "competition-freeze: $freeze"
-          if [ "$worker" != 401 ] || [ "$notify" != 401 ] || [ "$preview" != 401 ] || [ "$cleanup" != 401 ] || [ "$codecheck" != 401 ] || [ "$cvsign" != 401 ] || [ "$webhooks" != 401 ] || [ "$freeze" != 401 ] || ! echo "$link" | grep -q '"not_configured"'; then
+          echo "billing-worker: $billing"
+          if [ "$worker" != 401 ] || [ "$notify" != 401 ] || [ "$preview" != 401 ] || [ "$cleanup" != 401 ] || [ "$codecheck" != 401 ] || [ "$cvsign" != 401 ] || [ "$webhooks" != 401 ] || [ "$freeze" != 401 ] || [ "$billing" != 401 ] || ! echo "$link" | grep -q '"not_configured"'; then
             docker logs supabase_edge_runtime_skilient 2>&1 | tail -60
             exit 1
           fi
@@ -116,6 +118,8 @@ jobs:
           # address printed in verify links (decisions.md 2026-10-01).
           echo "CV_EXPORT_SECRET=$(docker exec supabase_db_skilient psql -U postgres -tAc "select decrypted_secret from vault.decrypted_secrets where name = 'cv_export_secret'")" >> "$GITHUB_ENV"
           echo "NEXT_PUBLIC_SITE_URL=http://127.0.0.1:3100" >> "$GITHUB_ENV"
+          # Billing (decisions.md 2026-10-05): the simulated gateway signs its webhooks with this test-only value.
+          echo "SIMULATED_GATEWAY_SECRET=e2e-simulated-gateway-signing-value-0001" >> "$GITHUB_ENV"
       - name: Build (gallery enabled)
         run: pnpm build
         env:

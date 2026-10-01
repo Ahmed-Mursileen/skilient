@@ -2119,6 +2119,11 @@ end;
 $$;
 revoke all on function private.billing_job_failed(bigint, integer, jsonb, text) from public;
 
+-- The bearer secret pg_cron sends to the billing-worker Edge Function (generated here; nobody types it).
+select vault.create_secret(encode(extensions.gen_random_bytes(32), 'hex'), 'billing_worker_secret',
+                           'Bearer secret pg_cron sends to the billing-worker Edge Function')
+where not exists (select 1 from vault.secrets where name = 'billing_worker_secret');
+
 select cron.schedule('billing-events', '10 seconds', $$select private.billing_process_events()$$);
 select cron.schedule('billing-tick', '*/5 * * * *', $$select private.billing_tick_job()$$);
 select cron.schedule('billing-worker', '* * * * *', $$select private.wake_billing_worker()$$);

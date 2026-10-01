@@ -33,7 +33,7 @@ vi.mock("@/lib/supabase/server", async () => {
 
 const { api, jwtSecret } = localStack();
 const serviceKey = (() => {
-  if (process.env.SUPABASE_SERVICE_ROLE_KEY) return process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (process.env.E2E_SUPABASE_SECRET_KEY) return process.env.E2E_SUPABASE_SECRET_KEY;
   const line = execSync("pnpm exec supabase status -o env", { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] })
     .split("\n")
     .find((l) => l.startsWith("SERVICE_ROLE_KEY="));

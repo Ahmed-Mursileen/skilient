@@ -10,7 +10,7 @@ import { rateLimit } from "@/lib/security/rate-limit";
 import { createClient } from "@/lib/supabase/server";
 
 /**
- * PDF export (PRD 5.18, Student Pro; entitlement stubbed until phase 10): prints one CV
+ * PDF export (PRD 5.18, Student Pro; entitlement cv.pdf_export from the phase 10 registry): prints one CV
  * version with a template, uploads it to the private cv-exports bucket as the student,
  * records its SHA-256 with a MAC only this route can make (CV_EXPORT_SECRET, also in Vault),
  * and returns a 60-second signed URL. Acts for the signed-in student; no service-role key.

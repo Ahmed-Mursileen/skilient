@@ -944,7 +944,7 @@ begin
   -- A metered key needs some allowance on the plan (or a top-up); spending it happens in the paid write
   -- itself (consume_quota, same transaction), which refuses with PT402 when nothing is left.
   if not private.entitled(k.subject, v_id, k.key) then
-    raise exception '% isn''t included in your plan', k.label using errcode = 'PT402';
+    raise exception '%: not included in your plan', k.label using errcode = 'PT402';
   end if;
 end;
 $$;

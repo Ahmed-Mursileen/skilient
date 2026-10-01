@@ -50,6 +50,15 @@ function targetWord(value: unknown): string {
   }
 }
 
+function billingHome(data: Record<string, unknown>): string {
+  return data.subject === "org" ? "/org/billing" : data.subject === "university" ? "/uni/billing" : "/settings/billing";
+}
+
+function amount(data: Record<string, unknown>): string {
+  const n = Number(data.amount ?? 0);
+  return `${str(data.currency) ?? "PKR"} ${n.toLocaleString("en-PK", { maximumFractionDigits: 2 })}`;
+}
+
 export function describeNotification(n: NotificationInput): NotificationText {
   const who = n.actorName ?? "Someone";
   const venture = str(n.data.venture_title) ?? "a venture";
@@ -345,6 +354,36 @@ export function describeNotification(n: NotificationInput): NotificationText {
       return { text: "Your company was invited to a university job fair.", href: "/recruit", subject: "Job fair invite" };
     case "fair_called":
       return { text: `${str(n.data.company) ?? "A company"} is calling you at ${str(n.data.fair) ?? "the job fair"}. Answer within 5 minutes.`, href: `/fairs/${n.entityId}`, subject: `${str(n.data.company) ?? "A company"} is calling you` };
+    case "billing_payment_succeeded":
+      return { text: `Payment received: ${amount(n.data)} for ${str(n.data.title) ?? "your plan"}${n.data.live === false ? " (test, no real money)" : ""}.`, href: billingHome(n.data), subject: "Payment received" };
+    case "billing_payment_failed":
+      return n.data.renewal
+        ? { text: `We couldn't renew ${str(n.data.title) ?? "your plan"}. We'll retry; everything keeps working for 7 days. Check your payment method.`, href: billingHome(n.data), subject: "Your renewal payment failed" }
+        : { text: `The payment for ${str(n.data.title) ?? "your checkout"} didn't go through. Nothing was charged.`, href: billingHome(n.data), subject: "Payment didn't go through" };
+    case "billing_trial_started":
+      return { text: `Your ${n.data.days ?? 7}-day Student Pro trial has started.`, href: "/settings/billing", subject: "Your Student Pro trial has started" };
+    case "billing_trial_ended":
+      return { text: "Your Student Pro trial has ended. You're on Free; your proof and CV stay.", href: "/settings/billing", subject: "Your trial has ended" };
+    case "billing_renewal_reminder":
+      return { text: `${str(n.data.plan) ?? "Your plan"} ends on ${str(n.data.ends) ?? "soon"} (${n.data.days} day${n.data.days === 1 ? "" : "s"}). Pay the next period to keep it.`, href: billingHome(n.data), subject: `Your plan ends in ${n.data.days} day${n.data.days === 1 ? "" : "s"}` };
+    case "billing_subscription_ended":
+      return { text: `${str(n.data.plan) ?? "Your plan"} has ended${n.data.reason === "payment_failed" ? " because the payment failed" : ""}. Your data is kept.`, href: billingHome(n.data), subject: "Your plan has ended" };
+    case "billing_invoice_issued":
+      return { text: `Invoice for ${str(n.data.title) ?? "your licence"}, due ${str(n.data.due) ?? "in 30 days"}.`, href: billingHome(n.data), subject: "New invoice from Skilient" };
+    case "billing_hire_fee":
+      return { text: `Hiring fee invoiced: ${amount({ ...n.data, currency: "PKR" })} for a ${n.data.kind === "intern" ? "intern" : "full-time"} hire, due ${str(n.data.due) ?? "in 30 days"}.`, href: "/org/billing", subject: "Hiring fee invoice" };
+    case "billing_hire_fee_overdue":
+      return { text: "A hiring-fee invoice is overdue. New contact requests are paused until it's paid.", href: "/org/billing", subject: "Hiring fee overdue" };
+    case "billing_refund":
+      return { text: `Refunded ${amount(n.data)}.`, href: billingHome(n.data), subject: "Refund issued" };
+    case "billing_plan_changed":
+      return { text: `Your plan changes to ${str(n.data.to) ?? "a new plan"} at renewal.`, href: billingHome(n.data), subject: "Plan change scheduled" };
+    case "billing_limits_applied":
+      return { text: "Your plan's limits changed: some seats became inactive, posts paused or API tokens were revoked. Nothing was deleted.", href: "/org/billing", subject: "Your plan's limits changed" };
+    case "billing_sponsorship_started":
+      return { text: `${str(n.data.university) ?? "Your university"} now sponsors your Student Pro.${n.data.paying ? " You can cancel your own plan at the end of its period." : ""}`, href: "/settings/billing", subject: "Your university sponsors Student Pro" };
+    case "billing_sponsorship_ending":
+      return { text: `${str(n.data.university) ?? "Your university"}'s Student Pro sponsorship ends on ${str(n.data.ends) ?? "soon"}. You can continue Pro yourself.`, href: "/settings/billing", subject: "Sponsored Student Pro is ending" };
     default:
       return { text: "You have a new notification.", href: "/notifications", subject: "New activity on Skilient" };
   }

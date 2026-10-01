@@ -176,9 +176,14 @@ Legend: 📖 = PRD files to read (in `docs/prd/`), ✅ = done-when checks.
 
 📖 `04a-business-model-and-monetisation.md`, `04b-paid-feature-implementation.md`, `05-24-billing-and-organisation-admin.md`
 
-- [ ] B1 entitlements + quotas + registry · B2 gateways, checkout, webhooks, lifecycle · B3 add-ons, hire fees, invoices, tax · B4 sponsorship sync · B5 staff billing tools · B6 end-to-end PKR and USD
+- [x] B1 entitlements + quotas + registry · B2 gateways, checkout, webhooks, lifecycle · B3 add-ons, hire fees, invoices, tax · B4 sponsorship sync · B5 staff billing tools
+- [ ] B6 end-to-end PKR and USD (deferred until the merchant accounts exist: checklist in `docs/setup-checklist.md` "B6", decisions.md 2026-10-05)
 
 ✅ Registry and concurrency tests pass · every lifecycle test passes in sandbox · real test transactions in PKR and USD
+
+- [x] Registry and concurrency tests pass (`tests/unit/billing-registry.test.ts`, `tests/worker/billing-registry.test.ts`, `tests/worker/billing-concurrency.test.ts`)
+- [x] Every lifecycle test passes against the simulated gateway plus recorded-format fixtures for Safepay and Paddle (pgTAP `44_billing`, `tests/worker/billing-webhooks.test.ts`, `tests/unit/billing-gateways.test.ts`); a replay changes nothing
+- [ ] Real test transactions in PKR and USD (B6, deferred)
 
 ## Phase 11 — Ops portal (full)
 

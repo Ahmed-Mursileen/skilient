@@ -28,7 +28,7 @@ export function NewShortlistForm() {
           if (r.ok) {
             setName("");
             router.push(`/recruit/shortlists/${r.data}` as Route);
-          } else setError(r.message);
+          } else if (!showUpgrade(r)) setError(r.message);
         });
       }}
     >
