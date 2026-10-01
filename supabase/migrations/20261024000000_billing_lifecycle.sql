@@ -251,6 +251,7 @@ create index checkout_sessions_invoice_idx on public.checkout_sessions (invoice_
 create index checkout_sessions_subscription_idx on public.checkout_sessions (subscription_id);
 create index subscriptions_renewal_invoice_idx on public.subscriptions (renewal_invoice_id);
 create index subscriptions_created_by_idx on public.subscriptions (created_by);
+create index subscriptions_gateway_ref_idx on public.subscriptions (gateway, gateway_subscription_ref) where gateway_subscription_ref is not null;
 create index checkout_sessions_created_by_idx on public.checkout_sessions (created_by);
 
 create function private.invoice_immutable()
@@ -1645,6 +1646,11 @@ begin
   end if;
   if e ->> 'subscription_id' is not null then
     select * into s from public.subscriptions where id = (e ->> 'subscription_id')::uuid for update;
+  elsif c.id is null and e ->> 'subscription_ref' is not null then
+    -- A renewal the gateway ran itself (Paddle): found by the gateway's subscription id.
+    select * into s from public.subscriptions
+     where gateway = v_gateway and gateway_subscription_ref = e ->> 'subscription_ref'
+     order by created_at desc limit 1 for update;
   end if;
 
   if ev.type = 'payment.succeeded' and c.id is not null then
@@ -2214,6 +2220,9 @@ begin
                    from public.org_members m join public.profiles p on p.user_id = m.user_id
                   where m.org_id = v_id and m.role <> 'billing'), '[]'::jsonb) end,
     'live_posts', case when v_type = 'org' then (select count(*) from public.job_posts j where j.org_id = v_id and j.status = 'live') end,
+    'live_jobs', case when v_type = 'org' then coalesce((
+                   select jsonb_agg(jsonb_build_object('id', j.id, 'title', j.title, 'sponsored_until', j.sponsored_until) order by j.published_at desc)
+                     from public.job_posts j where j.org_id = v_id and j.status = 'live'), '[]'::jsonb) end,
     'company_complete', private.company_complete(true),
     'live_mode', private.billing_live_mode())
     || private.billing_history(v_type, v_id);

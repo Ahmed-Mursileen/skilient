@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { after } from "next/server";
 import { CurrentUserProvider } from "@/components/providers/current-user-provider";
+import { UpgradeSheetHost } from "@/components/billing/upgrade-sheet";
 import { AppShell } from "@/components/shell/app-shell";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { getTourState } from "@/lib/data/portal";
@@ -29,6 +30,7 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
   return (
     <CurrentUserProvider key={user?.id ?? "signed-out"} initialUser={user}>
       <AppShell tour={tour}>{children}</AppShell>
+      <UpgradeSheetHost />
     </CurrentUserProvider>
   );
 }

@@ -95,10 +95,10 @@ export function requiresTwoFactor(pathname: string): boolean {
 }
 
 /** The only areas a recruiter account uses (PRD 5.20): everything else is for students. */
-const RECRUITER_PREFIXES = ["/recruit", "/org", "/companies", "/chat", "/notifications", "/settings", "/feedback", "/fairs"];
+const RECRUITER_PREFIXES = ["/recruit", "/org", "/companies", "/chat", "/notifications", "/settings", "/feedback", "/fairs", "/billing"];
 
 /** The areas a university-official account uses (PRD 5.23): its portal, ecospheres and events. */
-const UNI_ADMIN_PREFIXES = ["/uni", "/u", "/events", "/notifications", "/settings", "/feedback", "/competitions"];
+const UNI_ADMIN_PREFIXES = ["/uni", "/u", "/events", "/notifications", "/settings", "/feedback", "/competitions", "/billing"];
 
 /** Who may open the recruiter portal: recruiter accounts only. */
 function isRecruiterArea(pathname: string): boolean {

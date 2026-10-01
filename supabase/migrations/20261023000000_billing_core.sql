@@ -922,8 +922,7 @@ end;
 $$;
 
 -- `requireEntitlement(key)` (PRD 4b.4): every paid server action calls this first. Raises PT402
--- (HTTP 402 through PostgREST) when the caller's subject doesn't hold the key, or a metered key has
--- nothing left this period. Unknown keys are refused.
+-- (HTTP 402 through PostgREST) when the caller's subject doesn't hold the key. Unknown keys are refused.
 create function private.require_entitlement(p_key text)
 returns void
 language plpgsql
@@ -942,11 +941,9 @@ begin
   if k.subject = 'org' and not exists (select 1 from public.organizations o where o.id = v_id and o.status = 'verified') then
     raise exception 'your organisation isn''t verified yet' using errcode = '42501';
   end if;
-  if k.kind = 'limit' then
-    if coalesce((private.quota_status(k.subject, v_id, k.key) ->> 'remaining')::integer, 0) < 1 then
-      raise exception 'you''ve used this period''s % allowance', lower(k.label) using errcode = 'PT402';
-    end if;
-  elsif not private.entitled(k.subject, v_id, k.key) then
+  -- A metered key needs some allowance on the plan (or a top-up); spending it happens in the paid write
+  -- itself (consume_quota, same transaction), which refuses with PT402 when nothing is left.
+  if not private.entitled(k.subject, v_id, k.key) then
     raise exception '% isn''t included in your plan', k.label using errcode = 'PT402';
   end if;
 end;

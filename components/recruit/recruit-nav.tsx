@@ -21,14 +21,15 @@ const ORG = [
   { href: "/org/settings", label: "Company page", exact: true },
   { href: "/org/settings/api", label: "API" },
   { href: "/org/plan", label: "Plan" },
+  { href: "/org/billing", label: "Billing" },
 ] as const;
 
 type Item = { href: string; label: string; exact?: boolean };
 
-/** The recruiter portal's sections (PRD 5.20); billing seats see only the plan. */
+/** The recruiter portal's sections (PRD 5.20, 5.24); billing seats see the plan and billing only. */
 export function RecruitNav({ role }: { role: "admin" | "recruiter" | "billing" }) {
   const pathname = usePathname();
-  const items: readonly Item[] = role === "billing" ? [ORG[3]] : role === "admin" ? [...WORK, ...ORG] : [...WORK, ORG[3]];
+  const items: readonly Item[] = role === "billing" ? [ORG[3], ORG[4]] : role === "admin" ? [...WORK, ...ORG] : [...WORK, ORG[3]];
   return (
     <nav aria-label="Recruiter portal" className="border-b border-border-default">
       <ul className="-mb-px flex gap-1 overflow-x-auto">

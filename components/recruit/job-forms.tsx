@@ -1,5 +1,6 @@
 "use client";
 
+import { showUpgrade } from "@/components/billing/upgrade-sheet";
 import type { Route } from "next";
 import { useRouter } from "next/navigation";
 import { useState, useTransition, type FormEvent } from "react";
@@ -53,7 +54,7 @@ export function JobForm({ job, skills }: { job: JobDoc | null; skills: SkillOpti
         description: get("description"),
       };
       const r = await saveJob(job?.id ?? null, input);
-      if (!r.ok) return setError(r);
+      if (!r.ok) return showUpgrade(r) ? undefined : setError(r);
       if (job) router.refresh();
       else router.push(`/recruit/jobs/${r.data}` as Route);
     });

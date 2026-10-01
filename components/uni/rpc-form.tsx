@@ -1,5 +1,6 @@
 "use client";
 
+import { showUpgrade } from "@/components/billing/upgrade-sheet";
 import type { Route } from "next";
 import { useRouter } from "next/navigation";
 import { useId, useState, useTransition } from "react";
@@ -84,6 +85,7 @@ export function RpcForm({
           setDone(null);
           const result = await action(values);
           if (!result.ok) {
+            if (showUpgrade(result)) return;
             setError(result.message);
             setFieldErrors(result.fields ?? {});
             return;

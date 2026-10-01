@@ -1,5 +1,6 @@
 "use client";
 
+import { showUpgrade } from "@/components/billing/upgrade-sheet";
 import type { Route } from "next";
 import { useRouter } from "next/navigation";
 import { useState, useTransition, type FormEvent } from "react";
@@ -52,7 +53,7 @@ export function CompetitionForm({ existing, skills, universities }: { existing: 
         rubric,
       };
       const r = await saveCompetition(existing?.id ?? null, input);
-      if (!r.ok) return setError(r);
+      if (!r.ok) return showUpgrade(r) ? undefined : setError(r);
       if (existing) router.refresh();
       else router.push(`/recruit/competitions/${r.data}` as Route);
     });
