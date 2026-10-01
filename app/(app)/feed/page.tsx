@@ -11,7 +11,9 @@ import { PostCard } from "@/components/posts/post-card";
 import { Button, EmptyState } from "@/components/ui";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { getProgressCard } from "@/lib/data/portal";
-import { FEED_FILTERS, getFeed, getFollowedUpdates, getInvitableVentures, getPinnedAnnouncement, type FeedFilter, type FeedScope } from "@/lib/data/posts";
+import { QuestionsCard } from "@/components/uni/questions-card";
+import { getMyEcosphere, getMyUniQuestions } from "@/lib/data/uni";
+import { FEED_FILTERS, getFeed, getFollowedUpdates, getInvitableVentures, getPinnedAnnouncement, getPinnedUniversityAnnouncement, type FeedFilter, type FeedScope } from "@/lib/data/posts";
 import { createClient } from "@/lib/supabase/server";
 import { cn } from "@/lib/cn";
 
@@ -45,25 +47,32 @@ export default async function FeedPage({ searchParams }: PageProps<"/feed">) {
   const user = await getCurrentUser();
   if (!user) redirect("/signin");
   const sp = await searchParams;
-  const tab: FeedScope = sp.tab === "global" ? "global" : "university";
+  // The university may turn its University Feed off (PRD 5.23): then only Global shows.
+  const eco = await getMyEcosphere().catch(() => null);
+  const feedOn = eco?.modules.feed !== false;
+  const tab: FeedScope = sp.tab === "global" || !feedOn ? "global" : "university";
   const filter: FeedFilter = FEED_FILTERS.includes(sp.filter as FeedFilter) ? (sp.filter as FeedFilter) : "all";
 
   const supabase = await createClient();
-  const [page, pinned, updates, ventures, staff, card] = await Promise.all([
+  const [page, pinned, updates, ventures, staff, card, uniPinned, questions, questionsDismissed] = await Promise.all([
     getFeed(tab, filter),
     filter === "all" || filter === "announcements" ? getPinnedAnnouncement() : Promise.resolve(null),
     filter === "all" ? getFollowedUpdates() : Promise.resolve([]),
     getInvitableVentures(user.id),
     supabase.rpc("is_staff").then((r) => r.data === true),
     getProgressCard(user.id),
+    filter === "all" || filter === "announcements" ? getPinnedUniversityAnnouncement() : Promise.resolve(null),
+    getMyUniQuestions().catch(() => []),
+    supabase.from("ui_state").select("value").eq("user_id", user.id).eq("key", "uni_questions_dismissed").maybeSingle().then((r) => r.data?.value === true),
   ]);
+  const unanswered = questions.some((q) => q.answer === null);
 
   return (
     <main className="mx-auto flex max-w-[680px] flex-col gap-5 px-[var(--page-gutter)] py-8">
       <h1 className="sr-only">Home</h1>
       <nav aria-label="Feeds" className="border-b border-border-default">
         <ul className="-mb-px flex gap-1">
-          {TABS.map((t) => (
+          {TABS.filter((t) => feedOn || t.key !== "university").map((t) => (
             <li key={t.key}>
               <Link
                 href={href(t.key, filter)}
@@ -81,6 +90,8 @@ export default async function FeedPage({ searchParams }: PageProps<"/feed">) {
       </nav>
 
       <ProgressCard card={card} />
+
+      {questions.length > 0 && unanswered && !questionsDismissed ? <QuestionsCard university={eco?.name ?? "Your university"} questions={questions} /> : null}
 
       <Composer userId={user.id} defaultAudience={user.status === "graduate" ? "global" : tab} ventures={ventures} isStaff={staff} graduate={user.status === "graduate"} />
 
@@ -105,6 +116,7 @@ export default async function FeedPage({ searchParams }: PageProps<"/feed">) {
 
       <NewPostsPill userId={user.id} scope={tab} universityId={user.universityId} />
 
+      {uniPinned ? <PostCard post={uniPinned} /> : null}
       {pinned ? <PostCard post={pinned} /> : null}
 
       <FeedList

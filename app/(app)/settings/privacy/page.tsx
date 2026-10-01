@@ -11,6 +11,9 @@ import { unblockUser } from "@/lib/actions/friends";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { getCvViewsLast30Days } from "@/lib/data/cv";
 import { getBlocks } from "@/lib/data/friends";
+import { ageLabel } from "@/lib/format/time";
+import { getMyRecordViewers } from "@/lib/data/uni";
+import { ADMIN_ROLE_LABELS } from "@/lib/uni/constants";
 import { getBlockedCompanies, getProfileViewers, getRecruiterPrefs } from "@/lib/data/opportunities";
 import { VISIBILITY } from "@/lib/profile/options";
 import { createClient } from "@/lib/supabase/server";
@@ -41,7 +44,7 @@ export default async function PrivacyCentrePage() {
   const user = await getCurrentUser();
   if (!user) redirect("/signin?next=/settings/privacy");
   const supabase = await createClient();
-  const [{ data: profile }, { data: cv }, { count: links }, views, blocks, companies, viewers, prefs] = await Promise.all([
+  const [{ data: profile }, { data: cv }, { count: links }, views, blocks, companies, viewers, prefs, recordViewers] = await Promise.all([
     supabase.from("profiles").select("leaderboard_opt_out, visibility, recruiter_visible, looking_for").eq("user_id", user.id).maybeSingle(),
     supabase.from("cv_settings").select("visibility").eq("user_id", user.id).maybeSingle(),
     supabase.from("cv_share_links").select("id", { count: "exact", head: true }).eq("user_id", user.id).is("revoked_at", null),
@@ -50,6 +53,7 @@ export default async function PrivacyCentrePage() {
     getBlockedCompanies(),
     getProfileViewers(),
     getRecruiterPrefs(),
+    getMyRecordViewers().catch(() => ({ locked: true as const })),
   ]);
   const visibility = VISIBILITY.find((o) => o.value === profile?.visibility) ?? VISIBILITY[0];
   const looking = (profile?.looking_for ?? []) as string[];
@@ -145,10 +149,26 @@ export default async function PrivacyCentrePage() {
       </Section>
 
       <Section id="record-h" title="Who at my university viewed my record">
-        <p className="px-5 pb-4 text-body-sm text-text-secondary">
-          Universities on a Growth or Campus plan can see individual student records, and every view is logged. When yours can, the
-          list of who looked appears here with Pro. Nobody at your university can see your record today.
+        <p className="px-5 pb-2 text-body-sm text-text-secondary">
+          Universities on a Growth or Campus licence can open individual student records (covered by the user agreement), and every
+          view is logged. They never see your chats, private L0 skills, recruiter notes, which recruiters contacted you or who viewed your CV.
         </p>
+        {recordViewers.locked ? (
+          <p className="px-5 pb-4 text-body-sm text-text-secondary" data-testid="record-viewers-locked">
+            Student Pro shows who at your university viewed your record, and when.
+          </p>
+        ) : (recordViewers.items ?? []).length === 0 ? (
+          <p className="px-5 pb-4 text-body-sm text-text-secondary" data-testid="record-viewers">Nobody has viewed your record in the last 12 months.</p>
+        ) : (
+          <ul className="divide-y divide-border-muted" data-testid="record-viewers">
+            {(recordViewers.items ?? []).map((v, i) => (
+              <li key={i} className="flex justify-between gap-3 px-5 py-2 text-body-sm">
+                <span><span className="font-semibold">{v.name}</span> · {ADMIN_ROLE_LABELS[v.role]}</span>
+                <span className="text-text-secondary">{ageLabel(v.at)}</span>
+              </li>
+            ))}
+          </ul>
+        )}
       </Section>
 
       <Section id="blocked-h" title="Blocked people">

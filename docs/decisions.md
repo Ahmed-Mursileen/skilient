@@ -1387,3 +1387,135 @@ Append-only. One dated entry per product decision, with the reason. Carried over
 - 2026-10-03 (phase 8, deferred): Company logo upload (a monogram for now), `/org/billing` and invoices (phase 10), the recruiter guided
   tour, reporting a recruiter (a new report target), account deletion for recruiters, and the hire fee itself (phase 10). The visual
   design-gate pass and in-browser screenshots are phase 14; this phase ran axe in both themes on every new screen instead.
+
+## Phase 9: university portal (decisions)
+
+- 2026-10-04 (phase 9, Ahmed's answers): All 29 planning defaults approved, with the changes noted inline below.
+- 2026-10-04 (phase 9, plan stub): Billing is still phase 10, so a university's level is a fail-closed stub. `platform_config`
+  `uni.test_plans` = `{university_id: "basic"|"growth"|"campus"}` (SQL only, empty in production). `private.uni_plan(u)` is
+  `free` unless the university is claimed (has an owner) and listed there. `private.uni_entitled(u, key)` maps the plan through a
+  fixed matrix for known keys only (`uni.dashboard`, `uni.exports`, `uni.student_records`, `uni.skills_gap`, `uni.outcomes`,
+  `uni.faculty_panel`, `uni.benchmark`, `uni.accreditation`); an unknown key is denied. `private.uni_limit(u, key)`:
+  `uni.admin_seats` 1/2/5/10, `uni.hackathons` 0/0/2/4, `uni.job_fairs` 0/0/1/2 (free/Basic/Growth/Campus). The student key
+  `privacy.record_viewers` uses the existing `has_entitlement` test grants. Phase 10 replaces the body of `uni_plan()`.
+- 2026-10-04 (phase 9, "per year"): Fair and hackathon quotas count a rolling 365 days from each one's creation (cancelled drafts
+  don't count) until phase 10 switches to the licence year.
+- 2026-10-04 (phase 9, admin accounts): University admins have the `university_admin` account role: never scored, never on
+  leaderboards, no chat, created only through a claim or an invite. An existing faculty account may accept an admin invite and keep
+  teaching (the portal comes from its `university_admins` row). Students can never be admins. Two-factor is required at the route
+  (`proxy.ts` for `/uni`) and in SQL (`private.require_uni` reads the session's `aal`).
+- 2026-10-04 (phase 9, claims): `/uni/claim`: sign up with an email on one of that university's `faculty` or `both` domains, verify,
+  set up two-factor, then upload the authorisation letter or MoU (PDF, WebP after re-encode; **5 MB max**, Free plan storage) with a
+  title. Accounts staff (two-factor) approve or reject with a reason at `/ops/universities`. One open claim per university; a
+  claimed university refuses new claims ("ask your owner for an invite"). Letters are deleted 90 days after the decision.
+  Disputes (two claims for one university, an owner who left) are fixed by staff in SQL: `docs/university-claim-disputes.md`.
+- 2026-10-04 (phase 9, invites): Owner and admins invite by email on one of the university's domains; 7-day single-use tokens,
+  only the SHA-256 stored, the link also shown on screen. Pending invites count toward `uni.admin_seats`, so a free university has
+  only its owner. The owner can hand ownership to an existing admin (two-factor, audited).
+- 2026-10-04 (phase 9, domains): The owner or an admin requests an extra domain with a reason; accounts staff approve it at
+  `/ops/universities` and signup accepts it the moment it is inserted (source `ops`, never touched by the HEC sync). **Public email
+  domains** (the phase 1 `personal_email_domains` list) can never become a university domain: refused in the app and by a trigger on
+  `university_domains`.
+- 2026-10-04 (phase 9, ecosphere visibility): `/u/[slug]` is for signed-in users only. Anyone signed in sees the branding, welcome,
+  published pages and global events; announcements, university-only events, the teachers directory and the University Feed stay
+  with that university's members.
+- 2026-10-04 (phase 9, modules): Feed off: that university's students lose the University Feed and can't post to "my university"
+  (Global stays). Events off: no university events listed or created. Project ideas off: university-audience ideas are hidden from
+  its students (global ideas still show). Leaderboard off: the University scope disappears for them (ranking unchanged). Teachers
+  directory and job board only toggle their ecosphere sections. Turning a module off never deletes data.
+- 2026-10-04 (phase 9, branding): Primary and accent colours are used only inside `/u/[slug]`, never in the app shell. Each must
+  reach 4.5:1 against `bg/page` in light (#F0EFED) and dark (#0A0A09) themes, checked by Zod in the action and by
+  `private.contrast_ratio` in SQL on save, so a direct RPC can't bypass it. Logo and cover go through the sharp re-encode into a
+  public `university-media` bucket.
+- 2026-10-04 (phase 9, slug): Owner or admin may change the slug at most once every 30 days; reserved words are refused and **old
+  slugs stay reserved for 90 days** (`university_slug_history`) so nobody else can take them; they don't redirect.
+- 2026-10-04 (phase 9, departments): `departments(university_id, name)` and `programmes(department_id, name)`;
+  `profiles.department_id` added, `profiles.department` text kept in sync by trigger so leaderboards, Explore and recruiter filters
+  keep working (tested). When a university adds a department, existing profiles whose text matches (case-insensitive) are linked,
+  and the migration backfills the same way. Students whose department isn't on their university's list are "Unassigned"
+  (coordinators don't see them) and get a Home prompt. Batch labels are display only.
+- 2026-10-04 (phase 9, onboarding questions): Up to 3 per university, **multiple choice only (2 to 6 options), no free text**,
+  optional to answer. New students see them after step 1 of onboarding, existing students as a dismissible Home card. Admins see
+  counts only (groups of 5 or more); never shown to recruiters or other users, never used for targeting. **Sensitive topics
+  (religion, ethnicity, health, politics, income) are not allowed**: the editor states the rule, a SQL keyword check refuses the
+  obvious cases, and staff can remove any question at `/ops/universities` (audited).
+- 2026-10-04 (phase 9, awards): Owner and admins award any of their students, coordinators their own department; name, description
+  and an icon from a fixed Phosphor set (no uploads). Shown on the profile and as the optional `awards` field of the CV snapshot
+  ("awarded by {University}") from the next version; revoking drops it from the next version. **Awards never affect ranking**
+  (no score function reads `badge_awards`; said in code comments and here).
+- 2026-10-04 (phase 9, calendar): Owner and admins add semesters (display) and exam periods with the existing rules (≤ 45 days, no
+  overlap, reason, audited) plus at most 90 exam days per calendar year per university. `/ops/exam-periods` stays for staff.
+- 2026-10-04 (phase 9, records): Growth and Campus only. Owners and admins see all their students, coordinators their own department,
+  career office and communications none. "Their students" = student accounts at that university, active or graduate. The list
+  `/uni/students` is Growth+ and not logged; every call of `university_student_record()` writes one log row (no dedupe). **No bulk
+  export of individual records** (no CSV of the list, no multi-student function) and **record opens are rate-limited to 100 an hour
+  per admin**. Logs are kept 2 years (`uni-records-purge`). Never visible: chat, L0 skills, recruiter notes, which recruiters
+  contacted a student, individual CV views.
+- 2026-10-04 (phase 9, record viewers): Pro students (`privacy.record_viewers`) see the viewer's name, role and time for the last 12
+  months in Settings → Privacy; others see what Pro adds and no count.
+- 2026-10-04 (phase 9, dashboards): One nightly job (`uni-stats`, 03:37 PKT, after ranking) fills `uni_stats` rows (tables, not
+  materialised views, so every read goes through one function that checks the plan). Any group under 5 shows as "fewer than 5",
+  **and a count that could be derived by subtracting the visible ones from a visible total is suppressed too** (when exactly one
+  group in a breakdown is hidden, the next-smallest is hidden with it). Free universities get Home numbers only and a locked
+  dashboard; Basic/Growth/Campus follow the 5.23 table.
+- 2026-10-04 (phase 9, faculty panel): Growth+ shows counts per teacher (reviews, supervisions, code checks, endorsements, ideas) plus
+  department totals; never student content.
+- 2026-10-04 (phase 9, exports): CSV per dashboard area (Growth+) and a PDF of the dashboard through the CV Chromium renderer. **CSV
+  cells starting with `=`, `+`, `-` or `@` are prefixed with `'`** (formula injection). Accreditation templates are deferred until
+  partners confirm the content.
+- 2026-10-04 (phase 9, sponsorship): `final_year_batch` stays staff-only (it also drives graduation, phase 6). `/uni/sponsorship` shows
+  the eligible count and active grants (0 until phase 10); the owner can request a final-year batch change, applied by accounts staff at
+  `/ops/graduation`. `/uni/billing` shows the level and "write to Skilient". Invoices, activation and reminders are phase 10.
+- 2026-10-04 (phase 9, announcements): Posts of type `announcement` with audience university, plus `announcement_meta` (category,
+  expiry ≤ 90 days) and `announcement_targets` (departments and/or batches; none = whole university, students and faculty). Owner,
+  admins and communications post; coordinators for their own department only. Never ranked or surveyed; one pinned per university at
+  a time (≤ 7 days), shown above the platform pin. In-app plus the daily digest, never instant email (60-a-day cap). **At most 3
+  announcements a day per university.**
+- 2026-10-04 (phase 9, events): New `events` and `event_registrations` (the post-event `event_rsvps` stays). Types talk, workshop,
+  hackathon, competition, other; scope university or global; owner, admins and communications create them. Capacity is enforced in
+  `rsvp_event()` with a row lock, no waitlist; reminder in-app 24 hours before. Check-in: `/events/[id]/check-in` shows a QR of an
+  HMAC token that rotates every 30 s (the previous window also accepted); the phone camera opens `/events/[id]/attend?t=…`; walk-ins
+  are registered while seats remain. Attendance feeds records and dashboards.
+- 2026-10-04 (phase 9, moderation hide): Owners and admins hide a University Feed post at their university, a comment on one, or a
+  student's event post; it is hidden from everyone but the author at once and opens a Skilient report case with the reason. **The
+  author is told (in-app) that the university hid it and why; Skilient staff can restore it** (restoring clears the hide; removing
+  removes it as usual); every hide and reversal is in `ops_audit_log`-style history (`university_hides`) visible to staff.
+  `/uni/moderation` lists cases on their content with category, status and outcome, never the reporter.
+- 2026-10-04 (phase 9, hackathons): Competitions gain `host_type` (org|university), `university_id`, nullable `org_id`. Owner, admins
+  and career office create them against `uni.hackathons`; no Skilient review (live on publish); 1 to 22 days; own students unless
+  opened to other universities; 1 to 5 approved teachers of that university judge, final score = average; L3 evidence and winner
+  badge as phase 8; teams submit a repository URL (GitHub App repos stay deferred).
+- 2026-10-04 (phase 9, fair companies): Invited by email; the company signs up as a normal recruiter and its booth opens only once
+  Skilient verifies the organisation; no plan needed. During the fair and 14 days after, the company sees the name, department, batch,
+  tier and verified skills of students in its queue or with a booked slot, and chats with students it called; students are told this
+  when they join. **A student who leaves a company's queue disappears from that company's view at once, except for interviews already
+  held.**
+- 2026-10-04 (phase 9, queues): The university's students plus graduates from the last 12 months; at most 3 queues at once; "Call
+  next" opens a DM labelled with the company and fair; no answer in 5 minutes = skipped; one interview slot per booth per student; a
+  per-booth row lock keeps positions 1..n with no gaps or duplicates under 200 concurrent joins (tested with 200 parallel PostgREST
+  calls); Realtime updates.
+- 2026-10-04 (phase 9, fair report): Attendance, conversations, interviews and hires within 90 days (phase 8 `hires`); student
+  breakdowns groups of 5+; owner, admins and career office.
+- 2026-10-04 (phase 9, roles): As the 5.23 table: owner everything; admin everything but billing and ownership; career office fairs,
+  recruiter invitations, placement analytics (outcomes) and hackathons; coordinator teacher approvals, announcements, dashboard and
+  records for their own department; communications announcements and events. Hiding content is owner and admin only.
+- 2026-10-04 (phase 9, deferred): University-admin guided tour, accreditation templates, GitHub App hackathon repositories, billing,
+  invoices and sponsorship grants (phase 10), and the full `/ops/universities` tabs (phase 11; this phase builds claims, domain
+  requests and question removal only).
+- 2026-10-04 (phase 9, deviations as built):
+  - **Brand colours per theme.** No single colour reaches 4.5:1 on both page backgrounds (#F0EFED and #0A0A09), so primary and
+    accent each have a light-mode and a dark-mode value, each checked against its own page (Zod and `private.brand_colour_error`).
+  - **Claim letters are PDF only** (5 MB; the browser uploads into the caller's folder and the action checks the `%PDF-` bytes, like
+    credentials). Paper letters are scanned to PDF.
+  - **Onboarding questions show as a Home card** for every student with an unanswered question (dismissible), not as a separate
+    onboarding screen, so the onboarding step numbers and gate stay unchanged.
+  - **Hiding content happens in `/uni/moderation`** (recent University Feed posts and comments with a Hide form): university-official
+    accounts can't open the student feed. Faculty who are also admins use the same page.
+  - **Department membership is enforced by a trigger**: once a university has its own list, a student's department must be on it
+    (`profiles_tcheck_department`); the Zod schema accepts any 2 to 80 characters and the pickers show the university's list.
+  - **Organisers see counts only** for events (going, checked in), never a list of names, so a Basic university gets no
+    individual data through events.
+  - **Fair invites need an existing recruiter account on the invited domain** to accept (`/fairs/invite`); the booth opens to
+    students once Skilient verifies the organisation.
+  - Admin actions go to `university_audit_log` (readable by the owner and admins in Settings → Admins); staff actions stay in
+    `ops_audit_log` (append-only, `on delete restrict`), which would otherwise block deleting a former admin's account.

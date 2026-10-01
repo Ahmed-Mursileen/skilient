@@ -314,6 +314,37 @@ export function describeNotification(n: NotificationInput): NotificationText {
         ? { text: `Your team won ${title}. The winner badge counts toward L4, and your submission earned L3 evidence.`, href: `/competitions/${n.entityId}`, subject: `You won ${title}` }
         : { text: `Results are in for ${title}. Your submission earned L3 evidence.`, href: `/competitions/${n.entityId}`, subject: `Results for ${title}` };
     }
+    // Phase 9: university portal.
+    case "uni_claim_decided":
+      return n.data.approved === true
+        ? { text: "Your university claim is approved. You're the owner of its portal.", href: "/uni", subject: "Your university portal is ready" }
+        : { text: `Your university claim wasn't approved${str(n.data.reason) ? `: ${str(n.data.reason)}` : ""}.`, href: "/uni/claim", subject: "About your university claim" };
+    case "uni_admin_joined":
+      return { text: `${who} joined your university portal.`, href: "/uni/settings/admins", subject: "A new admin joined" };
+    case "uni_domain_decided":
+      return { text: `${str(n.data.domain) ?? "Your domain"} was ${n.data.approved === true ? "added: people can sign up with it now" : "not added"}${str(n.data.reason) ? ` (${str(n.data.reason)})` : ""}.`, href: "/uni/settings/domains", subject: "About your domain request" };
+    case "uni_batch_decided":
+      return { text: `Your final-year batch request was ${n.data.approved === true ? "applied" : "not applied"}${str(n.data.reason) ? `: ${str(n.data.reason)}` : ""}.`, href: "/uni/sponsorship", subject: "About your final-year batch" };
+    case "uni_announcement":
+      return { text: `${str(n.data.university) ?? "Your university"}: ${str(n.data.excerpt) ?? "a new announcement"}`, href: `/post/${n.entityId}`, subject: `Announcement from ${str(n.data.university) ?? "your university"}` };
+    case "uni_award":
+      return { text: `${str(n.data.university) ?? "Your university"} gave you the ${str(n.data.award) ?? "an"} award. It shows on your profile and your next CV.`, href: "/me", subject: `You received ${str(n.data.award) ?? "an award"}` };
+    case "uni_question_removed":
+      return { text: `Skilient removed your onboarding question "${str(n.data.prompt) ?? ""}": ${str(n.data.reason) ?? ""}`, href: "/uni/settings/ecosphere", subject: "An onboarding question was removed" };
+    case "uni_event_reminder":
+      return { text: `Tomorrow: ${str(n.data.title) ?? "an event you're going to"}.`, href: `/events/${n.entityId}`, subject: `Reminder: ${str(n.data.title) ?? "your event"}` };
+    case "uni_event_cancelled":
+      return { text: `${str(n.data.title) ?? "An event you were going to"} was cancelled.`, href: `/events/${n.entityId}`, subject: "An event was cancelled" };
+    case "content_hidden_by_university":
+      return { text: `${str(n.data.university) ?? "Your university"} hid your ${n.data.kind === "comment" ? "comment" : "post"} in the University Feed: ${str(n.data.reason) ?? ""}. Skilient will review it.`, href: str(n.data.post_id) ? `/post/${str(n.data.post_id)}` : "/feed", subject: "Your university hid your post" };
+    case "content_restored":
+      return { text: `Skilient reviewed your ${n.data.kind === "comment" ? "comment" : "post"} and restored it.`, href: "/feed", subject: "Your post is back" };
+    case "hackathon_judge":
+      return { text: `${who} asked you to judge ${str(n.data.title) ?? "a hackathon"}.`, href: "/teach/judging", subject: "You're judging a hackathon" };
+    case "fair_invite":
+      return { text: "Your company was invited to a university job fair.", href: "/recruit", subject: "Job fair invite" };
+    case "fair_called":
+      return { text: `${str(n.data.company) ?? "A company"} is calling you at ${str(n.data.fair) ?? "the job fair"}. Answer within 5 minutes.`, href: `/fairs/${n.entityId}`, subject: `${str(n.data.company) ?? "A company"} is calling you` };
     default:
       return { text: "You have a new notification.", href: "/notifications", subject: "New activity on Skilient" };
   }

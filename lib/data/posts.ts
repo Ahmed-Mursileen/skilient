@@ -357,3 +357,12 @@ export async function getFollowedUpdates(): Promise<FollowedUpdate[]> {
     })),
   }));
 }
+
+/** The caller's own university's pinned announcement (phase 9), shown above the platform pin. */
+export async function getPinnedUniversityAnnouncement(): Promise<PostCardData | null> {
+  const supabase = await createClient();
+  const { data } = await supabase.rpc("pinned_university_announcement" as never);
+  if (!data) return null;
+  const [card] = await getPostCards([data as string]);
+  return card ?? null;
+}

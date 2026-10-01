@@ -1,4 +1,5 @@
 import {
+  CalendarBlank,
   Bell,
   Briefcase,
   ChatCircleDots,
@@ -77,6 +78,7 @@ export const PRIMARY_NAV: NavItem[] = [
 export const SECONDARY_NAV: NavItem[] = [
   { key: "explore", label: "Explore", description: "Find people, ventures and skills.", href: "/explore", icon: MagnifyingGlass, match: ["/explore"] },
   { key: "leaderboard", label: "Leaderboard", description: "Where you stand at your university and overall.", href: "/leaderboard", icon: Medal, match: ["/leaderboard"] },
+  { key: "events", label: "Events", description: "Talks, workshops and fairs at your university and beyond.", href: "/events", icon: CalendarBlank, match: ["/events", "/u", "/fairs"] },
   { key: "friends", label: "Friends", description: "Your friends and their requests.", href: "/friends", icon: UsersThree, badge: "friends", match: ["/friends"] },
   { key: "notifications", label: "Notifications", description: "What happened since you were last here.", href: "/notifications", icon: Bell, badge: "notifications", match: ["/notifications"] },
   { key: "feedback", label: "Feedback", description: "Tell us what is confusing or broken.", href: "/feedback", icon: ChatCircleDots, match: ["/feedback"] },

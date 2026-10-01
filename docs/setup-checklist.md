@@ -185,6 +185,44 @@ Recruiter portal (decisions.md 2026-10-03). Nothing here is needed to merge; it 
   notices). Without them the admin still sees the invite link on screen.
 - [ ] **If a recruiter loses their authenticator**, follow `docs/recruiter-2fa-recovery.md` (the staff reset is phase 11).
 
+## Phase 9
+
+University portal (decisions.md "Phase 9"). Nothing needs a new key or secret.
+
+- [ ] **First university owner (claim).** The official signs up at `/signup?role=university_admin` with an email on a
+      `faculty` or `both` domain of their university, confirms it, turns on two-factor in Settings → Security, and sends the
+      authorisation letter (PDF, up to 5 MB) at `/uni/claim`. An `accounts` staff member (two-factor) opens
+      `/ops/universities`, checks the letter against the university's public pages and records the decision with a reason.
+      If the official's email domain isn't listed yet, add it first (below).
+- [ ] **Add a domain by hand** (only when no owner exists yet to ask for it; owners use Settings → Domains). Public webmail
+      domains are refused by a trigger. In the SQL editor:
+      ```sql
+      insert into public.university_domains (university_id, domain, kind, source)
+      select id, 'staff.example.edu.pk', 'faculty', 'ops' from public.universities where slug = 'example-university';
+      ```
+- [ ] **Test plans (optional, never in production).** A claimed university's licence level until billing (phase 10):
+      ```sql
+      insert into public.platform_config (key, version, value, reason)
+      select 'uni.test_plans', max(version) + 1,
+             (select value from public.platform_config where key = 'uni.test_plans' order by version desc limit 1)
+               || jsonb_build_object((select id::text from public.universities where slug = 'nutech'), 'growth'),
+             'Phase 9 test plan for NUTECH'
+        from public.platform_config where key = 'uni.test_plans';
+      ```
+      Levels: `basic`, `growth`, `campus`; any other value, or an unclaimed university, is `free`. To remove it, insert a new
+      version whose value is the latest value minus that key (`value - '<university id>'`).
+- [ ] **Test grant for a Pro student's record-viewer list (optional):**
+      ```sql
+      insert into public.platform_config (key, version, value, reason)
+      select 'entitlements.test_grants', max(version) + 1,
+             (select value from public.platform_config where key = 'entitlements.test_grants' order by version desc limit 1)
+               || jsonb_build_object('privacy.record_viewers', jsonb_build_array('<student user id>')),
+             'Phase 9 test grant'
+        from public.platform_config where key = 'entitlements.test_grants';
+      ```
+- [ ] **Disputes** (two claims for one university, or an owner who left): follow `docs/university-claim-disputes.md`.
+- [ ] Before launch: the nightly `uni-stats` job (03:37 PKT) fills the dashboards; nothing shows until its first run.
+
 ## Before phase 10 ⏳
 
 - [ ] **Company registration** (needed by payment gateways).

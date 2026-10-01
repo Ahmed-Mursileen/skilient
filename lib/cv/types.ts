@@ -52,4 +52,6 @@ export interface CvSnapshotV1 {
   endorsements: { endorser: string; skill: string; venture: string; note: string | null; date: string }[];
   credentials: { title: string; issuer: string; issued: string; expires: string | null }[];
   education: { university: string; department: string | null; graduation_year: number | null };
+  /** University awards (phase 9), in the next version after they are granted. Never part of ranking. */
+  awards?: { name: string; university: string; awarded: string }[];
 }

@@ -1,0 +1,5 @@
+/* University ecosphere brand colours (PRD 5.23): only inside .ecosphere, one value per theme, each checked at 4.5:1. */
+.ecosphere .eco-primary { color: var(--eco-primary-light); }
+.ecosphere .eco-accent { color: var(--eco-accent-light); }
+.dark .ecosphere .eco-primary { color: var(--eco-primary-dark); }
+.dark .ecosphere .eco-accent { color: var(--eco-accent-dark); }

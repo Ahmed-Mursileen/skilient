@@ -96,7 +96,18 @@ describe("decideRoute", () => {
     expect(requiresTwoFactor("/ops/queues")).toBe(true);
     expect(requiresTwoFactor("/opsx")).toBe(false);
     expect(decideRoute(at("/ops"))).toEqual({ type: "redirect", to: "/settings/security?required=1" });
-    expect(decideRoute(at("/uni/students", { aal: "aal2" }))).toEqual({ type: "next" });
+    const official = { ...done, role: "university_admin" };
+    expect(decideRoute(at("/uni/students", { aal: "aal2", state: official }))).toEqual({ type: "next" });
+    expect(decideRoute(at("/uni/students", { state: official }))).toEqual({ type: "redirect", to: "/settings/security?required=1" });
+  });
+
+  it("keeps university officials in their areas and students out of /uni (phase 9)", () => {
+    const official = { ...done, role: "university_admin" };
+    expect(homeFor(official)).toBe("/uni");
+    expect(decideRoute(at("/feed", { aal: "aal2", state: official }))).toEqual({ type: "redirect", to: "/uni" });
+    expect(decideRoute(at("/events", { aal: "aal2", state: official }))).toEqual({ type: "next" });
+    expect(decideRoute(at("/uni", { aal: "aal2" }))).toEqual({ type: "redirect", to: "/feed" });
+    expect(decideRoute(at("/fairs/x", { aal: "aal2", state: { ...done, role: "recruiter" } }))).toEqual({ type: "next" });
   });
 
   it("blocks everything behind a new agreement version", () => {

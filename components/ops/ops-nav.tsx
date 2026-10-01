@@ -13,6 +13,7 @@ export function OpsNav({ moderator, trust, accounts }: { moderator: boolean; tru
     trust && { href: "/ops/evidence", label: "Evidence", active: pathname.startsWith("/ops/evidence") },
     (accounts || trust) && { href: "/ops/teachers", label: "Teachers", active: pathname.startsWith("/ops/teachers") },
     accounts && { href: "/ops/orgs", label: "Organisations", active: pathname.startsWith("/ops/orgs") },
+    (accounts || moderator) && { href: "/ops/universities", label: "Universities", active: pathname.startsWith("/ops/universities") },
     accounts && { href: "/ops/exam-periods", label: "Exam periods", active: pathname.startsWith("/ops/exam-periods") },
     accounts && { href: "/ops/graduation", label: "Graduation", active: pathname.startsWith("/ops/graduation") },
     { href: "/ops/feedback", label: "Feedback", active: pathname.startsWith("/ops/feedback") },

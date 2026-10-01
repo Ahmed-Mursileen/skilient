@@ -42,11 +42,13 @@ export function ProfileSettingsForm({
   universityName,
   avatarUrl,
   coverUrl,
+  departments,
 }: {
   values: Values;
   universityName: string | null;
   avatarUrl: string | null;
   coverUrl: string | null;
+  departments?: string[];
 }) {
   const router = useRouter();
   const [dirty, setDirty] = useState(false);
@@ -115,7 +117,7 @@ export function ProfileSettingsForm({
         </Section>
 
         <Section title="Studies" description={universityName ? `At ${universityName}. Your university comes from your university email.` : undefined}>
-          <DepartmentSelect defaultValue={values.department} error={fields.department} />
+          <DepartmentSelect defaultValue={values.department} error={fields.department} options={departments} />
           <Field id="programme" label="Programme" error={fields.programme}>
             <Input id="programme" name="programme" maxLength={80} defaultValue={values.programme ?? ""} />
           </Field>
