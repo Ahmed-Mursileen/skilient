@@ -49,6 +49,7 @@ export function UniversityStep(props: {
   programme: string | null;
   graduationYear: number | null;
   campus: string | null;
+  departments?: string[];
 }) {
   return (
     <StepForm action={saveUniversityStep}>
@@ -80,7 +81,7 @@ export function UniversityStep(props: {
               {errors.universityId ? <FieldError>{errors.universityId}</FieldError> : null}
             </div>
           )}
-          <DepartmentSelect defaultValue={props.department} error={errors.department} />
+          <DepartmentSelect defaultValue={props.department} error={errors.department} options={props.departments} />
           <Field id="programme" label="Programme" helper="For example BS Computer Science or BBA." error={errors.programme}>
             <Input id="programme" name="programme" maxLength={80} defaultValue={props.programme ?? ""} aria-describedby="programme-helper" />
           </Field>

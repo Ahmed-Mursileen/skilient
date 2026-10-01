@@ -14,7 +14,7 @@ import { detectionMessage, detectUniversity } from "@/lib/auth/email-domain";
 import type { Agreement } from "@/lib/data/agreement";
 import { useDomainDirectory } from "@/lib/hooks/use-domain-directory";
 
-export function SignupForm({ siteKey, agreement, role = "student" }: { siteKey: string | null; agreement: Agreement | null; role?: "student" | "faculty" }) {
+export function SignupForm({ siteKey, agreement, role = "student" }: { siteKey: string | null; agreement: Agreement | null; role?: "student" | "faculty" | "university_admin" }) {
   const directory = useDomainDirectory();
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -124,7 +124,7 @@ export function SignupForm({ siteKey, agreement, role = "student" }: { siteKey: 
             <p className="flex items-start gap-1.5 text-body-sm text-text-secondary">
               <Buildings aria-hidden weight="bold" className="mt-0.5 size-4 shrink-0 text-text-muted" />
               <span>
-                Signing up as {role === "faculty" ? "faculty" : "a student"} of <strong className="font-semibold text-text-primary">{chosen.name}</strong>.{" "}
+                Signing up as {role === "faculty" ? "faculty" : role === "university_admin" ? "an official" : "a student"} of <strong className="font-semibold text-text-primary">{chosen.name}</strong>.{" "}
                 {!shared ? (
                   <button
                     type="button"
@@ -211,7 +211,11 @@ export function SignupForm({ siteKey, agreement, role = "student" }: { siteKey: 
         Create account
       </Button>
 
-      {role === "faculty" ? (
+      {role === "university_admin" ? (
+        <p className="text-center text-body-sm text-text-muted">
+          University officials use their official email. Next you turn on two-factor sign-in and send your authorisation letter.
+        </p>
+      ) : role === "faculty" ? (
         <p className="text-center text-body-sm text-text-muted">
           Faculty sign up with their university email, then ask for the teacher role.{" "}
           <Link href="/signup" className="font-semibold text-text-primary underline underline-offset-4">

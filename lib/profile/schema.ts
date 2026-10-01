@@ -28,7 +28,9 @@ export const fullNameSchema = z
   .min(2, "Enter your name (2 to 60 characters).")
   .max(60, "Keep your name under 60 characters.");
 export const bioSchema = optionalText(280, "Keep your intro under 280 characters.");
-export const departmentSchema = z.enum(DEPARTMENTS, { error: "Choose your department." });
+// The platform list, or a university's own list (phase 9; the database checks membership of that list).
+export const departmentSchema = z.string({ error: "Choose your department." }).trim().min(2, "Choose your department.").max(80, "Choose your department.");
+export { DEPARTMENTS };
 export const programmeSchema = optionalText(80, "Keep the programme under 80 characters.");
 export const campusSchema = optionalText(60, "Keep the campus under 60 characters.");
 export const graduationYearSchema = z.coerce

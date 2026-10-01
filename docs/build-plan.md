@@ -166,9 +166,11 @@ Legend: 📖 = PRD files to read (in `docs/prd/`), ✅ = done-when checks.
 
 📖 `05-22-multi-university-and-global-feed.md`, `05-23-university-portal.md`
 
-- [ ] Claim flow, admin roles, ecosphere customisation (contrast-checked), student records with access log, dashboards (groups ≥ 5), announcements targeting, events + QR check-in, job fairs, hackathons, moderation hide
+- [x] Claim flow, admin roles, ecosphere customisation (contrast-checked), student records with access log, dashboards (groups ≥ 5), announcements targeting, events + QR check-in, job fairs, hackathons, moderation hide
 
 ✅ A Basic university gets no individual records via direct RPC · every record view is logged · a job-fair queue stays consistent with 200 concurrent students
+
+*Status 2026-10-04: pgTAP `43_university_portal` (Basic refused even through the private function; one log row per view; contrast; hide reaches the queue; 3 announcements a day), `tests/worker/fair-queue.test.ts` (200 parallel PostgREST joins get positions 1..200), E2E `uni.spec.ts` with axe in both themes. Deferred as agreed: university-admin tour, accreditation templates, GitHub App hackathon repos, billing and sponsorship grants (phase 10), full /ops/universities tabs (phase 11).*
 
 ## Phase 10 — Billing
 

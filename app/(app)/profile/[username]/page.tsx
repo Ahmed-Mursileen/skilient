@@ -6,6 +6,7 @@ import { SkillList } from "@/components/skills/skill-list";
 import { EmptyState } from "@/components/ui";
 import { getProfileCredentials } from "@/lib/data/credentials";
 import { getEndorsements } from "@/lib/data/endorsements";
+import { getAwardsFor } from "@/lib/data/uni";
 import { getProfile } from "@/lib/data/profiles";
 import { getProfileSkills } from "@/lib/data/skills";
 import { LOOKING_FOR, VISIBILITY } from "@/lib/profile/options";
@@ -19,10 +20,11 @@ export default async function ProfileOverviewPage({ params }: PageProps<"/profil
   const lookup = await getProfile(username);
   if (lookup.kind !== "full") return null;
   const p = lookup.profile;
-  const [skills, endorsements, credentials] = await Promise.all([
+  const [skills, endorsements, credentials, awards] = await Promise.all([
     getProfileSkills(p.userId, p.isOwner),
     getEndorsements(p.userId),
     getProfileCredentials(p.userId),
+    getAwardsFor(p.userId).catch(() => []),
   ]);
   const openTo = LOOKING_FOR.filter((o) => p.lookingFor.includes(o.value)).map((o) => o.label);
   const details = [
@@ -109,6 +111,19 @@ export default async function ProfileOverviewPage({ params }: PageProps<"/profil
               None approved yet. Certificates you add are checked by a Skilient reviewer before they show here.
             </p>
           )}
+        </section>
+      ) : null}
+      {awards.length ? (
+        <section aria-labelledby="awards" data-testid="profile-awards">
+          <h2 id="awards" className="mb-3 text-h4">Awards</h2>
+          <ul className="flex flex-col gap-2">
+            {awards.map((a) => (
+              <li key={a.id} className="text-body">
+                <span className="font-semibold">{a.name}</span> <span className="text-text-secondary">awarded by {a.university}</span>
+                {a.description ? <span className="block text-body-sm text-text-secondary">{a.description}</span> : null}
+              </li>
+            ))}
+          </ul>
         </section>
       ) : null}
       {details.length ? (
