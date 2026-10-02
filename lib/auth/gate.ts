@@ -43,6 +43,8 @@ export function homeFor(state: GateState): string {
   // is the recruiter portal (PRD 5.20), where /recruit sends them on to /org/join until they
   // belong to an organisation.
   if (state.role === "recruiter") return "/recruit";
+  // University officials' home is their portal; without a seat it sends them on to /uni/claim.
+  if (state.role === "university_admin") return "/uni";
   return state.role === "faculty" ? "/teach" : "/feed";
 }
 
@@ -93,7 +95,10 @@ export function requiresTwoFactor(pathname: string): boolean {
 }
 
 /** The only areas a recruiter account uses (PRD 5.20): everything else is for students. */
-const RECRUITER_PREFIXES = ["/recruit", "/org", "/companies", "/chat", "/notifications", "/settings", "/feedback"];
+const RECRUITER_PREFIXES = ["/recruit", "/org", "/companies", "/chat", "/notifications", "/settings", "/feedback", "/fairs", "/billing"];
+
+/** The areas a university-official account uses (PRD 5.23): its portal, ecospheres and events. */
+const UNI_ADMIN_PREFIXES = ["/uni", "/u", "/events", "/notifications", "/settings", "/feedback", "/competitions", "/billing"];
 
 /** Who may open the recruiter portal: recruiter accounts only. */
 function isRecruiterArea(pathname: string): boolean {
@@ -163,6 +168,9 @@ export function decideRoute({ pathname, path, signedIn, aal, hasVerifiedFactor, 
   // Recruiter accounts stay in their own area; nobody else opens it.
   if (state.role === "recruiter" && !RECRUITER_PREFIXES.some((p) => matches(pathname, p))) return redirect("/recruit");
   if (isRecruiterArea(pathname) && state.role !== "recruiter") return redirect(homeFor(state));
+  if (state.role === "university_admin" && !UNI_ADMIN_PREFIXES.some((p) => matches(pathname, p))) return redirect("/uni");
+  // Students and recruiters never hold a portal seat (faculty may).
+  if (matches(pathname, "/uni") && (state.role === "student" || state.role === "recruiter")) return redirect(homeFor(state));
 
   return next;
 }

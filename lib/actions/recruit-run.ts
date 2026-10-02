@@ -3,7 +3,7 @@ import "server-only";
 import type { z } from "zod";
 import { actionContext } from "@/lib/actions/context";
 import { fail, fieldErrors, type ActionResult } from "@/lib/actions/result";
-import { call, NO_SESSION, signedIn } from "@/lib/actions/rpc";
+import { call, NO_SESSION, paymentRequired, signedIn } from "@/lib/actions/rpc";
 
 /**
  * The shape of every recruiter-portal action (CLAUDE.md "How to work" 3): Zod input, the session
@@ -20,6 +20,8 @@ export async function rpcAction<S extends z.ZodType, T = null>(opts: {
   invalidMessage?: string;
   /** The input wraps the form values under this key (`{ id, v }`): inline errors name the form's own fields. */
   unwrap?: string;
+  /** A paid action (lib/billing/registry.ts): the caller's plan must hold this key before anything runs. */
+  entitlement?: string;
 }): Promise<ActionResult<T>> {
   const ctx = await actionContext(opts.name);
   const parsed = opts.schema.safeParse(opts.input);
@@ -30,5 +32,9 @@ export async function rpcAction<S extends z.ZodType, T = null>(opts: {
   }
   const session = await signedIn(ctx);
   if (!session) return NO_SESSION;
+  if (opts.entitlement) {
+    const refused = await paymentRequired(ctx, session.supabase, session.userId, opts.entitlement);
+    if (refused) return refused;
+  }
   return call<T>(ctx, session.supabase, session.userId, opts.fn, opts.args(parsed.data), opts.revalidate ?? []);
 }

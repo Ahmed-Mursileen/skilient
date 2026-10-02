@@ -21,7 +21,8 @@ const FONTS: [family: string, weight: number, file: string][] = [
 ];
 
 let fontCss: string | null = null;
-function embeddedFonts(): string {
+/** Spectral and Barlow as data URIs: Chromium on Vercel has no system fonts. Also used by invoice PDFs. */
+export function embeddedFonts(): string {
   fontCss ??= FONTS.map(([family, weight, file]) => {
     const data = readFileSync(join(process.cwd(), "lib", "cv", "fonts", file)).toString("base64");
     return `@font-face { font-family: "${family}"; font-weight: ${weight}; font-style: normal; src: url(data:font/woff2;base64,${data}) format("woff2"); }`;

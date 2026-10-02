@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { actionContext } from "@/lib/actions/context";
 import { fail, ok, type ActionResult } from "@/lib/actions/result";
-import { call, NO_SESSION, signedIn } from "@/lib/actions/rpc";
+import { call, NO_SESSION, paymentRequired, signedIn } from "@/lib/actions/rpc";
 import { siteUrl } from "@/lib/cv/site";
 import { CV_SECTIONS } from "@/lib/cv/types";
 import { sha256Hex } from "@/lib/security/hash";
@@ -103,6 +103,10 @@ async function signAs(action: "reissue" | "refresh", name: string): Promise<Acti
   const ctx = await actionContext(name);
   const session = await signedIn(ctx);
   if (!session) return NO_SESSION;
+  if (action === "refresh") {
+    const refused = await paymentRequired(ctx, session.supabase, session.userId, "cv.refresh_on_demand");
+    if (refused) return refused;
+  }
   const { data, error } = await session.supabase.functions.invoke<{ code: string | null }>("cv-sign", { body: { action } });
   if (error) {
     const status = (error as { context?: { status?: number } }).context?.status ?? 0;
@@ -124,7 +128,7 @@ export async function reissueCv(): Promise<ActionResult<{ code: string | null }>
   return signAs("reissue", "cv.reissue");
 }
 
-/** Student Pro: a new version with today's data (stubbed off until phase 10). */
+/** Student Pro: a new version with today's data (registry key cv.refresh_on_demand). */
 export async function refreshCv(): Promise<ActionResult<{ code: string | null }>> {
   return signAs("refresh", "cv.refresh");
 }

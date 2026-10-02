@@ -1,0 +1,4 @@
+# False positives (decisions.md 2026-10-05): made-up delivery ids in the Safepay webhook fixtures of an earlier phase 10
+# commit, matched by the generic-api-key rule. The fixtures now use plain ids; the old commit stays in history.
+a0c22d981ac8676f23635e529353c6ac348f94aa:tests/fixtures/billing/safepay/refund.created.json:generic-api-key:1
+a0c22d981ac8676f23635e529353c6ac348f94aa:tests/fixtures/billing/safepay/payment.created.json:generic-api-key:1

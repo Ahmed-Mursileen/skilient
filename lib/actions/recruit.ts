@@ -144,17 +144,17 @@ export async function removeMember(userId: string): Promise<ActionResult> {
 // ---------------------------------------------------------------------------
 const listName = text(1, 60, "List name");
 export async function createShortlist(name: string): Promise<ActionResult<string>> {
-  return rpcAction<typeof listName, string>({ name: "recruit.create_shortlist", schema: listName, input: name, fn: "create_shortlist", args: (v) => ({ p_name: v }), revalidate: ["/recruit/shortlists"] });
+  return rpcAction<typeof listName, string>({ name: "recruit.create_shortlist", entitlement: "recruit.shortlists", schema: listName, input: name, fn: "create_shortlist", args: (v) => ({ p_name: v }), revalidate: ["/recruit/shortlists"] });
 }
 export async function renameShortlist(id: string, name: string): Promise<ActionResult> {
-  return rpcAction({ name: "recruit.rename_shortlist", schema: z.object({ id: uuid, name: listName }), input: { id, name }, fn: "rename_shortlist", args: (v) => ({ p_id: v.id, p_name: v.name }), revalidate: ["/recruit/shortlists"] });
+  return rpcAction({ name: "recruit.rename_shortlist", entitlement: "recruit.shortlists", schema: z.object({ id: uuid, name: listName }), input: { id, name }, fn: "rename_shortlist", args: (v) => ({ p_id: v.id, p_name: v.name }), revalidate: ["/recruit/shortlists"] });
 }
 export async function deleteShortlist(id: string): Promise<ActionResult> {
   return rpcAction({ name: "recruit.delete_shortlist", schema: uuid, input: id, fn: "delete_shortlist", args: (v) => ({ p_id: v }), revalidate: ["/recruit/shortlists"] });
 }
 export async function addToShortlist(listId: string, studentId: string): Promise<ActionResult<string | null>> {
   return rpcAction<z.ZodObject<{ listId: z.ZodUUID; studentId: z.ZodUUID }>, string | null>({
-    name: "recruit.shortlist_add",
+    name: "recruit.shortlist_add", entitlement: "recruit.shortlists",
     schema: z.object({ listId: uuid, studentId: uuid }),
     input: { listId, studentId },
     fn: "add_to_shortlist",
@@ -167,7 +167,7 @@ export async function removeFromShortlist(itemId: string): Promise<ActionResult>
 }
 export async function reorderShortlist(listId: string, itemIds: string[]): Promise<ActionResult> {
   return rpcAction({
-    name: "recruit.shortlist_reorder",
+    name: "recruit.shortlist_reorder", entitlement: "recruit.shortlists",
     schema: z.object({ listId: uuid, itemIds: z.array(uuid).max(500) }),
     input: { listId, itemIds },
     fn: "reorder_shortlist",
@@ -177,7 +177,7 @@ export async function reorderShortlist(listId: string, itemIds: string[]): Promi
 }
 export async function addNote(studentId: string, body: string): Promise<ActionResult<string>> {
   return rpcAction<z.ZodObject<{ studentId: z.ZodUUID; body: z.ZodString }>, string>({
-    name: "recruit.add_note",
+    name: "recruit.add_note", entitlement: "recruit.shortlists",
     schema: z.object({ studentId: uuid, body: text(1, 2000, "Note") }),
     input: { studentId, body },
     fn: "add_note",
@@ -200,7 +200,7 @@ const contactSchema = z.object({
 });
 export async function sendContactRequest(input: z.input<typeof contactSchema>): Promise<ActionResult<string>> {
   return rpcAction<typeof contactSchema, string>({
-    name: "recruit.send_contact",
+    name: "recruit.send_contact", entitlement: "contact.credits",
     schema: contactSchema,
     input,
     fn: "send_contact_request",
@@ -225,7 +225,7 @@ const filtersSchema = z.object({
 });
 export async function saveSearch(name: string, filters: z.input<typeof filtersSchema>, frequency: "daily" | "weekly"): Promise<ActionResult<string>> {
   return rpcAction<z.ZodObject<{ name: z.ZodString; filters: typeof filtersSchema; frequency: z.ZodEnum<{ daily: "daily"; weekly: "weekly" }> }>, string>({
-    name: "recruit.save_search",
+    name: "recruit.save_search", entitlement: "recruit.saved_searches",
     schema: z.object({ name: text(1, 60, "Name"), filters: filtersSchema, frequency: z.enum(["daily", "weekly"]) }),
     input: { name, filters, frequency },
     fn: "save_search",
@@ -362,7 +362,7 @@ const competitionSchema = z.object({
 export type CompetitionInput = z.input<typeof competitionSchema>;
 export async function saveCompetition(id: string | null, input: CompetitionInput): Promise<ActionResult<string>> {
   return rpcAction<z.ZodObject<{ id: z.ZodNullable<z.ZodUUID>; v: typeof competitionSchema }>, string>({
-    name: "recruit.save_competition",
+    name: "recruit.save_competition", entitlement: "competitions.run",
     unwrap: "v",
     schema: z.object({ id: uuid.nullable(), v: competitionSchema }),
     input: { id, v: input },
@@ -410,7 +410,7 @@ export async function finishCompetition(id: string): Promise<ActionResult> {
 export async function createApiToken(name: string): Promise<ActionResult<{ token: string }>> {
   const token = `skl_${randomBytes(32).toString("base64url")}`;
   const result = await rpcAction<typeof listName, string>({
-    name: "recruit.create_token",
+    name: "recruit.create_token", entitlement: "api.access",
     schema: listName,
     input: name,
     fn: "create_api_token",
@@ -424,7 +424,7 @@ export async function revokeApiToken(id: string): Promise<ActionResult> {
 }
 export async function createWebhook(url: string, events: string[]): Promise<ActionResult<{ id: string; secret: string }>> {
   return rpcAction<z.ZodObject<{ url: z.ZodString; events: z.ZodArray<z.ZodEnum<{ "application.created": "application.created"; "contact.accepted": "contact.accepted" }>> }>, { id: string; secret: string }>({
-    name: "recruit.create_webhook",
+    name: "recruit.create_webhook", entitlement: "api.access",
     schema: z.object({
       url: z.string().trim().regex(/^https:\/\/\S+$/, "The address must start with https://").max(300),
       events: z.array(z.enum(WEBHOOK_EVENTS)).min(1, "Pick at least one event."),

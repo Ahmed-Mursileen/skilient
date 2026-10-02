@@ -114,3 +114,25 @@ export function orgInviteEmail(to: string, d: { orgName: string; role: string; l
     text: `${body}\n\nCreate your account: ${d.link}\n\nThis link works once and expires in 7 days.\n`,
   };
 }
+
+export function uniAdminInviteEmail(to: string, d: { university: string; role: string; link: string }): Email {
+  const title = `${d.university} invited you to its Skilient portal`;
+  const body = `You've been added as ${d.role} on ${d.university}'s university portal on Skilient. Sign in, or create your account with this official email address, then turn on two-factor sign-in to join.`;
+  return {
+    to,
+    subject: title,
+    html: layout(title, p(body) + button(d.link, "Open the invite") + p("This link works once and expires in 7 days."), "If you weren't expecting this, you can ignore the email."),
+    text: `${body}\n\nOpen the invite: ${d.link}\n\nThis link works once and expires in 7 days.\n`,
+  };
+}
+
+export function fairInviteEmail(to: string, d: { university: string; fair: string; link: string }): Email {
+  const title = `${d.university} invites you to ${d.fair}`;
+  const body = `${d.university} invites your company to its job fair "${d.fair}" on Skilient. Fair access is free. Sign in or create a recruiter account with this work email, then accept the invite to open your booth.`;
+  return {
+    to,
+    subject: title,
+    html: layout(title, p(body) + button(d.link, "Open the invite"), "If you weren't expecting this, you can ignore the email."),
+    text: `${body}\n\nOpen the invite: ${d.link}\n`,
+  };
+}

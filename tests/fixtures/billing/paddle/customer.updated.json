@@ -1,0 +1,1 @@
+{"event_id":"evt_01hv8xcustomer000000000000a","event_type":"customer.updated","occurred_at":"2026-10-06T09:00:00.000000Z","notification_id":"ntf_01hv8xcustomer000000000000b","data":{"id":"ctm_01hv8wzz9y8x7w6v5u4t3s2r1q","email":"billing@example.com","status":"active"}}

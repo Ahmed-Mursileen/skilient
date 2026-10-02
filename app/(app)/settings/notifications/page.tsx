@@ -18,9 +18,17 @@ export default async function NotificationSettingsPage() {
         </p>
       </div>
       <div className="divide-y divide-border-muted overflow-hidden rounded-lg border border-border-default bg-bg-surface">
-        {settings.map((s) => (
-          <ChannelPicker key={s.category} {...s} />
-        ))}
+        {settings.map((s) =>
+          // Billing notices are transactional (decisions.md 2026-10-05): always emailed at once, not a choice.
+          s.category === "billing" ? (
+            <div key={s.category} className="flex flex-col gap-1 px-5 py-4" data-testid="pref-billing">
+              <p className="text-body font-semibold">{s.label}</p>
+              <p className="text-body-sm text-text-secondary">{s.description}</p>
+            </div>
+          ) : (
+            <ChannelPicker key={s.category} {...s} />
+          ),
+        )}
       </div>
     </main>
   );

@@ -133,11 +133,10 @@ test.describe("Verified CV", () => {
   test("a PDF export verifies, and one changed byte shows Altered", async ({ page }) => {
     const student = await createStudent({ domain: "nutech.edu.pk", fullName: "Sara Exported" });
     const code = await issue(student, "first");
-    // Test-only entitlement grant until phase 10 (decisions.md 2026-10-01).
+    // A staff grant of the Pro PDF export (phase 10 registry).
     await sql`
-      insert into public.platform_config (key, version, value, reason)
-      select 'entitlements.test_grants', max(version) + 1, jsonb_build_object('cv.pdf_export', jsonb_build_array(${student.id}::text)), 'E2E cv.spec'
-        from public.platform_config where key = 'entitlements.test_grants'`;
+      insert into public.entitlement_grants (subject_type, subject_id, key, value, source, ends_at, reason)
+      values ('user', ${student.id}, 'cv.pdf_export', 'true', 'admin', now() + interval '1 day', 'E2E cv.spec')`;
 
     await signInWithPassword(page, student.email, student.password);
     await page.goto("/me/cv");

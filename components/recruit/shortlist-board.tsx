@@ -1,5 +1,6 @@
 "use client";
 
+import { showUpgrade } from "@/components/billing/upgrade-sheet";
 import type { Route } from "next";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -27,7 +28,7 @@ export function NewShortlistForm() {
           if (r.ok) {
             setName("");
             router.push(`/recruit/shortlists/${r.data}` as Route);
-          } else setError(r.message);
+          } else if (!showUpgrade(r)) setError(r.message);
         });
       }}
     >
@@ -62,7 +63,7 @@ export function ShortlistBoard({ listId, name, items, jobs }: { listId: string; 
     setOrder(next);
     startTransition(async () => {
       const r = await reorderShortlist(listId, next.map((i) => i.id));
-      if (!r.ok) setMsg({ tone: "error", text: r.message });
+      if (!r.ok && !showUpgrade(r)) setMsg({ tone: "error", text: r.message });
     });
   }
 

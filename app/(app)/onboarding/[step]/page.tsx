@@ -51,6 +51,7 @@ export default async function OnboardingStepPage({ params, searchParams }: PageP
       .map((o) => ({ id: o.universities.id, name: o.universities.name }))
       .sort((a, b) => a.name.localeCompare(b.name));
     const current = choices.find((c) => c.id === profile?.university_id) ?? null;
+    const { data: own } = await supabase.from("departments").select("name").eq("university_id", current?.id ?? profile?.university_id ?? "").order("name");
     body = (
       <UniversityStep
         university={current}
@@ -59,6 +60,7 @@ export default async function OnboardingStepPage({ params, searchParams }: PageP
         programme={profile?.programme ?? null}
         graduationYear={profile?.graduation_year ?? null}
         campus={profile?.campus ?? null}
+        departments={(own ?? []).map((d) => d.name)}
       />
     );
   } else if (step === 2) {

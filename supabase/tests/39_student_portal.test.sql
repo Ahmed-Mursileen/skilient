@@ -191,8 +191,8 @@ select is((public.nav_badges()->>'ventures')::integer, 1, 'shown on Ventures');
 select throws_ok($$select * from public.opportunities('bogus')$$, '22023', null, 'unknown tabs are refused');
 select is((select count(*)::integer from public.opportunities('for_you')), 0, 'nothing to show yet, without an error');
 reset role;
-select ok((select prosrc !~* 'sponsor' from pg_proc where oid = 'private.opportunities(text, integer)'::regprocedure),
-  '"For you" has no sponsorship input');
+select ok((select prosrc !~* 'order by[^;]*sponsor' from pg_proc where oid = 'private.opportunities(text, integer)'::regprocedure),
+  '"For you" is never ordered by sponsorship (the label is only shown)');
 
 -- ---------------------------------------------------------------------------
 -- Feedback and triage
