@@ -39,8 +39,15 @@ export interface HeroCaptures {
   tick: { x: number; y: number };
 }
 
+export interface SectionCaptures {
+  venture: CaptureFile;
+  jobs: CaptureFile;
+  contactRequest: CaptureFile;
+}
+
 export interface CaptureManifest {
   hero: HeroCaptures;
+  sections: SectionCaptures;
 }
 
 export const captures = manifest as CaptureManifest;

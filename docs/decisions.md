@@ -1768,3 +1768,22 @@ Append-only. One dated entry per product decision, with the reason. Carried over
 - 2026-10-02 (phase 12, slice 1): University requests: one row per email address (asking again sends nothing), the token is
   hashed in SQL, and unsubscribing needs a button press (a POST), so link scanners in mailboxes can't unsubscribe anyone.
   A filled honeypot gets a fake success. The limit is 5 an hour per IP plus 300 an hour across the network.
+- 2026-10-02 (phase 12, slice 2): Trust-gap figures rechecked. ResumeLab (70%, 1,900 US workers, August 2023, via SHRM) and
+  Gallup Pakistan (about 5,000 of 25,000 IT graduates hired by leading firms, via ProPakistani 15 July 2020) match. The PBS Labour
+  Force Survey 2024-25 puts 23.9% on women with a master's degree or higher (bachelor's 23.8%), so the copy now says "master's
+  degree or higher". It drops the "degree holders overall 10.9%" figure, which wasn't confirmed, and keeps the national 7.1%.
+  The P@SHA line is left out. Ahmed signs off before launch.
+- 2026-10-02 (phase 12, slice 2): Lighthouse mobile on `/`, five local runs: 95, 93, 96, 90, 93. To get there:
+  - On marketing pages, Sentry now loads only when an error happens (then reports it), instead of after idle. Its 148 KB chunk
+    (Replay included) was competing with the page.
+  - JetBrains Mono is no longer preloaded anywhere.
+  - The landing's sample verify code is set in Barlow tabular figures.
+  - The phone headline is 36 px, so it, not a capture, is the largest element.
+  Tried and reverted: `experimental.inlineCss` (made first paint slower).
+- 2026-10-02 (phase 12, slice 2): Plan changes after the design gates:
+  - The how-it-works panels carry an icon and text, without capture crops. They are not boxed cards either (craft floor:
+    same-size icon cards).
+  - The "Our rules" heading is screen-reader only (no eyebrow above the band).
+  - The sample CV is one labelled image for assistive tech, so its own h1 isn't the page's.
+  - Feed captures carry a shadow only, because the captured card already has its border.
+  The finish review ran in-thread: impeccable's reviewer agent isn't installed in this harness.

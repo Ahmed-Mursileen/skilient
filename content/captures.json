@@ -83,5 +83,43 @@
       "x": 257,
       "y": 208
     }
+  },
+  "sections": {
+    "venture": {
+      "w": 760,
+      "h": 729,
+      "light": {
+        "avif": "/marketing/captures/venture-light.avif",
+        "webp": "/marketing/captures/venture-light.webp"
+      },
+      "dark": {
+        "avif": "/marketing/captures/venture-dark.avif",
+        "webp": "/marketing/captures/venture-dark.webp"
+      }
+    },
+    "jobs": {
+      "w": 390,
+      "h": 379,
+      "light": {
+        "avif": "/marketing/captures/jobs-light.avif",
+        "webp": "/marketing/captures/jobs-light.webp"
+      },
+      "dark": {
+        "avif": "/marketing/captures/jobs-dark.avif",
+        "webp": "/marketing/captures/jobs-dark.webp"
+      }
+    },
+    "contactRequest": {
+      "w": 390,
+      "h": 420,
+      "light": {
+        "avif": "/marketing/captures/contact-request-light.avif",
+        "webp": "/marketing/captures/contact-request-light.webp"
+      },
+      "dark": {
+        "avif": "/marketing/captures/contact-request-dark.avif",
+        "webp": "/marketing/captures/contact-request-dark.webp"
+      }
+    }
   }
 }

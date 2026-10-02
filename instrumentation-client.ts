@@ -3,26 +3,31 @@ import { sentryBaseOptions } from "@/lib/sentry-scrub";
 
 /**
  * Sentry in the browser. The SDK is its own chunk: the app loads it straight away; the public
- * marketing pages load it once the page is idle, which keeps them inside the PRD 10 JavaScript
- * budget (decisions 2026-10-02). Router transitions before it loads aren't traced.
+ * marketing pages load it only when something goes wrong, then report that error. This keeps them
+ * inside the PRD 10 performance budget (decisions 2026-10-02). Router transitions on marketing
+ * pages aren't traced.
  */
-let sentry: typeof SentryModule | null = null;
+let sentry: Promise<typeof SentryModule> | null = null;
+let loaded: typeof SentryModule | null = null;
 
-function load() {
-  void import("@sentry/nextjs").then((S) => {
+function load(): Promise<typeof SentryModule> {
+  sentry ??= import("@sentry/nextjs").then((S) => {
     S.init({ dsn: process.env.NEXT_PUBLIC_SENTRY_DSN, ...sentryBaseOptions });
-    sentry = S;
+    loaded = S;
+    return S;
   });
+  return sentry;
 }
 
 const MARKETING = /^\/(?:$|(?:recruiters|universities|faculty|about|pricing|request-university|terms|privacy)(?:\/|$))/;
 
 if (MARKETING.test(window.location.pathname)) {
-  const idle = window.requestIdleCallback ?? ((cb: () => void) => window.setTimeout(cb, 1500));
-  window.addEventListener("load", () => idle(load, { timeout: 4000 }), { once: true });
+  const report = (error: unknown) => void load().then((S) => S.captureException(error));
+  window.addEventListener("error", (e) => report(e.error ?? e.message), { once: true });
+  window.addEventListener("unhandledrejection", (e) => report(e.reason), { once: true });
 } else {
-  load();
+  void load();
 }
 
 export const onRouterTransitionStart: typeof SentryModule.captureRouterTransitionStart = (...args) =>
-  sentry?.captureRouterTransitionStart(...args);
+  loaded?.captureRouterTransitionStart(...args);
