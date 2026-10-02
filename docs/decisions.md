@@ -1605,3 +1605,8 @@ Append-only. One dated entry per product decision, with the reason. Carried over
   Chromium files (`outputFileTracingIncludes` in `next.config.ts` lists them per route). Added `/api/billing/invoice/**`, and
   `/api/uni/export` (the phase 9 dashboard PDF had the same gap); invoices now embed Spectral and Barlow like CVs, since
   Vercel's Chromium has no system fonts.
+- 2026-10-02 — Vercel Web Analytics and Speed Insights (PRs #49, #50, opened by Vercel's agent at the owner's request) are
+  added to the root layout but render only when `process.env.VERCEL` is set: their scripts live under `/_vercel/*`, which
+  exists only on Vercel; elsewhere the URL fell through to the auth gate and returned HTML, a "Refused to execute script"
+  error that the E2E CSP checks (rightly) fail on. Both are cookieless and same-origin (`'self'` already covers them);
+  PostHog (EU) stays the product analytics.
