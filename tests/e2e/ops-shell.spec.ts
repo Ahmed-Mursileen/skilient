@@ -136,6 +136,8 @@ test.describe("Ops shell", () => {
     for (const path of [
       "/ops",
       "/ops/reports",
+      "/ops/appeals",
+      "/ops/sanctions",
       "/ops/evidence",
       "/ops/feedback",
       "/ops/teachers",

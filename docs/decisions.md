@@ -1651,3 +1651,32 @@ Append-only. One dated entry per product decision, with the reason. Carried over
   writes an `audit.export` row before returning.
 - 2026-10-02 (phase 11, slice 1): Two-factor for staff was already enforced in SQL (`private.is_staff()` counts a role only on
   aal2) and in `proxy.ts` (aal2 for `/ops`); slice 1 adds pgTAP proving the new functions refuse aal1 staff.
+- 2026-10-02 (phase 11, slice 2): Sanctions. `sanction_user(user, warn|suspend|ban, until, reason, case)`: moderators warn and
+  suspend for at most 7 days (the form offers 1, 2, 3, 5 or 7 days; just under 7 × 24 h so the 7-day limit holds); super admins
+  also ban (empty end = permanent) and suspend longer. A trigger on `sanctions` enforces both limits again whatever function
+  writes the row, and only the lift fields can ever change. One suspension or ban at a time (lift first); warnings stack. A
+  suspension or ban deletes every `auth.sessions` row (signed out everywhere); a ban sets `auth.users.banned_until` (2999-12-31
+  when permanent), which the phase 5 trigger already turns into revoked CVs. While suspended, a `before insert` trigger refuses
+  the account's writes on 29 tables (posts, comments, messages, reactions, pins, votes, RSVPs, endorsements, ventures, invites,
+  applications, updates, follows, contributions and confirmations, friend requests, credentials, code checks, share links, job
+  applications, event registrations, contact requests, job posts, competition teams, ideas, supervisor comments, review
+  requests and reviews); reports, feedback, appeals and account deletion still work. Only the acting user counts (`auth.uid()`),
+  so jobs and other people's actions are never blocked. Every signed-in page shows a banner with a link to `/appeals`.
+- 2026-10-02 (phase 11, slice 2): Organisations: `sanction_org(org, warn|throttle|suspend, …)` for accounts staff. A throttle caps
+  contact requests at 1-50 in any 24 hours for up to 90 days (trigger on `contact_requests`, SQLSTATE 54000); a suspension sets
+  the organisation's status to suspended until lifted (lifting restores verified). Admins of the organisation are notified and
+  can appeal. The suspend/reinstate buttons in the verification form (phase 8) stay for verification problems and, like a
+  rejection, aren't appealable; conduct problems use the sanction form on `/ops/orgs/[id]`.
+- 2026-10-02 (phase 11, slice 2): Appeals (`appeals`, one per decision by a unique key): sanctions (not a warning from a report
+  case, which is appealed through the case), removals and warnings from report cases, staff CV revocations, credential
+  rejections and failed code checks, within 30 days, from `/appeals` (also open to recruiter accounts for their organisation).
+  The decider role is fixed at filing (moderator; super admin for a ban; accounts for an organisation; trust reviewer for
+  CVs, credentials and code checks) and the original staff member can never claim or decide it (check constraints plus a
+  trigger, which also makes a decision final). Overturning lifts the sanction, restores a removed post or an unlisted venture
+  (removed comments and messages were blanked and cleared photos deleted, so those stay gone), removes the case's penalty and
+  warning, approves the credential, or passes the code check (skills recomputed); a revoked CV stays revoked (signed) and the
+  student reissues. A banned account emails its appeal and any staff member files it (`ops_file_appeal`, audited). An appeal
+  only the original decider could decide (one super admin) is marked "needs another super admin" in `/ops/appeals`.
+- 2026-10-02 (phase 11, slice 2): New notification types (category account, emailed): `account_restricted`,
+  `restriction_lifted`, `org_sanctioned`, `appeal_decided`; none names a staff member. `docs/emergency-ban.md` now describes
+  `/ops/sanctions`; the dashboard ban is only for when `/ops` itself is down.

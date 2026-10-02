@@ -2,6 +2,7 @@ import type { Metadata, Route } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { OrgDecisionForm } from "@/components/ops/org-forms";
+import { OrgSanctionForm } from "@/components/ops/sanction-forms";
 import { Badge } from "@/components/ui";
 import { getOpsOrgCase, getOpsReputation } from "@/lib/data/ops-orgs";
 import { staffRoles } from "@/lib/data/ops-trust";
@@ -81,6 +82,10 @@ export default async function OpsOrgPage({ params }: PageProps<"/ops/orgs/[id]">
           </ul>
         )}
       </section>
+      {org.status === "verified" ? <OrgSanctionForm orgId={id} name={org.name} /> : null}
+      <p className="text-body-sm">
+        <Link href={"/ops/sanctions" as Route} className="underline underline-offset-4">Active sanctions</Link> (lift a throttle or suspension there)
+      </p>
     </main>
   );
 }

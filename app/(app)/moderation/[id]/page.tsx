@@ -1,5 +1,6 @@
 import { ShieldWarning } from "@phosphor-icons/react/dist/ssr";
-import type { Metadata } from "next";
+import type { Metadata, Route } from "next";
+import Link from "next/link";
 import { EmptyState } from "@/components/ui";
 import { getMyModerationNotice } from "@/lib/data/ops";
 
@@ -35,7 +36,13 @@ export default async function ModerationNoticePage({ params }: PageProps<"/moder
           <span className="font-semibold">Moderator&apos;s reason:</span> {notice.reason}
         </p>
       ) : null}
-      <p className="text-body-sm text-text-secondary">Appeals open with the next update to Skilient&apos;s moderation tools.</p>
+      <p className="text-body-sm text-text-secondary">
+        Think this is wrong?{" "}
+        <Link href={"/appeals" as Route} className="font-semibold underline underline-offset-4">
+          Appeal within 30 days
+        </Link>
+        . A different staff member reviews it, and their decision is final.
+      </p>
     </main>
   );
 }

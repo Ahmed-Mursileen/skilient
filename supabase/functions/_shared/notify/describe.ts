@@ -166,6 +166,47 @@ export function describeNotification(n: NotificationInput): NotificationText {
         subject: "A warning from Skilient moderators",
       };
     }
+    case "account_restricted": {
+      const until = str(n.data.until);
+      const day = until ? new Date(until).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: "Asia/Karachi" }) : null;
+      if (n.data.kind === "ban") {
+        return {
+          text: day ? `Your Skilient account is banned until ${day}.` : "Your Skilient account is banned.",
+          href: "/appeals",
+          subject: "Your Skilient account is banned",
+        };
+      }
+      if (n.data.kind === "suspend") {
+        return {
+          text: `Your account is suspended${day ? ` until ${day}` : ""}. You can still read, appeal or delete your account.`,
+          href: "/appeals",
+          subject: "Your Skilient account is suspended",
+        };
+      }
+      return { text: "Skilient moderators sent you a warning about your account.", href: "/appeals", subject: "A warning from Skilient moderators" };
+    }
+    case "restriction_lifted":
+      return {
+        text: n.data.kind === "ban" ? "The ban on your account was lifted." : "The suspension on your account was lifted.",
+        href: "/feed",
+        subject: "Your Skilient account is active again",
+      };
+    case "org_sanctioned": {
+      const org = str(n.data.org_name) ?? "your organisation";
+      const until = str(n.data.until);
+      const day = until ? new Date(until).toLocaleDateString("en-GB", { day: "numeric", month: "long", timeZone: "Asia/Karachi" }) : null;
+      const text =
+        n.data.kind === "suspend"
+          ? `Skilient suspended ${org}. Contact requests and job posts are paused until it is reinstated.`
+          : n.data.kind === "throttle"
+            ? `Skilient limited ${org} to ${typeof n.data.per_day === "number" ? n.data.per_day : "a few"} contact requests a day${day ? ` until ${day}` : ""}.`
+            : `Skilient sent ${org} a warning.`;
+      return { text, href: "/appeals", subject: `A decision about ${org} on Skilient` };
+    }
+    case "appeal_decided":
+      return n.data.outcome === "overturned"
+        ? { text: "Your appeal was accepted and the decision was reversed.", href: "/appeals", subject: "Your Skilient appeal was accepted" }
+        : { text: "Your appeal was reviewed and the decision stands. This is final.", href: "/appeals", subject: "Your Skilient appeal was reviewed" };
     case "chat_message": {
       const thread = str(n.data.thread_id);
       const where = str(n.data.venture_title);

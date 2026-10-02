@@ -3,6 +3,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ClaimButton } from "@/components/ops/claim-button";
 import { ResolveForm } from "@/components/ops/resolve-form";
+import { SanctionUserForm } from "@/components/ops/sanction-forms";
+import { rpcJson } from "@/lib/data/rpc-json";
 import { getCase } from "@/lib/data/ops";
 import { staffRoles } from "@/lib/data/ops-trust";
 import { REASON_LABELS, STATUS_LABELS, TARGET_LABELS } from "@/lib/ops/labels";
@@ -17,9 +19,11 @@ function text(value: unknown): string | null {
 /** /ops/reports/[id] (screen spec 3.11): content, attached messages only, history, action with a reason. */
 export default async function OpsCasePage({ params }: PageProps<"/ops/reports/[id]">) {
   const { id } = await params;
-  if (!(await staffRoles()).has("moderator")) notFound();
+  const roles = await staffRoles();
+  if (!roles.has("moderator")) notFound();
   const c = await getCase(id);
   if (!c) notFound();
+  const ownerId = c.owner ? await rpcJson<string | null>("ops_case_owner", { p_case: c.id }) : null;
   const s = c.snapshot;
   const author = text(s.author);
   const body = text(s.body) ?? text(s.bio);
@@ -132,6 +136,9 @@ export default async function OpsCasePage({ params }: PageProps<"/ops/reports/[i
             </div>
           )}
         </section>
+        {c.owner && ownerId ? (
+          <SanctionUserForm userId={ownerId} name={c.owner.name} caseId={c.id} superAdmin={roles.has("super_admin")} />
+        ) : null}
       </aside>
     </main>
   );
