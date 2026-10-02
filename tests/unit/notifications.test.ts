@@ -97,7 +97,11 @@ describe("describeNotification", () => {
     );
     expect(describeNotification({ ...base, type: "appeal_decided", data: { outcome: "overturned" } }).text).toBe("Your appeal was accepted and the decision was reversed.");
     expect(describeNotification({ ...base, type: "appeal_decided", data: { outcome: "upheld" } }).text).toContain("This is final.");
-    for (const t of ["account_restricted", "restriction_lifted", "org_sanctioned", "appeal_decided"]) {
+    expect(describeNotification({ ...base, type: "account_viewed", data: { reason: "a reported profile problem", viewed_at: "2026-10-02T10:00:00Z" } }).text).toBe(
+      "Skilient support viewed your account on 2 October 2026 for a reported profile problem.",
+    );
+    expect(describeNotification({ ...base, type: "mfa_reset", data: {} }).href).toBe("/settings/security");
+    for (const t of ["account_restricted", "restriction_lifted", "org_sanctioned", "appeal_decided", "account_viewed", "mfa_reset"]) {
       expect(describeNotification({ ...base, type: t, data: {} }).text).not.toContain("Amna Khan");
     }
   });

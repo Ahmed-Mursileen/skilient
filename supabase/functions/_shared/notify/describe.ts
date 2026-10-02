@@ -207,6 +207,18 @@ export function describeNotification(n: NotificationInput): NotificationText {
       return n.data.outcome === "overturned"
         ? { text: "Your appeal was accepted and the decision was reversed.", href: "/appeals", subject: "Your Skilient appeal was accepted" }
         : { text: "Your appeal was reviewed and the decision stands. This is final.", href: "/appeals", subject: "Your Skilient appeal was reviewed" };
+    case "account_viewed": {
+      const when = str(n.data.viewed_at);
+      const day = when ? new Date(when).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: "Asia/Karachi" }) : "today";
+      const reason = str(n.data.reason) ?? "support";
+      return { text: `Skilient support viewed your account on ${day} for ${reason}.`, href: "/notifications", subject: "Skilient support viewed your account" };
+    }
+    case "mfa_reset":
+      return {
+        text: "Skilient support reset two-factor on your account. Turn it on again in Settings, Security.",
+        href: "/settings/security",
+        subject: "Two-factor on your Skilient account was reset",
+      };
     case "chat_message": {
       const thread = str(n.data.thread_id);
       const where = str(n.data.venture_title);

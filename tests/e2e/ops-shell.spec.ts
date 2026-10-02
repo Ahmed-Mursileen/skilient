@@ -138,6 +138,7 @@ test.describe("Ops shell", () => {
       "/ops/reports",
       "/ops/appeals",
       "/ops/sanctions",
+      "/ops/users",
       "/ops/evidence",
       "/ops/feedback",
       "/ops/teachers",

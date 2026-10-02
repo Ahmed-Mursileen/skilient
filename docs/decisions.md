@@ -1680,3 +1680,22 @@ Append-only. One dated entry per product decision, with the reason. Carried over
 - 2026-10-02 (phase 11, slice 2): New notification types (category account, emailed): `account_restricted`,
   `restriction_lifted`, `org_sanctioned`, `appeal_decided`; none names a staff member. `docs/emergency-ban.md` now describes
   `/ops/sanctions`; the dashboard ban is only for when `/ops` itself is down.
+- 2026-10-02 (phase 11, slice 3): Users. Any staff role searches `/ops/users` (name or part of it, username, exact or partial
+  email, GitHub login or id; 2 characters minimum, 50 results, wildcards escaped) and reads a record: account, two-factor state
+  and unused backup codes, GitHub and last sync, score and skills, credentials and code checks, CVs, sanctions, appeals, deletion
+  state, and ban-evasion hints (a GitHub clash with another account, or the same email name at another domain on an account that
+  is restricted, banned or being deleted). Billing stays at `/ops/billing/user/[id]`. Trust reviewers force a GitHub re-sync
+  (skips the student's hourly limit) or recompute skills; "score reset" in PRD 5.26 is read as this recompute, with the score
+  following at the next nightly run like every other ranking change. Each is audited with before/after.
+- 2026-10-02 (phase 11, slice 3): View as user is a read-only staff rendering of the user's own pages (profile, Me, CV,
+  opportunities, privacy, notifications), not a session as the user, so staff can't act as them. Starting needs a reason the user
+  reads, opens a one-hour `ops_view_sessions` row (new table, RLS on, no client access), writes `view_as.start` to the audit log
+  and notifies the user ("Skilient support viewed your account on <date> for <reason>", in-app and instant email). Each page opened
+  is appended to the session. No page reads a chat table, and chat notifications are left out of the notifications page.
+- 2026-10-02 (phase 11, slice 3): Staff 2FA reset (`ops_reset_mfa`): super admins only, never their own, with an identity-check
+  note of at least 20 characters; removes every factor and backup code and every session, audits the counts before/after, adds
+  an in-app notice, and the app sends a security email through Resend directly (outside the 60-a-day notification cap, like the
+  other security emails). `docs/recruiter-2fa-recovery.md` now covers every account type and the `/ops` steps.
+- 2026-10-02 (phase 11, slice 3): "A moderator can't open a chat outside a report" is proven in pgTAP 47: staff (even a super admin
+  on aal2) read no `chat_messages` or `chat_threads` rows and `thread_messages` returns nothing for a non-member; the only chat
+  content staff see is `report_messages`, copied at report time.

@@ -103,6 +103,22 @@ export function backupCodeUsedEmail(to: string, securityUrl: string, at: Date = 
   };
 }
 
+/** Skilient support reset two-factor after an identity check (PRD 5.26, decisions 2026-09-28). */
+export function mfaResetEmail(to: string, securityUrl: string, at: Date = new Date()): Email {
+  const title = "Two-factor on your Skilient account was reset";
+  const body = `Skilient support removed the authenticators and backup codes from your account on ${timeFormat.format(at)} (Pakistan time), after checking it was you who asked. Every device was signed out.`;
+  return {
+    to,
+    subject: title,
+    html: layout(
+      title,
+      p(body) + p("Sign in and turn two-factor on again straight away, and keep the new backup codes somewhere other than your phone:") + button(securityUrl, "Open security settings"),
+      "If you didn't ask Skilient to do this, reset your password now and reply to this email.",
+    ),
+    text: `${body}\n\nTurn two-factor on again: ${securityUrl}\n\nIf you didn't ask for this, reset your password now and reply to this email.\n`,
+  };
+}
+
 /** An organisation admin invites a teammate (PRD 5.20); the link works once and expires in 7 days. */
 export function orgInviteEmail(to: string, d: { orgName: string; role: string; link: string }): Email {
   const title = `${d.orgName} invited you to Skilient`;

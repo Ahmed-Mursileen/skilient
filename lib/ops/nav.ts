@@ -12,6 +12,7 @@ import {
   Scales,
   SealCheck,
   Tray,
+  UserList,
   UsersFour,
 } from "@phosphor-icons/react/dist/ssr";
 import type { Icon } from "@phosphor-icons/react";
@@ -41,6 +42,7 @@ export const OPS_AREAS: OpsArea[] = [
   { key: "evidence", label: "Evidence", href: "/ops/evidence", icon: SealCheck, group: "Work", roles: ["trust_reviewer"], match: ["/ops/evidence"] },
   { key: "appeals", label: "Appeals", href: "/ops/appeals", icon: Scales, group: "Work", roles: [], match: ["/ops/appeals"] },
   { key: "sanctions", label: "Sanctions", href: "/ops/sanctions", icon: Prohibit, group: "Work", roles: ["moderator", "accounts"], match: ["/ops/sanctions"] },
+  { key: "users", label: "Users", href: "/ops/users", icon: UserList, group: "Work", roles: [], match: ["/ops/users"] },
   { key: "feedback", label: "Feedback", href: "/ops/feedback", icon: ChatText, group: "Work", roles: [], match: ["/ops/feedback"] },
   { key: "teachers", label: "Teachers", href: "/ops/teachers", icon: IdentificationBadge, group: "Organisations", roles: ["accounts", "trust_reviewer"], match: ["/ops/teachers"] },
   { key: "orgs", label: "Organisations", href: "/ops/orgs", icon: Buildings, group: "Organisations", roles: ["accounts"], match: ["/ops/orgs"] },
