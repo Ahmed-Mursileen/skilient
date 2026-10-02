@@ -2,6 +2,7 @@ import "server-only";
 
 import { esc } from "@/lib/cv/document";
 import { launchBrowser } from "@/lib/cv/browser";
+import { embeddedFonts } from "@/lib/cv/pdf";
 import { DRAFT_REASON_LABELS, INVOICE_KIND_LABELS, money } from "./constants";
 
 /**
@@ -100,7 +101,8 @@ export async function renderInvoicePdf(doc: InvoiceDocument): Promise<Uint8Array
   const browser = await launchBrowser();
   try {
     const page = await browser.newPage();
-    await page.setContent(invoiceHtml(doc), { waitUntil: "load" });
+    await page.setContent(invoiceHtml(doc).replace("<style>", `<style>${embeddedFonts()}\n`), { waitUntil: "load" });
+    await page.evaluate(() => document.fonts.ready.then(() => true));
     const pdf = await page.pdf({ format: "A4", printBackground: true, margin: { top: "16mm", bottom: "16mm", left: "16mm", right: "16mm" }, tagged: true });
     return new Uint8Array(pdf);
   } finally {
