@@ -2044,13 +2044,13 @@ isOneToOne: false
                   ]
                 },"organizations": {
                   Row: {
-                    "about": string | null,"billing_address": string | null,"billing_ntn": string | null,"city": string,"created_at": string,"created_by": string | null,"domain": string,"id": string,"industry": string,"linkedin_url": string | null,"locations": (string)[],"name": string,"province": string | null,"registration_number": string | null,"signer_role": string,"size": string,"slug": string,"status": Database["public"]['Enums']["org_status"],"status_reason": string | null,"updated_at": string,"verified_at": string | null,"verified_by": string | null,"website": string
+                    "about": string | null,"billing_address": string | null,"billing_ntn": string | null,"city": string,"created_at": string,"created_by": string | null,"domain": string,"id": string,"industry": string,"linkedin_url": string | null,"locations": (string)[],"name": string,"province": string | null,"registration_doc_at": string | null,"registration_doc_bytes": number | null,"registration_doc_path": string | null,"registration_number": string | null,"signer_role": string,"size": string,"slug": string,"status": Database["public"]['Enums']["org_status"],"status_reason": string | null,"updated_at": string,"verified_at": string | null,"verified_by": string | null,"website": string
                   }
                   Insert: {
-                    "about"?: string | null,"billing_address"?: string | null,"billing_ntn"?: string | null,"city": string,"created_at"?: string,"created_by"?: string | null,"domain": string,"id"?: string,"industry": string,"linkedin_url"?: string | null,"locations"?: (string)[],"name": string,"province"?: string | null,"registration_number"?: string | null,"signer_role": string,"size": string,"slug": string,"status"?: Database["public"]['Enums']["org_status"],"status_reason"?: string | null,"updated_at"?: string,"verified_at"?: string | null,"verified_by"?: string | null,"website": string
+                    "about"?: string | null,"billing_address"?: string | null,"billing_ntn"?: string | null,"city": string,"created_at"?: string,"created_by"?: string | null,"domain": string,"id"?: string,"industry": string,"linkedin_url"?: string | null,"locations"?: (string)[],"name": string,"province"?: string | null,"registration_doc_at"?: string | null,"registration_doc_bytes"?: number | null,"registration_doc_path"?: string | null,"registration_number"?: string | null,"signer_role": string,"size": string,"slug": string,"status"?: Database["public"]['Enums']["org_status"],"status_reason"?: string | null,"updated_at"?: string,"verified_at"?: string | null,"verified_by"?: string | null,"website": string
                   }
                   Update: {
-                    "about"?: string | null,"billing_address"?: string | null,"billing_ntn"?: string | null,"city"?: string,"created_at"?: string,"created_by"?: string | null,"domain"?: string,"id"?: string,"industry"?: string,"linkedin_url"?: string | null,"locations"?: (string)[],"name"?: string,"province"?: string | null,"registration_number"?: string | null,"signer_role"?: string,"size"?: string,"slug"?: string,"status"?: Database["public"]['Enums']["org_status"],"status_reason"?: string | null,"updated_at"?: string,"verified_at"?: string | null,"verified_by"?: string | null,"website"?: string
+                    "about"?: string | null,"billing_address"?: string | null,"billing_ntn"?: string | null,"city"?: string,"created_at"?: string,"created_by"?: string | null,"domain"?: string,"id"?: string,"industry"?: string,"linkedin_url"?: string | null,"locations"?: (string)[],"name"?: string,"province"?: string | null,"registration_doc_at"?: string | null,"registration_doc_bytes"?: number | null,"registration_doc_path"?: string | null,"registration_number"?: string | null,"signer_role"?: string,"size"?: string,"slug"?: string,"status"?: Database["public"]['Enums']["org_status"],"status_reason"?: string | null,"updated_at"?: string,"verified_at"?: string | null,"verified_by"?: string | null,"website"?: string
                   }
                   Relationships: [
                     
@@ -4343,6 +4343,9 @@ isOneToOne: false
 "my_org":
 { Args: Record<PropertyKey, never>; Returns: Json
                            },
+"my_org_document":
+{ Args: Record<PropertyKey, never>; Returns: Json
+                           },
 "my_org_invites":
 { Args: Record<PropertyKey, never>; Returns: Json
                            },
@@ -4410,11 +4413,17 @@ isOneToOne: false
               "detail": string,"href": string,"id": string,"kind": string,"org_name": string,"sponsored": boolean,"starts_at": string,"title": string
             }[]
                            },
+"ops_add_uni_domain":
+{ Args: { "p_domain": string,"p_kind": string,"p_reason": string,"p_university": string }; Returns: undefined
+                           },
 "ops_appeal_case":
 { Args: { "p_id": string }; Returns: Json
                            },
 "ops_appeals":
 { Args: { "p_open"?: boolean }; Returns: Json
+                           },
+"ops_assign_uni_owner":
+{ Args: { "p_email": string,"p_reason": string,"p_university": string }; Returns: string
                            },
 "ops_audit_export":
 { Args: { "p_action"?: string,"p_from"?: string,"p_reason": string,"p_staff"?: string,"p_target_type"?: string,"p_to"?: string }; Returns: Json
@@ -4501,6 +4510,9 @@ isOneToOne: false
 "ops_org_case":
 { Args: { "p_org": string }; Returns: Json
                            },
+"ops_org_document":
+{ Args: { "p_org": string }; Returns: Json
+                           },
 "ops_org_reputation":
 { Args: { "p_org": string }; Returns: Json
                            },
@@ -4581,11 +4593,17 @@ isOneToOne: false
 "ops_uni_claim":
 { Args: { "p_id": string }; Returns: Json
                            },
+"ops_uni_list":
+{ Args: { "p_query"?: string }; Returns: Json
+                           },
 "ops_uni_questions":
 { Args: Record<PropertyKey, never>; Returns: Json
                            },
 "ops_uni_queue":
 { Args: { "p_q"?: string }; Returns: Json
+                           },
+"ops_uni_record":
+{ Args: { "p_id": string }; Returns: Json
                            },
 "ops_universities":
 { Args: Record<PropertyKey, never>; Returns: Json
@@ -5054,6 +5072,9 @@ isOneToOne: false
                            },
 "submit_feedback":
 { Args: { "p_body": string,"p_device": string,"p_page": string,"p_screenshot": string,"p_type": Database["public"]['Enums']["feedback_type"],"p_version": string }; Returns: string
+                           },
+"submit_org_document":
+{ Args: { "p_path": string }; Returns: undefined
                            },
 "submit_repo":
 { Args: { "p_team": string,"p_url": string }; Returns: undefined

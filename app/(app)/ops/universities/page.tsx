@@ -1,6 +1,9 @@
 import type { Metadata, Route } from "next";
 import Link from "next/link";
 import { DataTable, PageTitle, Section } from "@/components/uni/page-parts";
+import { controlBase } from "@/components/ui/field";
+import { cn } from "@/lib/cn";
+import { getUniList } from "@/lib/data/ops-unis";
 import { RpcForm, type FormAction } from "@/components/uni/rpc-form";
 import { decideDomain, decideFinalYear, opsRemoveQuestion } from "@/lib/actions/uni";
 import { getOpsHides, getOpsQuestions, getOpsUniQueue } from "@/lib/data/uni";
@@ -21,11 +24,14 @@ const decide = (action: FormAction, id: string) => (
  * /ops/universities (PRD 5.26 minimal, phase 9): claims, extra domains, final-year requests and
  * onboarding questions (accounts staff); every university hide and its outcome (moderators).
  */
-export default async function OpsUniversitiesPage() {
+export default async function OpsUniversitiesPage({ searchParams }: PageProps<"/ops/universities">) {
   const roles = await staffRoles();
   const accounts = roles.has("accounts") || roles.has("super_admin");
   const moderator = roles.has("moderator") || roles.has("super_admin");
-  const [queue, questions, hides] = await Promise.all([
+  const sp = await searchParams;
+  const q = typeof sp.q === "string" ? sp.q.trim().slice(0, 100) : "";
+  const [unis, queue, questions, hides] = await Promise.all([
+    accounts ? getUniList(q) : Promise.resolve([]),
     accounts ? getOpsUniQueue() : Promise.resolve(null),
     accounts ? getOpsQuestions() : Promise.resolve([]),
     moderator ? getOpsHides() : Promise.resolve([]),
@@ -33,6 +39,19 @@ export default async function OpsUniversitiesPage() {
   return (
     <main className="flex flex-col gap-8">
       <PageTitle title="Universities">Claims are checked against the university&apos;s public pages. Disputes are fixed by SQL (docs/university-claim-disputes.md).</PageTitle>
+      {accounts ? (
+        <Section title="All universities" id="all-h">
+          <form method="get" action="/ops/universities" className="flex flex-wrap items-end gap-2" role="search">
+            <div className="flex flex-col gap-2">
+              <label htmlFor="uni-q" className="text-body-sm font-semibold">Name or email domain</label>
+              <input id="uni-q" name="q" defaultValue={q} maxLength={100} className={cn(controlBase, "h-10 w-80")} />
+            </div>
+            <button type="submit" className="inline-flex h-10 items-center rounded-md border border-border-strong px-4 text-body-sm font-semibold">Search</button>
+          </form>
+          <DataTable testId="ops-unis" head={["University", "Owner", "Plan", "Admins", "Students"]} empty="No university matches."
+            rows={unis.map((u) => [<Link key="u" className="font-semibold underline" href={`/ops/universities/${u.id}` as Route}>{u.name}</Link>, u.owner_name ?? "Not onboarded", u.plan ?? "free", String(u.admins), String(u.students)])} />
+        </Section>
+      ) : null}
       {queue ? (
         <>
           <Section title="Claims" id="c-h">

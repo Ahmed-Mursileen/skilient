@@ -189,8 +189,8 @@ Legend: 📖 = PRD files to read (in `docs/prd/`), ✅ = done-when checks.
 
 📖 `05-26-admin-portal-skilient-ops.md`
 
-- [ ] All queues with claiming, sanctions, appeals, view-as, org verification, university onboarding, platform config (versioned), metrics, audit log view; 2FA required
-- [ ] Staff "reset 2FA" (last resort): requires an identity-check note, writes `ops_audit_log`, emails the student (decisions 2026-09-28)
+- [x] All queues with claiming, sanctions, appeals, view-as, org verification, university onboarding, platform config (versioned), metrics, audit log view; 2FA required
+- [x] Staff "reset 2FA" (last resort): requires an identity-check note, writes `ops_audit_log`, emails the student (decisions 2026-09-28)
 
 ✅ Every staff write has an audit row · a moderator can't suspend beyond 7 days or open a chat outside a report · an appeal can't be decided by the original staff member
 

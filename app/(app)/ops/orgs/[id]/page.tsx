@@ -6,7 +6,8 @@ import { OrgSanctionForm } from "@/components/ops/sanction-forms";
 import { Badge } from "@/components/ui";
 import { getOpsOrgCase, getOpsReputation } from "@/lib/data/ops-orgs";
 import { staffRoles } from "@/lib/data/ops-trust";
-import { isRefusal } from "@/lib/data/rpc-json";
+import { isRefusal, rpcJson } from "@/lib/data/rpc-json";
+import { createClient } from "@/lib/supabase/server";
 import { ageLabel } from "@/lib/format/time";
 import { ORG_ROLE_LABELS, ORG_STATUS_LABELS } from "@/lib/recruit/constants";
 
@@ -23,6 +24,9 @@ export default async function OpsOrgPage({ params }: PageProps<"/ops/orgs/[id]">
   });
   if (!org) notFound();
   const rep = await getOpsReputation(id);
+  // The optional registration document (private bucket; a 60-second link for accounts staff).
+  const doc = await rpcJson<{ path: string | null; at: string | null } | null>("ops_org_document", { p_org: id });
+  const docUrl = doc?.path ? (await (await createClient()).storage.from("org-documents").createSignedUrl(doc.path, 60)).data?.signedUrl ?? null : null;
   const host = (() => {
     try {
       return new URL(org.website).hostname.replace(/^www\./, "");
@@ -37,6 +41,16 @@ export default async function OpsOrgPage({ params }: PageProps<"/ops/orgs/[id]">
         <h1 className="font-display text-h1">{org.name}</h1>
         <Badge data-testid="org-case-status">{ORG_STATUS_LABELS[org.status]}</Badge>
       </div>
+      <p className="text-body-sm" data-testid="org-document">
+        Registration document:{" "}
+        {docUrl ? (
+          <a href={docUrl} target="_blank" rel="noopener noreferrer" className="font-semibold underline underline-offset-4">
+            Open the PDF
+          </a>
+        ) : (
+          "none uploaded (it's optional)"
+        )}
+      </p>
       <dl className="grid gap-x-6 gap-y-2 sm:grid-cols-2 text-body-sm">
         <Row k="Website"><a href={org.website} target="_blank" rel="noopener noreferrer" className="font-semibold underline underline-offset-4">{org.website}</a></Row>
         <Row k="Email domain"><span className="font-mono text-code-sm">{org.domain}</span> {host === org.domain || host.endsWith(`.${org.domain}`) ? "matches the website" : "does not obviously match the website"}</Row>
