@@ -326,6 +326,38 @@ With sandbox keys set (steps 1–5), as a test student, a test organisation and 
 - [ ] Resend one webhook from each dashboard → `/ops/billing` shows no new payment (replays change nothing).
 - [ ] Tick B6 in `docs/build-plan.md` and note the date in `docs/decisions.md`.
 
+## Phase 11
+
+Ops portal (decisions.md "Phase 11").
+
+- [ ] **Make yourself super admin** (slice 1; today your account holds trust reviewer and accounts only). Staff roles in `/ops/staff`
+      need a super admin, so the first one is granted in the Supabase SQL editor. Two-factor must already be on for the account:
+
+  ```sql
+  with me as (
+    select u.id from auth.users u
+     where u.email = lower('<sign-in email>')
+       and exists (select 1 from auth.mfa_factors f where f.user_id = u.id and f.status = 'verified')
+  ), granted as (
+    insert into public.staff_roles (user_id, role, granted_by)
+    select me.id, 'super_admin', me.id from me
+    on conflict (user_id, role) do nothing
+    returning user_id
+  )
+  insert into public.ops_audit_log (staff_id, action, target_type, target_id, reason, before, after)
+  select g.user_id, 'staff.grant', 'user', g.user_id::text, 'Bootstrap: first super admin (SQL editor)',
+         jsonb_build_object('roles', '[]'::jsonb), jsonb_build_object('roles', jsonb_build_array('super_admin'))
+    from granted g;
+
+  -- Check: one row. If none, the email is wrong or two-factor isn't on yet.
+  select s.role from public.staff_roles s join auth.users u on u.id = s.user_id
+   where u.email = lower('<sign-in email>') and s.role = 'super_admin';
+  ```
+
+  Sign out and back in with your code afterwards; every later role change goes through `/ops/staff`.
+- [ ] **A second super admin** (before the closed beta). An appeal on a super admin's decision needs a different super admin, and
+      the last one can't be removed. Once the person has a Skilient account with two-factor on, grant it at `/ops/staff`.
+
 ## Before phase 13
 
 - [x] **PostHog** Cloud **EU** project: project key, host, personal API key; set billing limit to **$0**. — *done: EU, $0 limits*

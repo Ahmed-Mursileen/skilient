@@ -3,6 +3,7 @@ import "server-only";
 import { cache } from "react";
 import { CREDENTIAL_BUCKET, type CredentialStatus } from "@/lib/credentials/constants";
 import { ageLabel, dayLabel } from "@/lib/format/time";
+import type { StaffRole } from "@/lib/ops/nav";
 import { createClient } from "@/lib/supabase/server";
 
 /**
@@ -10,7 +11,7 @@ import { createClient } from "@/lib/supabase/server";
  * through a SQL function that refuses anyone but a trust reviewer on a two-factor session.
  */
 
-export type StaffRole = "moderator" | "trust_reviewer" | "accounts" | "super_admin";
+export type { StaffRole };
 
 /** The staff roles that count right now (two-factor on); super_admin implies every role. */
 export const staffRoles = cache(async (): Promise<Set<StaffRole>> => {

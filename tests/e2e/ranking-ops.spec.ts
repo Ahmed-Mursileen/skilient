@@ -44,8 +44,9 @@ test.describe("Ranking in /ops", () => {
     const page = await staffPage(browser, accounts);
     const problems = watchConsole(page);
 
-    // Accounts staff land on their own area.
+    // Accounts staff open their own area from the ops sidebar.
     await page.goto("/ops");
+    await page.getByTestId("ops-sidebar").getByRole("link", { name: "Exam periods" }).click();
     await expect(page).toHaveURL(/\/ops\/exam-periods$/);
     await expect(page.getByRole("heading", { level: 1, name: "Exam periods" })).toBeVisible();
     await axe(page, "exam periods");
