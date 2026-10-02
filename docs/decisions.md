@@ -1755,3 +1755,16 @@ Append-only. One dated entry per product decision, with the reason. Carried over
   of three cards (the taste skill bans equal three-card rows). (3) The landing reuses `/api/universities/domains` (now with a live
   flag) instead of a new `/api/public/university-domains`. (4) The impeccable concept roll was skipped because PRD 5.1 and screen
   spec 3.1 pin both the world and the structure. (5) PostHog stays in phase 13; phase 12 only names its five marketing events.
+- 2026-10-02 (phase 12, slice 1): The browser Sentry SDK is now its own chunk. The app loads it immediately; the public marketing
+  pages load it once the page is idle (`instrumentation-client.ts`). It was most of a 121 KB (gzip) chunk on every page and held
+  the landing below Lighthouse 90 (88, now 91 to 95). Errors in the first moment on a marketing page aren't reported. First-load JS
+  on the landing is still above the PRD 10 soft budget of 90 KB: React and the Next.js runtime alone are close to it.
+- 2026-10-02 (phase 12, slice 1): Nav and footer links appear only for marketing pages that exist (`BUILT_PAGES` in
+  `content/marketing.ts`). Main deploys to production between slices, and links to unbuilt pages would 404.
+- 2026-10-02 (phase 12, slice 1): The hero's focal sequence is built from real captures (`pnpm marketing:captures`): post A before
+  the tick, post A answered (12), its public line at 11 and at 12 (the whole line rolls, because "11" and "12" differ in width),
+  and post B. The reader had already answered post B, so only one post shows a question. Captures hide the app's fixed bars. The
+  first card is preloaded for the device's colour scheme only.
+- 2026-10-02 (phase 12, slice 1): University requests: one row per email address (asking again sends nothing), the token is
+  hashed in SQL, and unsubscribing needs a button press (a POST), so link scanners in mailboxes can't unsubscribe anyone.
+  A filled honeypot gets a fake success. The limit is 5 an hour per IP plus 300 an hour across the network.

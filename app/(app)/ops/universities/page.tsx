@@ -6,6 +6,7 @@ import { cn } from "@/lib/cn";
 import { getUniList } from "@/lib/data/ops-unis";
 import { RpcForm, type FormAction } from "@/components/uni/rpc-form";
 import { decideDomain, decideFinalYear, opsRemoveQuestion } from "@/lib/actions/uni";
+import { openAllUniversities } from "@/lib/actions/ops/universities";
 import { getOpsHides, getOpsQuestions, getOpsUniQueue } from "@/lib/data/uni";
 import { staffRoles } from "@/lib/data/ops-trust";
 import { ageLabel } from "@/lib/format/time";
@@ -50,6 +51,23 @@ export default async function OpsUniversitiesPage({ searchParams }: PageProps<"/
           </form>
           <DataTable testId="ops-unis" head={["University", "Owner", "Plan", "Admins", "Students"]} empty="No university matches."
             rows={unis.map((u) => [<Link key="u" className="font-semibold underline" href={`/ops/universities/${u.id}` as Route}>{u.name}</Link>, u.owner_name ?? "Not onboarded", u.plan ?? "free", String(u.admins), String(u.students)])} />
+        </Section>
+      ) : null}
+      {accounts ? (
+        <Section title="Public launch" id="launch-h">
+          <p className="max-w-[70ch] text-body-sm text-text-secondary">
+            Opens student and faculty signup at every university that has an email domain, in one audited step. Everyone who asked for a university gets
+            the launch email. To open one university, use its page.
+          </p>
+          <RpcForm
+            testId="uni-open-all"
+            action={openAllUniversities as FormAction}
+            submitLabel="Open every university"
+            fields={[
+              { name: "confirm", label: "I'm opening signup everywhere (public launch)", type: "checkbox" },
+              { name: "reason", label: "Reason", type: "text", required: true },
+            ]}
+          />
         </Section>
       ) : null}
       {queue ? (

@@ -4,9 +4,9 @@ import { notFound } from "next/navigation";
 import { DataTable } from "@/components/uni/page-parts";
 import { RpcForm } from "@/components/uni/rpc-form";
 import { Badge } from "@/components/ui";
-import { addUniDomain, assignUniOwner } from "@/lib/actions/ops/universities";
+import { addUniDomain, assignUniOwner, setUniversityLive } from "@/lib/actions/ops/universities";
 import { cn } from "@/lib/cn";
-import { getUniRecord } from "@/lib/data/ops-unis";
+import { getUniRecord, getUniSignup } from "@/lib/data/ops-unis";
 import { staffRoles } from "@/lib/data/ops-trust";
 import { dayLabel } from "@/lib/format/time";
 
@@ -30,8 +30,9 @@ export default async function OpsUniversityPage({ params, searchParams }: PagePr
   if (!/^[0-9a-f-]{36}$/.test(id)) notFound();
   const roles = await staffRoles();
   if (!roles.has("accounts")) notFound();
-  const [u, sp] = await Promise.all([getUniRecord(id), searchParams]);
+  const [u, sp, signup] = await Promise.all([getUniRecord(id), searchParams, getUniSignup(id)]);
   if (!u) notFound();
+  const { liveAt, live: isLive } = signup;
   const tab = TABS.find((t) => t.id === sp.tab)?.id ?? "overview";
   return (
     <main className="flex flex-col gap-5">
@@ -116,6 +117,24 @@ export default async function OpsUniversityPage({ params, searchParams }: PagePr
           ) : (
             <p className="text-body-sm">Owner: {u.owner.name}</p>
           )}
+          <section aria-labelledby="signup-h" className="flex flex-col gap-2 rounded-lg border border-border-default bg-bg-surface p-4" data-testid="uni-signup">
+            <h2 id="signup-h" className="text-h3">
+              Signup
+            </h2>
+            <p className="text-body-sm text-text-secondary">
+              {isLive
+                ? `Open since ${dayLabel(liveAt!)}: students and faculty can sign up.`
+                : "Closed: students and faculty see \u201cRequest it\u201d on the landing page. University officials can still sign up and claim the portal."}{" "}
+              Opening it emails everyone who asked for this university.
+            </p>
+            <RpcForm
+              testId={isLive ? "uni-close" : "uni-open"}
+              action={setUniversityLive}
+              extra={{ university: u.id, live: !isLive }}
+              submitLabel={isLive ? "Close signup" : "Open signup"}
+              fields={[{ name: "reason", label: "Reason", type: "text", required: true }]}
+            />
+          </section>
           <section aria-labelledby="domains-h" className="flex flex-col gap-2">
             <h2 id="domains-h" className="text-h3">
               Email domains

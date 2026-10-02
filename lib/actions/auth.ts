@@ -163,12 +163,25 @@ export async function signUp(formData: FormData): Promise<ActionResult> {
     ctx.done("refused", { error_code: "personal_email" });
     return fail("personal_email", "Use your university email.", { fields: { email: "Use your university email." } });
   }
-  const ownerIds = [...new Set(owners.data.map((o) => o.university_id))];
+  let ownerIds = [...new Set(owners.data.map((o) => o.university_id))];
   if (ownerIds.length === 0) {
     ctx.done("refused", { error_code: "unknown_domain" });
     return fail("unknown_domain", "Your university isn't on Skilient yet.", {
       fields: { email: "Your university isn't on Skilient yet." },
     });
+  }
+  // Students and faculty need a live university (the closed beta, decisions 2026-10-02); officials don't.
+  if (role !== "university_admin") {
+    const { data: live, error: liveError } = await supabase.from("universities").select("id").in("id", ownerIds).lte("live_at", new Date().toISOString());
+    if (liveError) {
+      ctx.done("error", { error_code: "live_lookup_failed" });
+      return fail("unavailable", UNAVAILABLE, { requestId: ctx.requestId });
+    }
+    ownerIds = live.map((u) => u.id);
+    if (ownerIds.length === 0) {
+      ctx.done("refused", { error_code: "university_not_live" });
+      return fail("not_live", "Your university isn't on Skilient yet.", { fields: { email: "Your university isn't on Skilient yet." } });
+    }
   }
   const universityId = input.universityId || (ownerIds.length === 1 ? ownerIds[0] : undefined);
   if (!universityId || !ownerIds.includes(universityId)) {

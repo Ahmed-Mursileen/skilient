@@ -3,10 +3,15 @@ import { detectionMessage, detectUniversity, emailDomain, type DomainDirectory }
 
 const directory: DomainDirectory = {
   domains: {
-    "nutech.edu.pk": [{ id: "u1", name: "NUTECH" }],
+    "nutech.edu.pk": [{ id: "u1", name: "NUTECH", live: true }],
     "preston.edu.pk": [
-      { id: "u2", name: "Preston University Karachi" },
-      { id: "u3", name: "Preston University Kohat" },
+      { id: "u2", name: "Preston University Karachi", live: true },
+      { id: "u3", name: "Preston University Kohat", live: true },
+    ],
+    "nu.edu.pk": [{ id: "u4", name: "FAST-NUCES", live: false }],
+    "shared.edu.pk": [
+      { id: "u5", name: "Open College", live: true },
+      { id: "u6", name: "Closed College", live: false },
     ],
   },
   personal: ["gmail.com", "outlook.com"],
@@ -28,7 +33,7 @@ describe("detectUniversity", () => {
     expect(detectUniversity("ali@nutech.edu.pk", directory)).toEqual({
       kind: "match",
       domain: "nutech.edu.pk",
-      universities: [{ id: "u1", name: "NUTECH" }],
+      universities: [{ id: "u1", name: "NUTECH", live: true }],
     });
   });
   it("returns every owner of a shared domain (the picker)", () => {
@@ -46,6 +51,18 @@ describe("detectUniversity", () => {
       expect(d.kind).toBe("unknown");
       expect(detectionMessage(d)).toBe("Your university isn't on Skilient yet.");
     }
+  });
+  it("says a known university that isn't live yet isn't on Skilient (PRD 5.1 Request it)", () => {
+    const d = detectUniversity("sara@nu.edu.pk", directory);
+    expect(d.kind).toBe("not_live");
+    expect(detectionMessage(d)).toBe("FAST-NUCES isn't on Skilient yet.");
+  });
+  it("narrows a shared domain to the live universities", () => {
+    const d = detectUniversity("x@shared.edu.pk", directory);
+    expect(d.kind === "match" && d.universities.map((u) => u.id)).toEqual(["u5"]);
+  });
+  it("lets university officials match a university before it opens", () => {
+    expect(detectUniversity("dean@nu.edu.pk", directory, { requireLive: false }).kind).toBe("match");
   });
   it("is quiet while the field is empty", () => {
     expect(detectUniversity("  ", directory)).toEqual({ kind: "empty" });
