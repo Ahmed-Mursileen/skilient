@@ -3103,13 +3103,13 @@ isOneToOne: false
                   ]
                 },"universities": {
                   Row: {
-                    "billing_address": string | null,"billing_ntn": string | null,"city": string | null,"claimed_at": string | null,"created_at": string,"final_year_batch": number | null,"id": string,"name": string,"owner_id": string | null,"province": string | null,"slug": string,"slug_changed_at": string | null,"updated_at": string
+                    "billing_address": string | null,"billing_ntn": string | null,"city": string | null,"claimed_at": string | null,"created_at": string,"final_year_batch": number | null,"id": string,"live_at": string | null,"name": string,"owner_id": string | null,"province": string | null,"slug": string,"slug_changed_at": string | null,"updated_at": string
                   }
                   Insert: {
-                    "billing_address"?: string | null,"billing_ntn"?: string | null,"city"?: string | null,"claimed_at"?: string | null,"created_at"?: string,"final_year_batch"?: number | null,"id"?: string,"name": string,"owner_id"?: string | null,"province"?: string | null,"slug": string,"slug_changed_at"?: string | null,"updated_at"?: string
+                    "billing_address"?: string | null,"billing_ntn"?: string | null,"city"?: string | null,"claimed_at"?: string | null,"created_at"?: string,"final_year_batch"?: number | null,"id"?: string,"live_at"?: string | null,"name": string,"owner_id"?: string | null,"province"?: string | null,"slug": string,"slug_changed_at"?: string | null,"updated_at"?: string
                   }
                   Update: {
-                    "billing_address"?: string | null,"billing_ntn"?: string | null,"city"?: string | null,"claimed_at"?: string | null,"created_at"?: string,"final_year_batch"?: number | null,"id"?: string,"name"?: string,"owner_id"?: string | null,"province"?: string | null,"slug"?: string,"slug_changed_at"?: string | null,"updated_at"?: string
+                    "billing_address"?: string | null,"billing_ntn"?: string | null,"city"?: string | null,"claimed_at"?: string | null,"created_at"?: string,"final_year_batch"?: number | null,"id"?: string,"live_at"?: string | null,"name"?: string,"owner_id"?: string | null,"province"?: string | null,"slug"?: string,"slug_changed_at"?: string | null,"updated_at"?: string
                   }
                   Relationships: [
                     
@@ -3316,6 +3316,25 @@ isOneToOne: false
                   Relationships: [
                     {
       foreignKeyName: "university_questions_university_id_fkey"
+      columns: ["university_id"]
+isOneToOne: false
+      referencedRelation: "universities"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"university_requests": {
+                  Row: {
+                    "confirmed_at": string | null,"consent": boolean,"created_at": string,"domain": string,"email": string,"id": string,"notified_at": string | null,"token_hash": string,"university_id": string | null,"university_name": string | null,"unsubscribed_at": string | null
+                  }
+                  Insert: {
+                    "confirmed_at"?: string | null,"consent": boolean,"created_at"?: string,"domain": string,"email": string,"id"?: string,"notified_at"?: string | null,"token_hash": string,"university_id"?: string | null,"university_name"?: string | null,"unsubscribed_at"?: string | null
+                  }
+                  Update: {
+                    "confirmed_at"?: string | null,"consent"?: boolean,"created_at"?: string,"domain"?: string,"email"?: string,"id"?: string,"notified_at"?: string | null,"token_hash"?: string,"university_id"?: string | null,"university_name"?: string | null,"unsubscribed_at"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "university_requests_university_id_fkey"
       columns: ["university_id"]
 isOneToOne: false
       referencedRelation: "universities"
@@ -3891,6 +3910,9 @@ isOneToOne: false
 "confirm_contribution":
 { Args: { "p_entry": string }; Returns: boolean
                            },
+"confirm_university_request":
+{ Args: { "p_token": string }; Returns: Json
+                           },
 "correct_contribution":
 { Args: { "p_description": string,"p_evidence_url"?: string,"p_hours"?: number,"p_kind": Database["public"]['Enums']["contribution_kind"],"p_original": string,"p_skill_ids"?: (string)[] }; Returns: string
                            },
@@ -4205,6 +4227,9 @@ isOneToOne: false
 "judge_score_team":
 { Args: { "p_feedback"?: string,"p_scores": Json,"p_team": string }; Returns: undefined
                            },
+"landing_stats":
+{ Args: Record<PropertyKey, never>; Returns: Json
+                           },
 "leaderboard":
 { Args: { "p_after"?: number,"p_batch"?: number,"p_department"?: string,"p_scope"?: string }; Returns: {
               "avatar_path": string,"full_name": string,"is_me": boolean,"place": number,"rank": number,"tier": Database["public"]['Enums']["ranking_tier"],"university_name": string,"username": string,"weekly_change": number
@@ -4507,6 +4532,9 @@ isOneToOne: false
 "ops_metrics":
 { Args: Record<PropertyKey, never>; Returns: Json
                            },
+"ops_open_all_universities":
+{ Args: { "p_reason": string }; Returns: number
+                           },
 "ops_org_case":
 { Args: { "p_org": string }; Returns: Json
                            },
@@ -4578,6 +4606,9 @@ isOneToOne: false
 "ops_set_tax_rate":
 { Args: { "p_from": string,"p_label": string,"p_province": string,"p_rate": number,"p_reason": string }; Returns: string
                            },
+"ops_set_university_live":
+{ Args: { "p_live": boolean,"p_reason": string,"p_university": string }; Returns: string
+                           },
 "ops_simulate":
 { Args: { "p_action": string,"p_reason": string,"p_sub": string }; Returns: Json
                            },
@@ -4610,6 +4641,9 @@ isOneToOne: false
                            },
 "ops_university_hides":
 { Args: { "p_case"?: string }; Returns: Json
+                           },
+"ops_university_requests":
+{ Args: Record<PropertyKey, never>; Returns: Json
                            },
 "ops_user_record":
 { Args: { "p_user": string }; Returns: Json
@@ -4690,6 +4724,9 @@ isOneToOne: false
 { Args: { "p_user": string }; Returns: {
               "id": string,"is_owner": boolean,"joined_at": string,"status": Database["public"]['Enums']["venture_status"],"team_role": Database["public"]['Enums']["venture_team_role"],"title": string,"type": Database["public"]['Enums']["venture_type"]
             }[]
+                           },
+"public_plans":
+{ Args: Record<PropertyKey, never>; Returns: Json
                            },
 "publish_job":
 { Args: { "p_id": string }; Returns: undefined
@@ -4784,6 +4821,9 @@ isOneToOne: false
                            },
 "request_uni_domain":
 { Args: { "p_domain": string,"p_kind": Database["public"]['Enums']["domain_kind"],"p_reason": string }; Returns: string
+                           },
+"request_university":
+{ Args: { "p_consent": boolean,"p_email": string,"p_token": string,"p_university_name": string }; Returns: Json
                            },
 "require_entitlement":
 { Args: { "p_key": string }; Returns: undefined
@@ -5322,6 +5362,9 @@ isOneToOne: false
                            },
 "unread_notification_count":
 { Args: Record<PropertyKey, never>; Returns: number
+                           },
+"unsubscribe_university_request":
+{ Args: { "p_token": string }; Returns: boolean
                            },
 "update_company_page":
 { Args: { "p": Json }; Returns: undefined
