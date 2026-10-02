@@ -152,3 +152,23 @@ export function fairInviteEmail(to: string, d: { university: string; fair: strin
     text: `${body}\n\nOpen the invite: ${d.link}\n`,
   };
 }
+
+/** "Request it" confirmation (PRD 5.1): one email per new request, with the unsubscribe link. */
+export function universityRequestEmail(to: string, d: { university: string | null; confirmUrl: string; unsubscribeUrl: string }): Email {
+  const name = d.university ?? "your university";
+  const title = `Confirm your request for ${name}`;
+  const body = `You asked for ${name} to join Skilient. Confirm your email address and we'll email you once, on the day it joins.`;
+  const footer = "Didn't ask for this? Ignore this email and nothing else happens.";
+  return {
+    to,
+    subject: title,
+    html: layout(
+      title,
+      p(body) +
+        button(d.confirmUrl, "Confirm my request") +
+        `<p style="margin:0 0 16px 0;font-size:13px;line-height:20px;color:#5C5A55;">Don't want the launch email? <a href="${escapeHtml(d.unsubscribeUrl)}" style="color:#0E0D0B;">Unsubscribe</a>.</p>`,
+      footer,
+    ),
+    text: `${body}\n\nConfirm: ${d.confirmUrl}\n\nUnsubscribe: ${d.unsubscribeUrl}\n\n${footer}\n`,
+  };
+}

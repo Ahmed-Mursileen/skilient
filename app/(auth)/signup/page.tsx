@@ -33,7 +33,12 @@ export default async function SignupPage({ searchParams }: PageProps<"/signup">)
         </>
       }
     >
-      <SignupForm siteKey={turnstileSiteKey()} agreement={agreement} role={official ? "university_admin" : faculty ? "faculty" : "student"} />
+      <SignupForm
+        siteKey={turnstileSiteKey()}
+        agreement={agreement}
+        role={official ? "university_admin" : faculty ? "faculty" : "student"}
+        defaultEmail={typeof sp.email === "string" ? sp.email.trim().slice(0, 254) : ""}
+      />
     </AuthFrame>
   );
 }

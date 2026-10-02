@@ -13,6 +13,7 @@
     "test:worker": "vitest run --config vitest.worker.config.mts",
     "test:ats": "vitest run --config vitest.ats.config.mts",
     "test:e2e": "playwright test",
+    "marketing:captures": "playwright test -c playwright.captures.config.ts",
     "db:start": "supabase start",
     "db:reset": "supabase db reset",
     "db:test": "supabase test db",

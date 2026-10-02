@@ -1,6 +1,6 @@
 import "server-only";
 
-import type { DomainDirectory, UniversityRef } from "@/lib/auth/email-domain";
+import type { DirectoryUniversity, DomainDirectory } from "@/lib/auth/email-domain";
 import { createPublicClient } from "@/lib/supabase/public";
 
 /**
@@ -12,7 +12,7 @@ export async function loadDomainDirectory(): Promise<DomainDirectory> {
   const [domains, personal] = await Promise.all([
     supabase
       .from("university_domains")
-      .select("domain, kind, universities!inner(id, name)")
+      .select("domain, kind, universities!inner(id, name, live_at)")
       .in("kind", ["student", "both"])
       .order("domain")
       .limit(5000),
@@ -21,10 +21,12 @@ export async function loadDomainDirectory(): Promise<DomainDirectory> {
   if (domains.error) throw new Error(`university_domains: ${domains.error.message}`);
   if (personal.error) throw new Error(`personal_email_domains: ${personal.error.message}`);
 
-  const byDomain: Record<string, UniversityRef[]> = {};
+  const now = Date.now();
+  const byDomain: Record<string, DirectoryUniversity[]> = {};
   for (const row of domains.data) {
     const university = row.universities;
-    (byDomain[row.domain] ??= []).push({ id: university.id, name: university.name });
+    const live = university.live_at !== null && Date.parse(university.live_at) <= now;
+    (byDomain[row.domain] ??= []).push({ id: university.id, name: university.name, live });
   }
   for (const list of Object.values(byDomain)) list.sort((a, b) => a.name.localeCompare(b.name));
 

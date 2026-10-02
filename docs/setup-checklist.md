@@ -394,6 +394,23 @@ Ops portal (decisions.md "Phase 11").
 - [ ] **A second super admin** (before the closed beta). An appeal on a super admin's decision needs a different super admin, and
       the last one can't be removed. Once the person has a Skilient account with two-factor on, grant it at `/ops/staff`.
 
+## Phase 12
+
+Marketing site (`docs/marketing-design-plan.md`, decisions.md "phase 12"). Later slices add to this list.
+
+- [ ] **Closed beta signup** (slice 1). After this migration reaches the hosted project, students and faculty can sign up only at
+      NUTECH. Existing accounts elsewhere keep working. Open another university at `/ops/universities/<id>` → Signup → Open signup.
+      At public launch use `/ops/universities` → Public launch → Open every university. Both need accounts staff with two-factor.
+- [ ] **Request emails** (slice 1). "Request it" sends a confirmation email through the app's Resend sender (`RESEND_API_KEY`,
+      `EMAIL_FROM`, already set for security emails). Send yourself one from the landing page and check that the confirm and
+      unsubscribe links work.
+- [ ] **Turnstile on the request form** (slice 1). It uses the existing `TURNSTILE_SITE_KEY` / `TURNSTILE_SECRET_KEY`. Without
+      JavaScript the form can't pass Turnstile in production, so such visitors are asked to turn JavaScript on.
+- [ ] **Recheck the captures** (any slice). Product captures are taken from the app with sample content by
+      `pnpm build && pnpm marketing:captures` (local stack). Re-run after a visible change to the feed, then commit the new files.
+- [ ] **Higgsfield credits** (slice 3). The account has 10 free credits. Top up enough for about three tries at each of the six
+      art pieces in the design plan (B8), or say which to drop.
+
 ## Before phase 13
 
 - [x] **PostHog** Cloud **EU** project: project key, host, personal API key; set billing limit to **$0**. — *done: EU, $0 limits*

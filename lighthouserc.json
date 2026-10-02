@@ -4,7 +4,8 @@
       "startServerCommand": "pnpm start --port 3200",
       "startServerReadyPattern": "Ready",
       "url": [
-        "http://localhost:3200/"
+        "http://localhost:3200/",
+        "http://localhost:3200/request-university"
       ],
       "numberOfRuns": 1,
       "settings": {

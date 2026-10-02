@@ -76,11 +76,26 @@ function matches(pathname: string, prefix: string): boolean {
   return pathname === prefix || pathname.startsWith(`${prefix}/`);
 }
 
+/** The public marketing site (PRD 5.1). */
+export const MARKETING_PATHS = [
+  "/recruiters",
+  "/universities",
+  "/faculty",
+  "/about",
+  "/pricing",
+  "/request-university",
+  "/join",
+  "/terms",
+  "/privacy",
+] as const;
+
 /** Open to everyone, signed in or not. */
 export function isPublicPath(pathname: string): boolean {
   return (
     pathname === "/" ||
-    ["/auth", "/api", "/ui", "/verify", "/cv", "/.well-known"].some((p) => matches(pathname, p))
+    pathname === "/robots.txt" ||
+    pathname === "/sitemap.xml" ||
+    ["/auth", "/api", "/ui", "/verify", "/cv", "/.well-known", ...MARKETING_PATHS].some((p) => matches(pathname, p))
   );
 }
 

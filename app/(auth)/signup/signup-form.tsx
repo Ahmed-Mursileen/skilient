@@ -14,10 +14,21 @@ import { detectionMessage, detectUniversity } from "@/lib/auth/email-domain";
 import type { Agreement } from "@/lib/data/agreement";
 import { useDomainDirectory } from "@/lib/hooks/use-domain-directory";
 
-export function SignupForm({ siteKey, agreement, role = "student" }: { siteKey: string | null; agreement: Agreement | null; role?: "student" | "faculty" | "university_admin" }) {
+export function SignupForm({
+  siteKey,
+  agreement,
+  role = "student",
+  defaultEmail = "",
+}: {
+  siteKey: string | null;
+  agreement: Agreement | null;
+  role?: "student" | "faculty" | "university_admin";
+  /** Prefilled from the landing page's email field (?email=). */
+  defaultEmail?: string;
+}) {
   const directory = useDomainDirectory();
   const [fullName, setFullName] = useState("");
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(defaultEmail);
   const [password, setPassword] = useState("");
   const [universityId, setUniversityId] = useState("");
   const [showPickerNote, setShowPickerNote] = useState(false);
@@ -29,7 +40,10 @@ export function SignupForm({ siteKey, agreement, role = "student" }: { siteKey: 
   const [googlePending, startGoogle] = useTransition();
   const agreeId = useId();
 
-  const detection = useMemo(() => (directory ? detectUniversity(email, directory) : null), [email, directory]);
+  const detection = useMemo(
+    () => (directory ? detectUniversity(email, directory, { requireLive: role !== "university_admin" }) : null),
+    [email, directory, role],
+  );
   const owners = detection?.kind === "match" ? detection.universities : [];
   const shared = owners.length > 1;
   const chosen = owners.find((u) => u.id === universityId) ?? (owners.length === 1 ? owners[0] : undefined);
@@ -119,7 +133,17 @@ export function SignupForm({ siteKey, agreement, role = "student" }: { siteKey: 
           {fields.email ? (
             <FieldError>{fields.email}</FieldError>
           ) : liveEmailError && detection?.kind !== "invalid" ? (
-            <FieldError>{liveEmailError}</FieldError>
+            <FieldError>
+              {liveEmailError}
+              {detection?.kind === "not_live" || detection?.kind === "unknown" ? (
+                <>
+                  {" "}
+                  <Link href={`/request-university?email=${encodeURIComponent(email.trim())}`} className="font-semibold underline underline-offset-4">
+                    Request it
+                  </Link>
+                </>
+              ) : null}
+            </FieldError>
           ) : chosen ? (
             <p className="flex items-start gap-1.5 text-body-sm text-text-secondary">
               <Buildings aria-hidden weight="bold" className="mt-0.5 size-4 shrink-0 text-text-muted" />

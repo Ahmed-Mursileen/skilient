@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { decideRoute, homeFor, onboardingPath, requiresTwoFactor, safeNext, type GateInput, type GateState } from "@/lib/auth/gate";
+import { decideRoute, homeFor, isPublicPath, onboardingPath, requiresTwoFactor, safeNext, type GateInput, type GateState } from "@/lib/auth/gate";
 
 const done: GateState = {
   has_profile: true,
@@ -183,5 +183,16 @@ describe("recruiters (PRD 5.20)", () => {
   it("keeps students and faculty out of the recruiter portal", () => {
     expect(decideRoute(at("/recruit/search", { state: done, aal: "aal2" }))).toEqual({ type: "redirect", to: "/feed" });
     expect(decideRoute(at("/org/join", { state: { ...done, role: "faculty" }, aal: "aal2" }))).toEqual({ type: "redirect", to: "/teach" });
+  });
+});
+
+describe("the marketing site (PRD 5.1)", () => {
+  it("is public, signed in or not", () => {
+    for (const p of ["/", "/recruiters", "/universities", "/faculty", "/about", "/pricing", "/request-university", "/request-university/confirm", "/join", "/terms", "/privacy", "/robots.txt", "/sitemap.xml"]) {
+      expect(isPublicPath(p)).toBe(true);
+    }
+  });
+  it("doesn't open app routes that merely share a prefix", () => {
+    for (const p of ["/uni", "/universitiesx", "/feed", "/pricing-admin"]) expect(isPublicPath(p)).toBe(false);
   });
 });

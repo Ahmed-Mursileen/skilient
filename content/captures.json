@@ -1,0 +1,87 @@
+{
+  "hero": {
+    "screen": 390,
+    "top": {
+      "w": 390,
+      "h": 137,
+      "light": {
+        "avif": "/marketing/captures/hero-top-light.avif",
+        "webp": "/marketing/captures/hero-top-light.webp"
+      },
+      "dark": {
+        "avif": "/marketing/captures/hero-top-dark.avif",
+        "webp": "/marketing/captures/hero-top-dark.webp"
+      }
+    },
+    "postB": {
+      "w": 351,
+      "h": 269,
+      "light": {
+        "avif": "/marketing/captures/hero-post-b-light.avif",
+        "webp": "/marketing/captures/hero-post-b-light.webp"
+      },
+      "dark": {
+        "avif": "/marketing/captures/hero-post-b-dark.avif",
+        "webp": "/marketing/captures/hero-post-b-dark.webp"
+      }
+    },
+    "postABefore": {
+      "w": 351,
+      "h": 343,
+      "light": {
+        "avif": "/marketing/captures/hero-post-a-before-light.avif",
+        "webp": "/marketing/captures/hero-post-a-before-light.webp"
+      },
+      "dark": {
+        "avif": "/marketing/captures/hero-post-a-before-dark.avif",
+        "webp": "/marketing/captures/hero-post-a-before-dark.webp"
+      }
+    },
+    "postAAfter": {
+      "w": 351,
+      "h": 319,
+      "light": {
+        "avif": "/marketing/captures/hero-post-a-after-light.avif",
+        "webp": "/marketing/captures/hero-post-a-after-light.webp"
+      },
+      "dark": {
+        "avif": "/marketing/captures/hero-post-a-after-dark.avif",
+        "webp": "/marketing/captures/hero-post-a-after-dark.webp"
+      }
+    },
+    "line": {
+      "x": 16,
+      "y": 190,
+      "w": 182,
+      "h": 21
+    },
+    "lineBefore": {
+      "w": 182,
+      "h": 21,
+      "light": {
+        "avif": "/marketing/captures/hero-line-11-light.avif",
+        "webp": "/marketing/captures/hero-line-11-light.webp"
+      },
+      "dark": {
+        "avif": "/marketing/captures/hero-line-11-dark.avif",
+        "webp": "/marketing/captures/hero-line-11-dark.webp"
+      }
+    },
+    "lineAfter": {
+      "w": 182,
+      "h": 21,
+      "light": {
+        "avif": "/marketing/captures/hero-line-12-light.avif",
+        "webp": "/marketing/captures/hero-line-12-light.webp"
+      },
+      "dark": {
+        "avif": "/marketing/captures/hero-line-12-dark.avif",
+        "webp": "/marketing/captures/hero-line-12-dark.webp"
+      }
+    },
+    "tick": {
+      "x": 257,
+      "y": 208
+    }
+  }
+}

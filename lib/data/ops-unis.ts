@@ -1,6 +1,7 @@
 import "server-only";
 
 import { isRefusal, rpcJson } from "@/lib/data/rpc-json";
+import { createClient } from "@/lib/supabase/server";
 
 /** University onboarding reads for /ops (PRD 5.26); accounts staff on two-factor, checked in SQL. */
 
@@ -44,4 +45,12 @@ export async function getUniRecord(id: string): Promise<UniRecord | null> {
     if (isRefusal(err, "P0002", "22P02")) return null;
     throw err;
   }
+}
+
+/** Whether students and faculty can sign up at a university now (universities.live_at, phase 12). */
+export async function getUniSignup(id: string): Promise<{ liveAt: string | null; live: boolean }> {
+  const supabase = await createClient();
+  const { data } = await supabase.from("universities").select("live_at").eq("id", id).maybeSingle();
+  const liveAt = data?.live_at ?? null;
+  return { liveAt, live: liveAt !== null && Date.parse(liveAt) <= Date.now() };
 }

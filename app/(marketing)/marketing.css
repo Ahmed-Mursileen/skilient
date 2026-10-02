@@ -1,0 +1,194 @@
+/*
+ * Marketing site styles (docs/marketing-design-plan.md). Tokens only; motion per plan B3.
+ * Without JavaScript (no html[data-js]) every state shown here is the end state.
+ */
+
+/* The hero headline: two lines at 1280 px in an 8-column measure (decisions 2026-10-02). */
+.text-hero {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 1.1rem + 2.6vw, 2.75rem);
+  font-weight: 500;
+  line-height: 1.08;
+  letter-spacing: -0.022em;
+  text-wrap: balance;
+}
+
+/* Detection result: crossfade in (150 ms). */
+@keyframes detect-in {
+  from {
+    opacity: 0;
+  }
+}
+.detect-in {
+  animation: detect-in 150ms linear;
+}
+
+/* ------------------------------------------------------------------------- */
+/* Phone menu (Popover API: works without JavaScript)                        */
+/* ------------------------------------------------------------------------- */
+.site-menu {
+  inset: 0 0 0 auto;
+  opacity: 1;
+  transition:
+    opacity 150ms linear,
+    display 150ms allow-discrete,
+    overlay 150ms allow-discrete;
+}
+.site-menu:not(:popover-open) {
+  opacity: 0;
+}
+@starting-style {
+  .site-menu:popover-open {
+    opacity: 0;
+  }
+}
+.site-menu::backdrop {
+  background: rgb(14 13 11 / 0.4);
+}
+
+/* ------------------------------------------------------------------------- */
+/* Request sheet: bottom sheet on phone, dialog from 640 px                  */
+/* ------------------------------------------------------------------------- */
+.request-sheet {
+  width: 100%;
+  max-width: 100%;
+  margin: auto 0 0;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  box-shadow: var(--elevation-4);
+  opacity: 1;
+  transition:
+    opacity 200ms linear,
+    display 200ms allow-discrete,
+    overlay 200ms allow-discrete;
+}
+.request-sheet:not([open]) {
+  opacity: 0;
+}
+@starting-style {
+  .request-sheet[open] {
+    opacity: 0;
+  }
+}
+.request-sheet::backdrop {
+  background: rgb(14 13 11 / 0.45);
+}
+@media (min-width: 640px) {
+  .request-sheet {
+    width: min(32rem, calc(100vw - 2rem));
+    margin: auto;
+    border-radius: var(--radius-lg);
+  }
+}
+
+/* ------------------------------------------------------------------------- */
+/* Hero phone and the focal sequence                                          */
+/* ------------------------------------------------------------------------- */
+.hero-phone {
+  width: min(100%, 22rem);
+  padding: 10px 10px 0;
+  border: 1px solid var(--border-strong);
+  border-bottom: 0;
+  border-radius: 2.25rem 2.25rem 0 0;
+  background: var(--bg-elevated);
+  box-shadow: var(--elevation-3);
+}
+.dark .hero-phone {
+  box-shadow: none;
+}
+.hero-screen {
+  position: relative;
+  height: 26rem;
+  overflow: hidden;
+  border-radius: 1.6rem 1.6rem 0 0;
+  background: var(--bg-page);
+}
+@media (max-width: 639px) {
+  .hero-top {
+    display: none;
+  }
+}
+@media (min-width: 1024px) {
+  .hero-screen {
+    height: 35rem;
+  }
+}
+.hero-feed {
+  display: flex;
+  flex-direction: column;
+  gap: 2.05%;
+}
+.hero-card {
+  position: relative;
+}
+.hero-card-a {
+  order: 1;
+}
+.hero-card-b {
+  order: 2;
+}
+.hero-a-stack {
+  display: grid;
+}
+.hero-a-stack > * {
+  grid-area: 1 / 1;
+  position: relative;
+}
+.hero-a-before,
+.hero-roll {
+  display: none;
+}
+.hero-tap {
+  position: absolute;
+  width: 11%;
+  aspect-ratio: 1;
+  border: 2px solid var(--text-primary);
+  border-radius: 9999px;
+  opacity: 0;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+.hero-roll {
+  position: absolute;
+  overflow: hidden;
+  background: var(--bg-surface);
+}
+.hero-roll-track {
+  display: flex;
+  flex-direction: column;
+  height: 200%;
+}
+.hero-roll-track > * {
+  height: 50%;
+}
+.hero-roll-track picture,
+.hero-roll-track img {
+  height: 100%;
+}
+
+/* With JavaScript: the start state until the sequence runs. */
+[data-js] .hero-screen:not([data-state="done"]) .hero-card-a {
+  order: 2;
+}
+[data-js] .hero-screen:not([data-state="done"]) .hero-card-b {
+  order: 1;
+}
+[data-js] .hero-screen[data-state="start"] .hero-a-before,
+[data-js] .hero-screen[data-state="answered"] .hero-a-before {
+  display: block;
+}
+[data-js] .hero-screen[data-state="start"] .hero-a-after {
+  opacity: 0;
+}
+[data-js] .hero-roll {
+  display: block;
+}
+
+/* ------------------------------------------------------------------------- */
+/* Live at                                                                    */
+/* ------------------------------------------------------------------------- */
+.live-list > li:not(:last-child)::after {
+  content: "/";
+  margin-inline: 0.6em;
+  color: var(--interactive-primary);
+}
