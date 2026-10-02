@@ -1601,3 +1601,7 @@ Append-only. One dated entry per product decision, with the reason. Carried over
   `docs/setup-checklist.md` "B6". Also deferred: a PayFast adapter, recording a dashboard-made Safepay refund from `/ops/billing`
   (until Safepay's refund API is confirmed staff refund there and void or credit by hand), accreditation report templates, and the
   visual design-gate pass (phase 14; this phase ran axe in both themes on every new screen).
+- 2026-10-02 (phase 10, fix): Invoice PDFs answered `render_failed` on Vercel: the route's function didn't include the headless
+  Chromium files (`outputFileTracingIncludes` in `next.config.ts` lists them per route). Added `/api/billing/invoice/**`, and
+  `/api/uni/export` (the phase 9 dashboard PDF had the same gap); invoices now embed Spectral and Barlow like CVs, since
+  Vercel's Chromium has no system fonts.
