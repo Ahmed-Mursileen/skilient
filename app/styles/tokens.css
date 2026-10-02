@@ -73,6 +73,12 @@
   --elevation-3: 0 4px 12px rgb(14 13 11 / 0.08), 0 8px 28px rgb(14 13 11 / 0.09);
   --elevation-4: 0 8px 24px rgb(14 13 11 / 0.1), 0 20px 52px rgb(14 13 11 / 0.12);
   --elevation-inset: inset 0 1px 2px rgb(14 13 11 / 0.06);
+
+  /* Chart series (categorical, fixed order; validated for CVD and contrast, phase 11) */
+  --series-1: #0a58e0;
+  --series-2: #e04020;
+  --series-3: #0a9290;
+  --series-4: #eda100;
 }
 
 .dark {
@@ -135,6 +141,12 @@
   --elevation-3: 0 4px 12px rgb(0 0 0 / 0.4), 0 8px 28px rgb(0 0 0 / 0.45);
   --elevation-4: 0 8px 24px rgb(0 0 0 / 0.5), 0 20px 52px rgb(0 0 0 / 0.55);
   --elevation-inset: inset 0 1px 2px rgb(0 0 0 / 0.3);
+
+  /* Chart series (dark steps of the same ramps, validated against the dark surface) */
+  --series-1: #2878f8;
+  --series-2: #e04020;
+  --series-3: #10aaaa;
+  --series-4: #c98500;
 }
 
 :root {

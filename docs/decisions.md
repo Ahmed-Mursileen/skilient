@@ -1699,3 +1699,24 @@ Append-only. One dated entry per product decision, with the reason. Carried over
 - 2026-10-02 (phase 11, slice 3): "A moderator can't open a chat outside a report" is proven in pgTAP 47: staff (even a super admin
   on aal2) read no `chat_messages` or `chat_threads` rows and `thread_messages` returns nothing for a non-member; the only chat
   content staff see is `report_messages`, copied at report time.
+- 2026-10-02 (phase 11, slice 4): Config. Every `platform_config` key has a row in the new `config_keys` (area, description,
+  when it applies, JSON schema). The schemas were generated from each key's current value: same keys (no extras, none missing),
+  same types, numbers never negative, arrays keep their element type; `pg_jsonschema` (enabled in `extensions`) checks a new value
+  in SQL. Super admins save versions at `/ops/config/[key]` with a reason, against the version they started from (a newer save in
+  between is refused); the editor shows a path-level diff before saving and every version's diff in the history; versions are
+  never edited. `ranking.*` applies at the next nightly run (proven in pgTAP 48: published scores keep formula v1 until the run);
+  everything else applies on save. A new config key needs a `config_keys` row (pgTAP 48 fails otherwise).
+- 2026-10-02 (phase 11, slice 4): Plan prices are edited at `/ops/config/plans` (super admins, reason, audited before/after; the
+  history is the audit log for that plan). They stay in `plans`, so new subscriptions and renewals use them (`renewal_quote` reads
+  the plan at renewal) and paid periods keep their price. A plan keeps the currencies it has; staff-applied plans have no price.
+- 2026-10-02 (phase 11, slice 4): The skill dictionary is at `/ops/config/skills` for trust reviewers: add (id, name, category,
+  optional parent; no GitHub detectors until a developer adds them), rename, retire, restore, never delete; each audited.
+- 2026-10-02 (phase 11, slice 4): Metrics. One materialised view (`private.ops_metrics_mv`: signups by account type for 90 days,
+  L2+ evidence rate for the 15 largest universities, contact requests per week, hires per month, MRR per stream from live
+  subscriptions) refreshed hourly by `ops-metrics` (:23), plus `private.ops_metric_snapshots` for weekly actives per university
+  (daily) and queue backlogs (hourly), kept 400 days. `/ops/metrics` is open to every staff role and links to PostHog for funnels
+  and retention. Charts use **Recharts** (Ahmed asked for a chart library): series colours are new `--series-1..4` tokens from
+  the brand ramps (blue, vermillion, teal, amber), checked with the dataviz validator in both themes (light amber is below 3:1
+  against the surface, so every chart also has a table view); one axis per chart, legends for two or more series, hover
+  tooltips, 2px lines, 4px rounded bar ends; the chart itself is hidden from screen readers and not focusable, and the table view
+  carries the numbers.

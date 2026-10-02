@@ -1,5 +1,6 @@
 import {
   Buildings,
+  ChartLine,
   CalendarX,
   ChatText,
   ClipboardText,
@@ -11,6 +12,7 @@ import {
   Prohibit,
   Scales,
   SealCheck,
+  SlidersHorizontal,
   Tray,
   UserList,
   UsersFour,
@@ -51,6 +53,8 @@ export const OPS_AREAS: OpsArea[] = [
   { key: "graduation", label: "Graduation", href: "/ops/graduation", icon: ClipboardText, group: "Organisations", roles: ["accounts"], match: ["/ops/graduation"] },
   { key: "billing", label: "Billing", href: "/ops/billing", icon: CreditCard, group: "Organisations", roles: ["accounts"], match: ["/ops/billing"] },
   { key: "staff", label: "Staff", href: "/ops/staff", icon: UsersFour, group: "Platform", roles: ["super_admin"], match: ["/ops/staff"] },
+  { key: "config", label: "Config", href: "/ops/config", icon: SlidersHorizontal, group: "Platform", roles: [], match: ["/ops/config"] },
+  { key: "metrics", label: "Metrics", href: "/ops/metrics", icon: ChartLine, group: "Platform", roles: [], match: ["/ops/metrics"] },
   { key: "audit", label: "Audit log", href: "/ops/audit", icon: ListMagnifyingGlass, group: "Platform", roles: [], match: ["/ops/audit"] },
 ];
 

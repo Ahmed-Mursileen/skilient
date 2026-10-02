@@ -709,6 +709,19 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"config_keys": {
+                  Row: {
+                    "applies": string,"area": string,"description": string,"key": string,"schema": NonNullable<Json>,"updated_at": string
+                  }
+                  Insert: {
+                    "applies": string,"area": string,"description": string,"key": string,"schema": NonNullable<Json>,"updated_at"?: string
+                  }
+                  Update: {
+                    "applies"?: string,"area"?: string,"description"?: string,"key"?: string,"schema"?: NonNullable<Json>,"updated_at"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
                 },"contact_requests": {
                   Row: {
                     "closed_at": string | null,"created_at": string,"decided_at": string | null,"decline_reason": string | null,"expires_at": string,"id": string,"message": string,"org_id": string,"recruiter_id": string | null,"role_title": string,"status": Database["public"]['Enums']["contact_status"],"student_id": string,"thread_id": string | null
@@ -4441,10 +4454,19 @@ isOneToOne: false
 "ops_competitions":
 { Args: { "p_status"?: string }; Returns: Json
                            },
+"ops_config_history":
+{ Args: { "p_key": string }; Returns: Json
+                           },
+"ops_config_keys":
+{ Args: Record<PropertyKey, never>; Returns: Json
+                           },
 "ops_cv_records":
 { Args: { "p_query": string }; Returns: {
               "code": string,"full_name": string,"id": string,"issued_at": string,"revoked_at": string,"revoked_reason": string,"superseded": boolean,"user_id": string,"username": string,"version": number
             }[]
+                           },
+"ops_edit_skill":
+{ Args: { "p_action": string,"p_category": string,"p_id": string,"p_name": string,"p_parent": string,"p_reason": string }; Returns: undefined
                            },
 "ops_end_subscription":
 { Args: { "p_reason": string,"p_sub": string }; Returns: undefined
@@ -4473,6 +4495,9 @@ isOneToOne: false
 "ops_mark_invoice_paid":
 { Args: { "p_invoice": string,"p_reason": string,"p_reference": string }; Returns: undefined
                            },
+"ops_metrics":
+{ Args: Record<PropertyKey, never>; Returns: Json
+                           },
 "ops_org_case":
 { Args: { "p_org": string }; Returns: Json
                            },
@@ -4481,6 +4506,12 @@ isOneToOne: false
                            },
 "ops_orgs":
 { Args: { "p_status"?: string }; Returns: Json
+                           },
+"ops_plan_history":
+{ Args: { "p_plan": string }; Returns: Json
+                           },
+"ops_plans":
+{ Args: Record<PropertyKey, never>; Returns: Json
                            },
 "ops_queue":
 { Args: { "p_status"?: string }; Returns: {
@@ -4523,14 +4554,23 @@ isOneToOne: false
 "ops_sanctions":
 { Args: { "p_active"?: boolean }; Returns: Json
                            },
+"ops_set_config":
+{ Args: { "p_expected": number,"p_key": string,"p_reason": string,"p_value": Json }; Returns: number
+                           },
 "ops_set_final_year_batch":
 { Args: { "p_batch": number,"p_reason": string,"p_university": string }; Returns: undefined
+                           },
+"ops_set_plan_price":
+{ Args: { "p_plan": string,"p_price_pkr": number,"p_price_usd": number,"p_reason": string }; Returns: undefined
                            },
 "ops_set_tax_rate":
 { Args: { "p_from": string,"p_label": string,"p_province": string,"p_rate": number,"p_reason": string }; Returns: string
                            },
 "ops_simulate":
 { Args: { "p_action": string,"p_reason": string,"p_sub": string }; Returns: Json
+                           },
+"ops_skills":
+{ Args: Record<PropertyKey, never>; Returns: Json
                            },
 "ops_spam_reviews":
 { Args: { "p_status"?: string }; Returns: Json

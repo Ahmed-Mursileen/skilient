@@ -47,3 +47,24 @@ export function pktDayRange(from?: string, to?: string): { from?: string; to?: s
   }
   return { from: f ? new Date(Date.parse(`${f}T00:00:00+05:00`)).toISOString() : undefined, to: end };
 }
+
+/** Leaf paths of a JSON value ("caps.skills"); arrays and scalars are leaves. */
+function flatten(v: unknown, prefix: string, out: Map<string, string>) {
+  if (isObject(v) && Object.keys(v).length) {
+    for (const [k, child] of Object.entries(v)) flatten(child, prefix ? `${prefix}.${k}` : k, out);
+  } else if (v !== undefined) {
+    out.set(prefix || "value", JSON.stringify(v));
+  }
+}
+
+/** Path-level changes between two config versions: only what differs, sorted by path. */
+export function configDiff(before: unknown, after: unknown): DiffRow[] {
+  const b = new Map<string, string>();
+  const a = new Map<string, string>();
+  flatten(before, "", b);
+  flatten(after, "", a);
+  return [...new Set([...b.keys(), ...a.keys()])]
+    .sort()
+    .filter((k) => b.get(k) !== a.get(k))
+    .map((key) => ({ key, before: b.get(key) ?? null, after: a.get(key) ?? null, changed: true }));
+}
