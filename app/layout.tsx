@@ -35,7 +35,8 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
     <html lang="en" className={fontVariables} suppressHydrationWarning>
       <body className="min-h-dvh bg-bg-page font-sans text-body text-text-primary">
         <ThemeProvider nonce={nonce}>{children}</ThemeProvider>
-        <SpeedInsights />
+        {/* /_vercel/speed-insights only exists on Vercel; elsewhere (local, CI) the script URL falls through to the app. */}
+        {process.env.VERCEL ? <SpeedInsights /> : null}
       </body>
     </html>
   );
