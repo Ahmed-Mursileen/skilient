@@ -1940,6 +1940,19 @@ isOneToOne: false
                   Relationships: [
                     
                   ]
+                },"ops_view_sessions": {
+                  Row: {
+                    "expires_at": string,"id": string,"pages": (string)[],"reason": string,"staff_id": string,"started_at": string,"user_id": string
+                  }
+                  Insert: {
+                    "expires_at"?: string,"id"?: string,"pages"?: (string)[],"reason": string,"staff_id": string,"started_at"?: string,"user_id": string
+                  }
+                  Update: {
+                    "expires_at"?: string,"id"?: string,"pages"?: (string)[],"reason"?: string,"staff_id"?: string,"started_at"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
                 },"org_events": {
                   Row: {
                     "actor_id": string | null,"at": string,"id": number,"kind": string,"org_id": string,"student_id": string | null
@@ -4445,6 +4458,9 @@ isOneToOne: false
 "ops_gateway_activity":
 { Args: Record<PropertyKey, never>; Returns: Json
                            },
+"ops_github_resync":
+{ Args: { "p_reason": string,"p_user": string }; Returns: number
+                           },
 "ops_grant":
 { Args: { "p_ends_at": string,"p_id": string,"p_key": string,"p_reason": string,"p_type": string,"p_value": Json }; Returns: string
                            },
@@ -4474,11 +4490,17 @@ isOneToOne: false
 "ops_quota_override":
 { Args: { "p_id": string,"p_key": string,"p_reason": string,"p_type": string,"p_used": number }; Returns: undefined
                            },
+"ops_recompute_skills":
+{ Args: { "p_reason": string,"p_user": string }; Returns: undefined
+                           },
 "ops_refund":
 { Args: { "p_amount": number,"p_payment": string,"p_reason": string }; Returns: undefined
                            },
 "ops_remove_uni_question":
 { Args: { "p_id": string,"p_reason": string }; Returns: undefined
+                           },
+"ops_reset_mfa":
+{ Args: { "p_identity_note": string,"p_user": string }; Returns: string
                            },
 "ops_resolve_hire_fee":
 { Args: { "p_fee": string,"p_outcome": string,"p_reason": string }; Returns: undefined
@@ -4530,6 +4552,18 @@ isOneToOne: false
                            },
 "ops_university_hides":
 { Args: { "p_case"?: string }; Returns: Json
+                           },
+"ops_user_record":
+{ Args: { "p_user": string }; Returns: Json
+                           },
+"ops_user_search":
+{ Args: { "p_query": string }; Returns: Json
+                           },
+"ops_view_as_page":
+{ Args: { "p_page": string,"p_user": string }; Returns: Json
+                           },
+"ops_view_as_start":
+{ Args: { "p_reason": string,"p_user": string }; Returns: string
                            },
 "ops_void_invoice":
 { Args: { "p_invoice": string,"p_reason": string }; Returns: undefined

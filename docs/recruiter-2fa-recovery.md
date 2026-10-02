@@ -1,48 +1,33 @@
-# Recruiter locked out of two-factor (until phase 11)
+# Someone locked out of two-factor
 
-The staff "reset 2FA" action in `/ops` arrives in phase 11 (decisions.md, 2026-09-28). A recruiter without their authenticator or
-backup codes can't open the portal (it needs two-factor in the route and in the database), so until then a **super admin** resets
-it by hand. This needs an identity check first: it removes the only thing between an attacker and a company's candidate data.
+For anyone who has lost both their authenticator and their backup codes: recruiters, university admins, staff, or students who
+turned two-factor on. Since phase 11 a **super admin** resets it in `/ops` (decisions.md 2026-09-28 and "Phase 11"). It is the last
+resort: it removes the only thing between an attacker and the account (for a recruiter, a company's candidate data), so check
+identity first, every time.
 
 ## 1. Check it is them
 
-1. The request must come from the recruiter's **work email** (the one on the account). If it comes from anywhere else, answer
-   from the work email address and wait for a reply there.
-2. Ask a **different admin of the same organisation** to confirm in writing (reply from their work email), or, for a sole admin,
-   check that the company website lists them (or call a switchboard number from the company website, not one they give you).
-3. Write down who confirmed, how and when. You need it for step 3.
+1. The request must come from the account's **own email address**. If it comes from anywhere else, answer to the account's email
+   address and wait for a reply there.
+2. Confirm by a second route:
+   - **Recruiter:** a different admin of the same organisation confirms in writing from their work email; for a sole admin, check
+     that the company website lists them, or call a switchboard number from the company website (not one they give you).
+   - **University admin:** the university owner (or, for the owner, the registrar's office through a number on the university
+     website) confirms.
+   - **Student or faculty:** a short video call where they show their university ID card, matching the profile name.
+3. Write down who asked, who confirmed, how and when. That note is required.
 
-## 2. Remove the factors
+## 2. Reset it in /ops
 
-In the Supabase **SQL Editor** (replace `<recruiter user id>`; find it with
-`select id from auth.users where email = lower('<work email>');`):
+1. `/ops/users` → search the email → open the record.
+2. **Reset two-factor** (super admins only): paste the identity-check note (at least 20 characters) → **Reset two-factor**.
 
-```sql
-delete from auth.mfa_factors where user_id = '<recruiter user id>';
-delete from private.mfa_backup_codes where user_id = '<recruiter user id>';
--- Signs out every device: the old sessions may carry two-factor.
-delete from auth.sessions where user_id = '<recruiter user id>';
-```
+What this does, in one step: every authenticator and backup code is removed, every device is signed out, the note goes into
+`ops_audit_log` with the before/after (`user.mfa_reset`), the person gets an in-app notice and a security email telling them to
+turn two-factor on again. Portals that need two-factor (`/recruit`, `/org`, `/uni`, `/ops`) send them to Settings → Security
+before showing anything. Nothing else about the account, organisation or university changes.
 
-What this does: the next sign-in has no second step, and the portal sends the recruiter to **Settings → Security** to turn two-factor
-on again before it shows anything. Nothing about the organisation, shortlists or notes changes.
+## 3. Afterwards
 
-## 3. Record it in `ops_audit_log`
-
-```sql
-insert into public.ops_audit_log (staff_id, action, target_type, target_id, reason, after)
-values (
-  '<your user id>',
-  'recruiter_2fa_reset',
-  'user',
-  '<recruiter user id>',
-  '<who asked, who confirmed, how, when>',
-  jsonb_build_object('via', 'sql_editor')
-);
-```
-
-## 4. Tell them
-
-Email the recruiter from the Skilient address: two-factor was reset after the identity check, sign in and turn it on straight away,
-and keep the new backup codes somewhere other than the authenticator's device. If you didn't hear from them first, also email the
-organisation's other admins that a reset happened.
+If the request didn't come from them first, also tell the organisation's other admins (or the university owner) that a reset
+happened. Never reset your own two-factor this way; another super admin does it.
