@@ -1610,3 +1610,6 @@ Append-only. One dated entry per product decision, with the reason. Carried over
   exists only on Vercel; elsewhere the URL fell through to the auth gate and returned HTML, a "Refused to execute script"
   error that the E2E CSP checks (rightly) fail on. Both are cookieless and same-origin (`'self'` already covers them);
   PostHog (EU) stays the product analytics.
+- 2026-10-02 — Axiom waits for Vercel Pro: its Vercel integration needs Log Drains (Pro only). Shipping logs from `lib/log.ts`
+  straight to Axiom's API was the alternative; not worth a token and per-request work when Pro is needed anyway before launch
+  (Hobby is non-commercial only). Until then, Vercel's own runtime logs.
