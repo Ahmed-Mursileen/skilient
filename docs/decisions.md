@@ -1742,3 +1742,16 @@ Append-only. One dated entry per product decision, with the reason. Carried over
   can't suspend past 7 days (46) or read a chat outside a report (47); every ops write has its audit row (49, plus each slice's
   own tests); an appeal can't be decided by the original staff member (46); an unverified organisation can't send a contact
   request (41); a weight change shows up only after the next recompute (48).
+- 2026-10-02 (Ahmed, phase 12 answers): Every default in `docs/marketing-design-plan.md` "Settled answers" was taken. In short:
+  marketing pages render per request with the nonce CSP (data cached for an hour), not statically, so the signed-in check stays
+  server-side and scripts never need `'unsafe-inline'`. Universities gain `live_at`: students and faculty sign up only at live
+  universities (NUTECH for the closed beta); staff open them in `/ops/universities`, which emails confirmed requesters. Officials
+  may sign up anywhere so portals can be claimed first. "Live at" lists live universities with 10+ verified students. Captures use
+  fictional sample content at NUTECH. Higgsfield art is two-colour risograph (10 free credits until a top-up). About, Privacy,
+  contact and socials wait for Ahmed's text. University leads go to `sales_leads` in `/ops/leads`. Code-led impeccable build.
+  Lighthouse CI stays report-only. Claude merges each slice once CI is green.
+- 2026-10-02 (phase 12, design deviations): (1) The hero headline uses a new `--text-hero` token (about 42 px at 1280) instead of
+  `text/display`, which can't set the 12-word headline in two lines at 1280. (2) "For organisations" uses three index rows instead
+  of three cards (the taste skill bans equal three-card rows). (3) The landing reuses `/api/universities/domains` (now with a live
+  flag) instead of a new `/api/public/university-domains`. (4) The impeccable concept roll was skipped because PRD 5.1 and screen
+  spec 3.1 pin both the world and the structure. (5) PostHog stays in phase 13; phase 12 only names its five marketing events.
