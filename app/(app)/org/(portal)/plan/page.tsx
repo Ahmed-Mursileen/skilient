@@ -11,7 +11,7 @@ const FEATURES: { key: string; label: string }[] = [
   { key: "api.access", label: "API, webhooks and ATS export" },
 ];
 
-/** /org/plan (PRD 5.20, 5.24): what this organisation may use. Paid plans and billing arrive with phase 10. */
+/** /org/plan (PRD 5.20, 5.24): what this organisation may use. Plans, add-ons and invoices are at /org/billing. */
 export default async function PlanPage() {
   const plan = await getOrgPlan();
   const left = plan.contact_credits_limit === null ? null : Math.max(plan.contact_credits_limit - plan.contact_credits_used, 0);
@@ -35,7 +35,7 @@ export default async function PlanPage() {
           ))}
         </ul>
         <p className="text-body-sm text-text-secondary">
-          A contact credit is spent when you send a request and is not refunded if the student declines. Credits never reveal anonymised candidates: a student reveals themselves by accepting. Paid plans, invoices and Enterprise single sign-on are coming; for SSO or an annual invoice, write to the Skilient team.
+          A contact credit is spent when you send a request and is not refunded if the student declines. Credits never reveal anonymised candidates: a student reveals themselves by accepting. Plans, extra credits, invoices and hiring fees are under Billing; for Enterprise (single sign-on, annual invoicing), write to the Skilient team.
         </p>
       </section>
     </main>

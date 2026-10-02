@@ -19,6 +19,9 @@ export default async function ProfileSettingsPage() {
     .eq("user_id", user.id)
     .single();
 
+  // The university's own department list when it has one (PRD 5.23).
+  const { data: options } = await supabase.from("departments").select("name").eq("university_id", user.universityId ?? "").order("name");
+  const departments = (options ?? []).map((d) => d.name);
   return (
     <main className="mx-auto flex max-w-2xl flex-col gap-6 px-[var(--page-gutter)] py-8">
       <div>
@@ -33,6 +36,7 @@ export default async function ProfileSettingsPage() {
         </p>
       ) : (
         <ProfileSettingsForm
+          departments={departments}
           universityName={user.universityName}
           avatarUrl={publicImageUrl("avatars", p.avatar_path)}
           coverUrl={publicImageUrl("covers", p.cover_path)}

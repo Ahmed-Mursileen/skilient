@@ -166,17 +166,24 @@ Legend: 📖 = PRD files to read (in `docs/prd/`), ✅ = done-when checks.
 
 📖 `05-22-multi-university-and-global-feed.md`, `05-23-university-portal.md`
 
-- [ ] Claim flow, admin roles, ecosphere customisation (contrast-checked), student records with access log, dashboards (groups ≥ 5), announcements targeting, events + QR check-in, job fairs, hackathons, moderation hide
+- [x] Claim flow, admin roles, ecosphere customisation (contrast-checked), student records with access log, dashboards (groups ≥ 5), announcements targeting, events + QR check-in, job fairs, hackathons, moderation hide
 
 ✅ A Basic university gets no individual records via direct RPC · every record view is logged · a job-fair queue stays consistent with 200 concurrent students
+
+*Status 2026-10-04: pgTAP `43_university_portal` (Basic refused even through the private function; one log row per view; contrast; hide reaches the queue; 3 announcements a day), `tests/worker/fair-queue.test.ts` (200 parallel PostgREST joins get positions 1..200), E2E `uni.spec.ts` with axe in both themes. Deferred as agreed: university-admin tour, accreditation templates, GitHub App hackathon repos, billing and sponsorship grants (phase 10), full /ops/universities tabs (phase 11).*
 
 ## Phase 10 — Billing
 
 📖 `04a-business-model-and-monetisation.md`, `04b-paid-feature-implementation.md`, `05-24-billing-and-organisation-admin.md`
 
-- [ ] B1 entitlements + quotas + registry · B2 gateways, checkout, webhooks, lifecycle · B3 add-ons, hire fees, invoices, tax · B4 sponsorship sync · B5 staff billing tools · B6 end-to-end PKR and USD
+- [x] B1 entitlements + quotas + registry · B2 gateways, checkout, webhooks, lifecycle · B3 add-ons, hire fees, invoices, tax · B4 sponsorship sync · B5 staff billing tools
+- [ ] B6 end-to-end PKR and USD (deferred until the merchant accounts exist: checklist in `docs/setup-checklist.md` "B6", decisions.md 2026-10-05)
 
 ✅ Registry and concurrency tests pass · every lifecycle test passes in sandbox · real test transactions in PKR and USD
+
+- [x] Registry and concurrency tests pass (`tests/unit/billing-registry.test.ts`, `tests/worker/billing-registry.test.ts`, `tests/worker/billing-concurrency.test.ts`)
+- [x] Every lifecycle test passes against the simulated gateway plus recorded-format fixtures for Safepay and Paddle (pgTAP `44_billing`, `tests/worker/billing-webhooks.test.ts`, `tests/unit/billing-gateways.test.ts`); a replay changes nothing
+- [ ] Real test transactions in PKR and USD (B6, deferred)
 
 ## Phase 11 — Ops portal (full)
 

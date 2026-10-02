@@ -106,7 +106,7 @@ Claude Code can't create these accounts or keys. Do them before (or alongside) p
   (the first call after a deploy is the cold start). Paste both JSON answers into the next session;
   they give PDF size, Node and Chromium memory, and timings. If `total_ms` is over 10,000 when warm,
   or the call fails, say so before phase 10 turns export on.
-- [ ] **Optional: try a PDF export yourself** (test-only grant until phase 10). With your user id:
+- [ ] **Optional: try a PDF export yourself.** *Retired in phase 10: `entitlements.test_grants` no longer exists. Start the free trial at `/settings/billing`, or give yourself a grant of `cv.pdf_export` at `/ops/billing`.* (Old steps, kept for the record:) With your user id:
 
   ```sql
   insert into public.platform_config (key, version, value, reason)
@@ -139,7 +139,7 @@ Recruiter portal (decisions.md 2026-10-03). Nothing here is needed to merge; it 
      meanwhile; search, contact requests and jobs stay locked until it is verified.
 - [ ] **Verify the company** with your own staff account (staff roles and two-factor are already on, phase 4): open `/ops/orgs`,
   choose the company, and press **Verify**. Reload `/recruit` as the recruiter: the banner is gone.
-- [ ] **Give the company test entitlements** (billing is phase 10; until then this is how Explore turns into full results). In the
+- [ ] **Give the company test entitlements.** *Retired in phase 10: buy a plan on the simulated gateway at `/org/billing`, or give a comp plan at `/ops/billing`.* (Old steps, kept for the record:) In the
   Supabase **SQL editor** run the statement below. Find the company id first:
 
   ```sql
@@ -185,12 +185,146 @@ Recruiter portal (decisions.md 2026-10-03). Nothing here is needed to merge; it 
   notices). Without them the admin still sees the invite link on screen.
 - [ ] **If a recruiter loses their authenticator**, follow `docs/recruiter-2fa-recovery.md` (the staff reset is phase 11).
 
-## Before phase 10 ⏳
+## Phase 9
 
-- [ ] **Company registration** (needed by payment gateways).
-- [ ] **Local PKR gateway** merchant account (Safepay or PayFast): sandbox + live keys, webhook secret; confirm recurring/saved-card support.
-- [ ] **USD merchant-of-record** (Paddle or similar): confirm it accepts a Pakistani seller; sandbox + live keys.
-- [ ] **Accountant**: provincial sales tax rates for `tax_rates`.
+University portal (decisions.md "Phase 9"). Nothing needs a new key or secret.
+
+- [ ] **First university owner (claim).** The official signs up at `/signup?role=university_admin` with an email on a
+      `faculty` or `both` domain of their university, confirms it, turns on two-factor in Settings → Security, and sends the
+      authorisation letter (PDF, up to 5 MB) at `/uni/claim`. An `accounts` staff member (two-factor) opens
+      `/ops/universities`, checks the letter against the university's public pages and records the decision with a reason.
+      If the official's email domain isn't listed yet, add it first (below).
+- [ ] **Add a domain by hand** (only when no owner exists yet to ask for it; owners use Settings → Domains). Public webmail
+      domains are refused by a trigger. In the SQL editor:
+      ```sql
+      insert into public.university_domains (university_id, domain, kind, source)
+      select id, 'staff.example.edu.pk', 'faculty', 'ops' from public.universities where slug = 'example-university';
+      ```
+- [ ] **Test plans (optional, never in production).** *Retired in phase 10: issue a licence or a comp plan at `/ops/billing` instead.* (Old steps:) A claimed university's licence level until billing (phase 10):
+      ```sql
+      insert into public.platform_config (key, version, value, reason)
+      select 'uni.test_plans', max(version) + 1,
+             (select value from public.platform_config where key = 'uni.test_plans' order by version desc limit 1)
+               || jsonb_build_object((select id::text from public.universities where slug = 'nutech'), 'growth'),
+             'Phase 9 test plan for NUTECH'
+        from public.platform_config where key = 'uni.test_plans';
+      ```
+      Levels: `basic`, `growth`, `campus`; any other value, or an unclaimed university, is `free`. To remove it, insert a new
+      version whose value is the latest value minus that key (`value - '<university id>'`).
+- [ ] **Test grant for a Pro student's record-viewer list (optional):** *Retired in phase 10: use the trial or an `/ops/billing` grant.* (Old steps:)
+      ```sql
+      insert into public.platform_config (key, version, value, reason)
+      select 'entitlements.test_grants', max(version) + 1,
+             (select value from public.platform_config where key = 'entitlements.test_grants' order by version desc limit 1)
+               || jsonb_build_object('privacy.record_viewers', jsonb_build_array('<student user id>')),
+             'Phase 9 test grant'
+        from public.platform_config where key = 'entitlements.test_grants';
+      ```
+- [ ] **Disputes** (two claims for one university, or an owner who left): follow `docs/university-claim-disputes.md`.
+- [ ] Before launch: the nightly `uni-stats` job (03:37 PKT) fills the dashboards; nothing shows until its first run.
+
+## Phase 10
+
+Billing (decisions.md "Phase 10"). It runs on the **simulated gateway** until the company is registered and the merchant
+accounts exist: no money moves, every payment and invoice is marked TEST and never counts as revenue.
+
+- [ ] **Vercel env vars** (Settings → Environment Variables, Production and Preview, then redeploy):
+      `SIMULATED_GATEWAY_SECRET` = the output of `openssl rand -hex 32` (**Sensitive**), `BILLING_GATEWAY_LOCAL=simulated`,
+      `BILLING_GATEWAY_MOR=simulated`. Without the secret, checkout answers "Payments aren't available yet".
+- [ ] **Who may use test payments in production.** Staff always may. To let a tester (for example yourself as a student), add
+      their user id:
+      ```sql
+      insert into public.platform_config (key, version, value, reason)
+      select 'billing.simulated_testers', max(version) + 1,
+             (select value from public.platform_config where key = 'billing.simulated_testers' order by version desc limit 1)
+               || jsonb_build_array('<user id>'),
+             'Ahmed testing billing'
+        from public.platform_config where key = 'billing.simulated_testers';
+      ```
+      (Previews and local runs let everyone use the simulated gateway.)
+- [ ] **The billing worker** deploys with the other Edge Functions on merge; its Vault secret `billing_worker_secret` is generated by
+      the migration and it reuses `project_url`. Nothing to type. Check it once: Supabase → Edge Functions → `billing-worker` shows
+      deployed, and `select * from cron.job where jobname like 'billing%';` lists `billing-events`, `billing-tick`, `billing-worker`,
+      `billing-purge` (and `sponsorship-sync`).
+- [ ] **Company details on invoices** (when the company exists). Until legal name, NTN and address are set every invoice says
+      DRAFT; STRN is needed for tax invoices; bank details print on organisation and university invoices:
+      ```sql
+      insert into public.platform_config (key, version, value, reason)
+      select 'billing.company', max(version) + 1, jsonb_build_object(
+               'legal_name', 'Skilient (Private) Limited', 'trading_name', 'Skilient',
+               'ntn', '<NTN>', 'strn', '<STRN>', 'address', '<registered address, city>',
+               'email', 'billing@skilient.com', 'phone', '<phone>',
+               'bank', jsonb_build_object('account_title', '<account title>', 'bank_name', '<bank>', 'iban', '<IBAN>',
+                                          'swift', '<SWIFT>', 'branch', '<branch>')),
+             'Company registered'
+        from public.platform_config where key = 'billing.company';
+      ```
+      Issued invoices never change; only new ones carry the details.
+- [ ] **Sales tax rates** (from the accountant): `/ops/billing?tab=gateways` → "Sales tax rates", one row per province with the
+      date it applies from (e.g. Punjab, "Punjab sales tax on services", 16, from 1 July). PKR invoices to organisations and
+      universities in a province with no rate say "tax rate isn't set" and are drafts. Students' prices include tax (receipts).
+- [ ] **First manual grants** (launch partners, Enterprise): `/ops/billing` → find the account → "Give a comp plan" (plan and
+      months, e.g. Growth for 6 months) or "Add grant" for one key with an expiry. Both need a reason and are audited. Prefer the
+      page: the SQL below does the same for Growth for six months but writes no audit row, so keep it for emergencies:
+      ```sql
+      insert into public.entitlement_grants (subject_type, subject_id, key, value, source, ends_at, reason)
+      select 'org', '<org id>', g.key, g.value, 'admin', now() + interval '6 months', 'Launch partner: Growth free for 6 months'
+        from public.plans p cross join lateral jsonb_each(p.grants) g where p.id = 'recruiter_growth_monthly';
+      ```
+- [ ] **University licences**: when a university's owner asks (or signs a PO), `/ops/billing?tab=gateways` → "Issue a university
+      licence" with its id, level, start date and PO number. It is active at once; the invoice is due in 30 days; mark it paid with the
+      bank reference when the transfer arrives (account page → Invoices → Mark paid). Unpaid 14 days after the due date, it lapses.
+- [ ] **Billing live mode** (only after a real gateway is live, below): hiring-fee and licence invoices are TEST until then.
+      ```sql
+      insert into public.platform_config (key, version, value, reason)
+      select 'billing.live_mode', max(version) + 1, 'true', 'Real gateway live' from public.platform_config where key = 'billing.live_mode';
+      ```
+
+### Switching to a real gateway
+
+Do this once per gateway when its merchant account exists. Safepay takes PKR (students, organisations, university pay links);
+Paddle takes USD from organisations. Nothing in the lifecycle changes: only env vars and the webhook URL.
+
+1. **Sign up and get sandbox keys.**
+   - Safepay: <https://getsafepay.com> → merchant sign-up (needs the company's NTN and bank account). In the **sandbox** dashboard:
+     Developers → API keys gives the **API key** (`sec_…`, the "public/client" key the SDK calls `api_key`) and the **secret key**;
+     Developers → Webhooks gives the **webhook shared secret**. Ask Safepay support to confirm, in writing: JazzCash and Easypaisa on
+     hosted checkout, saved cards (tokenisation) for renewals, and the refund API.
+   - Paddle: <https://www.paddle.com> → sign up for Paddle Billing; **first confirm they onboard a Pakistan-registered seller**.
+     In the **sandbox** (sandbox-vendors.paddle.com): Developer tools → Authentication → **API key**; Checkout → Checkout settings →
+     set a **default payment link** (your site); Developer tools → Notifications → **New destination** (below) gives the **secret key**.
+2. **Register the webhook URLs** (the gateways call these; replace the host for previews):
+   - Safepay: `https://skilient.com/api/billing/webhook/safepay`
+   - Paddle: `https://skilient.com/api/billing/webhook/paddle`, events `transaction.completed`, `transaction.payment_failed`,
+     `adjustment.created`, `adjustment.updated`.
+3. **Set the env vars** (sandbox values first), as **Sensitive**:
+   - Vercel (Production and Preview): `SAFEPAY_ENVIRONMENT=sandbox`, `SAFEPAY_API_KEY`, `SAFEPAY_SECRET_KEY`,
+     `SAFEPAY_WEBHOOK_SECRET`; `PADDLE_ENVIRONMENT=sandbox`, `PADDLE_API_KEY`, `PADDLE_WEBHOOK_SECRET`.
+   - Supabase → Edge Functions → Secrets (for `billing-worker`'s renewals and refunds): the same six, plus `BILLING_PRODUCTION=1`
+     on the production project only.
+4. **Check readiness**: `/ops/billing?tab=gateways` lists Safepay and Paddle as configured, mode `sandbox`, nothing missing.
+5. **Flip the one setting**: in Vercel set `BILLING_GATEWAY_LOCAL=safepay` (and/or `BILLING_GATEWAY_MOR=paddle`), redeploy. From now
+   on production refuses the simulated gateway (unless `BILLING_ALLOW_SIMULATED=1`), and checkouts open the gateway's page.
+6. **Sandbox test** (B6 below, with sandbox cards): run the checklist; then save one real delivery of each webhook (body only, from
+   the gateway's delivery log) over the files in `tests/fixtures/billing/<gateway>/`, run `pnpm test`, and fix anything marked
+   `CONFIRM` in `supabase/functions/_shared/billing/safepay.ts` / `paddle.ts` that the real bodies contradict.
+7. **Go live**: replace the sandbox keys with live keys, set `SAFEPAY_ENVIRONMENT=production` / `PADDLE_ENVIRONMENT=production`
+   (Vercel and Supabase), point the live dashboards' webhooks at the same URLs, redeploy, then turn on billing live mode (above).
+
+### B6: real test transactions (deferred until the merchant accounts exist)
+
+With sandbox keys set (steps 1–5), as a test student, a test organisation and a test university owner:
+
+- [ ] Student Pro monthly in **PKR** by card on Safepay sandbox → return page says "Payment confirmed" within a minute; `/settings/billing`
+      shows Active and a receipt; `/ops/billing?tab=gateways` shows Safepay's last webhook time.
+- [ ] The same by **JazzCash/Easypaisa** (if Safepay's sandbox offers them) → prepaid period, renewal reminders scheduled.
+- [ ] A **failed** sandbox card → "didn't go through", nothing charged.
+- [ ] Organisation **Starter in USD** on Paddle sandbox → Active; the payment shows Paddle's invoice number; no Skilient invoice.
+- [ ] A Paddle **renewal** (sandbox: change the subscription's next billed date) → the period moves on.
+- [ ] A **refund** from `/ops/billing` (Paddle) → payment Refunded, plan ends, credit note for PKR payments.
+- [ ] A **hiring-fee invoice** paid by its pay link on Safepay → fee Paid.
+- [ ] Resend one webhook from each dashboard → `/ops/billing` shows no new payment (replays change nothing).
+- [ ] Tick B6 in `docs/build-plan.md` and note the date in `docs/decisions.md`.
 
 ## Before phase 13
 

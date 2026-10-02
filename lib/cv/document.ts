@@ -162,7 +162,11 @@ function sectionBody(s: CvSnapshotV1, section: CvSection): SectionBody | null {
       };
     case "education": {
       const e = s.education;
-      return { kind: "p", text: [e.university, e.department, e.graduation_year ? `Class of ${e.graduation_year}` : null].filter(Boolean).join(", ") };
+      const line = [e.university, e.department, e.graduation_year ? `Class of ${e.graduation_year}` : null].filter(Boolean).join(", ");
+      // University awards (phase 9) follow the studies; older snapshots have none.
+      const awards = s.awards ?? [];
+      if (!awards.length) return { kind: "p", text: line };
+      return { kind: "list", items: [[line], ...awards.map((a): Seg[] => [{ strong: a.name }, `, awarded by ${a.university}, ${cvDate(a.awarded)}.`])] };
     }
   }
 }

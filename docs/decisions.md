@@ -1387,3 +1387,221 @@ Append-only. One dated entry per product decision, with the reason. Carried over
 - 2026-10-03 (phase 8, deferred): Company logo upload (a monogram for now), `/org/billing` and invoices (phase 10), the recruiter guided
   tour, reporting a recruiter (a new report target), account deletion for recruiters, and the hire fee itself (phase 10). The visual
   design-gate pass and in-browser screenshots are phase 14; this phase ran axe in both themes on every new screen instead.
+
+## Phase 9: university portal (decisions)
+
+- 2026-10-04 (phase 9, Ahmed's answers): All 29 planning defaults approved, with the changes noted inline below.
+- 2026-10-04 (phase 9, plan stub): Billing is still phase 10, so a university's level is a fail-closed stub. `platform_config`
+  `uni.test_plans` = `{university_id: "basic"|"growth"|"campus"}` (SQL only, empty in production). `private.uni_plan(u)` is
+  `free` unless the university is claimed (has an owner) and listed there. `private.uni_entitled(u, key)` maps the plan through a
+  fixed matrix for known keys only (`uni.dashboard`, `uni.exports`, `uni.student_records`, `uni.skills_gap`, `uni.outcomes`,
+  `uni.faculty_panel`, `uni.benchmark`, `uni.accreditation`); an unknown key is denied. `private.uni_limit(u, key)`:
+  `uni.admin_seats` 1/2/5/10, `uni.hackathons` 0/0/2/4, `uni.job_fairs` 0/0/1/2 (free/Basic/Growth/Campus). The student key
+  `privacy.record_viewers` uses the existing `has_entitlement` test grants. Phase 10 replaces the body of `uni_plan()`.
+- 2026-10-04 (phase 9, "per year"): Fair and hackathon quotas count a rolling 365 days from each one's creation (cancelled drafts
+  don't count) until phase 10 switches to the licence year.
+- 2026-10-04 (phase 9, admin accounts): University admins have the `university_admin` account role: never scored, never on
+  leaderboards, no chat, created only through a claim or an invite. An existing faculty account may accept an admin invite and keep
+  teaching (the portal comes from its `university_admins` row). Students can never be admins. Two-factor is required at the route
+  (`proxy.ts` for `/uni`) and in SQL (`private.require_uni` reads the session's `aal`).
+- 2026-10-04 (phase 9, claims): `/uni/claim`: sign up with an email on one of that university's `faculty` or `both` domains, verify,
+  set up two-factor, then upload the authorisation letter or MoU (PDF, WebP after re-encode; **5 MB max**, Free plan storage) with a
+  title. Accounts staff (two-factor) approve or reject with a reason at `/ops/universities`. One open claim per university; a
+  claimed university refuses new claims ("ask your owner for an invite"). Letters are deleted 90 days after the decision.
+  Disputes (two claims for one university, an owner who left) are fixed by staff in SQL: `docs/university-claim-disputes.md`.
+- 2026-10-04 (phase 9, invites): Owner and admins invite by email on one of the university's domains; 7-day single-use tokens,
+  only the SHA-256 stored, the link also shown on screen. Pending invites count toward `uni.admin_seats`, so a free university has
+  only its owner. The owner can hand ownership to an existing admin (two-factor, audited).
+- 2026-10-04 (phase 9, domains): The owner or an admin requests an extra domain with a reason; accounts staff approve it at
+  `/ops/universities` and signup accepts it the moment it is inserted (source `ops`, never touched by the HEC sync). **Public email
+  domains** (the phase 1 `personal_email_domains` list) can never become a university domain: refused in the app and by a trigger on
+  `university_domains`.
+- 2026-10-04 (phase 9, ecosphere visibility): `/u/[slug]` is for signed-in users only. Anyone signed in sees the branding, welcome,
+  published pages and global events; announcements, university-only events, the teachers directory and the University Feed stay
+  with that university's members.
+- 2026-10-04 (phase 9, modules): Feed off: that university's students lose the University Feed and can't post to "my university"
+  (Global stays). Events off: no university events listed or created. Project ideas off: university-audience ideas are hidden from
+  its students (global ideas still show). Leaderboard off: the University scope disappears for them (ranking unchanged). Teachers
+  directory and job board only toggle their ecosphere sections. Turning a module off never deletes data.
+- 2026-10-04 (phase 9, branding): Primary and accent colours are used only inside `/u/[slug]`, never in the app shell. Each must
+  reach 4.5:1 against `bg/page` in light (#F0EFED) and dark (#0A0A09) themes, checked by Zod in the action and by
+  `private.contrast_ratio` in SQL on save, so a direct RPC can't bypass it. Logo and cover go through the sharp re-encode into a
+  public `university-media` bucket.
+- 2026-10-04 (phase 9, slug): Owner or admin may change the slug at most once every 30 days; reserved words are refused and **old
+  slugs stay reserved for 90 days** (`university_slug_history`) so nobody else can take them; they don't redirect.
+- 2026-10-04 (phase 9, departments): `departments(university_id, name)` and `programmes(department_id, name)`;
+  `profiles.department_id` added, `profiles.department` text kept in sync by trigger so leaderboards, Explore and recruiter filters
+  keep working (tested). When a university adds a department, existing profiles whose text matches (case-insensitive) are linked,
+  and the migration backfills the same way. Students whose department isn't on their university's list are "Unassigned"
+  (coordinators don't see them) and get a Home prompt. Batch labels are display only.
+- 2026-10-04 (phase 9, onboarding questions): Up to 3 per university, **multiple choice only (2 to 6 options), no free text**,
+  optional to answer. New students see them after step 1 of onboarding, existing students as a dismissible Home card. Admins see
+  counts only (groups of 5 or more); never shown to recruiters or other users, never used for targeting. **Sensitive topics
+  (religion, ethnicity, health, politics, income) are not allowed**: the editor states the rule, a SQL keyword check refuses the
+  obvious cases, and staff can remove any question at `/ops/universities` (audited).
+- 2026-10-04 (phase 9, awards): Owner and admins award any of their students, coordinators their own department; name, description
+  and an icon from a fixed Phosphor set (no uploads). Shown on the profile and as the optional `awards` field of the CV snapshot
+  ("awarded by {University}") from the next version; revoking drops it from the next version. **Awards never affect ranking**
+  (no score function reads `badge_awards`; said in code comments and here).
+- 2026-10-04 (phase 9, calendar): Owner and admins add semesters (display) and exam periods with the existing rules (≤ 45 days, no
+  overlap, reason, audited) plus at most 90 exam days per calendar year per university. `/ops/exam-periods` stays for staff.
+- 2026-10-04 (phase 9, records): Growth and Campus only. Owners and admins see all their students, coordinators their own department,
+  career office and communications none. "Their students" = student accounts at that university, active or graduate. The list
+  `/uni/students` is Growth+ and not logged; every call of `university_student_record()` writes one log row (no dedupe). **No bulk
+  export of individual records** (no CSV of the list, no multi-student function) and **record opens are rate-limited to 100 an hour
+  per admin**. Logs are kept 2 years (`uni-records-purge`). Never visible: chat, L0 skills, recruiter notes, which recruiters
+  contacted a student, individual CV views.
+- 2026-10-04 (phase 9, record viewers): Pro students (`privacy.record_viewers`) see the viewer's name, role and time for the last 12
+  months in Settings → Privacy; others see what Pro adds and no count.
+- 2026-10-04 (phase 9, dashboards): One nightly job (`uni-stats`, 03:37 PKT, after ranking) fills `uni_stats` rows (tables, not
+  materialised views, so every read goes through one function that checks the plan). Any group under 5 shows as "fewer than 5",
+  **and a count that could be derived by subtracting the visible ones from a visible total is suppressed too** (when exactly one
+  group in a breakdown is hidden, the next-smallest is hidden with it). Free universities get Home numbers only and a locked
+  dashboard; Basic/Growth/Campus follow the 5.23 table.
+- 2026-10-04 (phase 9, faculty panel): Growth+ shows counts per teacher (reviews, supervisions, code checks, endorsements, ideas) plus
+  department totals; never student content.
+- 2026-10-04 (phase 9, exports): CSV per dashboard area (Growth+) and a PDF of the dashboard through the CV Chromium renderer. **CSV
+  cells starting with `=`, `+`, `-` or `@` are prefixed with `'`** (formula injection). Accreditation templates are deferred until
+  partners confirm the content.
+- 2026-10-04 (phase 9, sponsorship): `final_year_batch` stays staff-only (it also drives graduation, phase 6). `/uni/sponsorship` shows
+  the eligible count and active grants (0 until phase 10); the owner can request a final-year batch change, applied by accounts staff at
+  `/ops/graduation`. `/uni/billing` shows the level and "write to Skilient". Invoices, activation and reminders are phase 10.
+- 2026-10-04 (phase 9, announcements): Posts of type `announcement` with audience university, plus `announcement_meta` (category,
+  expiry ≤ 90 days) and `announcement_targets` (departments and/or batches; none = whole university, students and faculty). Owner,
+  admins and communications post; coordinators for their own department only. Never ranked or surveyed; one pinned per university at
+  a time (≤ 7 days), shown above the platform pin. In-app plus the daily digest, never instant email (60-a-day cap). **At most 3
+  announcements a day per university.**
+- 2026-10-04 (phase 9, events): New `events` and `event_registrations` (the post-event `event_rsvps` stays). Types talk, workshop,
+  hackathon, competition, other; scope university or global; owner, admins and communications create them. Capacity is enforced in
+  `rsvp_event()` with a row lock, no waitlist; reminder in-app 24 hours before. Check-in: `/events/[id]/check-in` shows a QR of an
+  HMAC token that rotates every 30 s (the previous window also accepted); the phone camera opens `/events/[id]/attend?t=…`; walk-ins
+  are registered while seats remain. Attendance feeds records and dashboards.
+- 2026-10-04 (phase 9, moderation hide): Owners and admins hide a University Feed post at their university, a comment on one, or a
+  student's event post; it is hidden from everyone but the author at once and opens a Skilient report case with the reason. **The
+  author is told (in-app) that the university hid it and why; Skilient staff can restore it** (restoring clears the hide; removing
+  removes it as usual); every hide and reversal is in `ops_audit_log`-style history (`university_hides`) visible to staff.
+  `/uni/moderation` lists cases on their content with category, status and outcome, never the reporter.
+- 2026-10-04 (phase 9, hackathons): Competitions gain `host_type` (org|university), `university_id`, nullable `org_id`. Owner, admins
+  and career office create them against `uni.hackathons`; no Skilient review (live on publish); 1 to 22 days; own students unless
+  opened to other universities; 1 to 5 approved teachers of that university judge, final score = average; L3 evidence and winner
+  badge as phase 8; teams submit a repository URL (GitHub App repos stay deferred).
+- 2026-10-04 (phase 9, fair companies): Invited by email; the company signs up as a normal recruiter and its booth opens only once
+  Skilient verifies the organisation; no plan needed. During the fair and 14 days after, the company sees the name, department, batch,
+  tier and verified skills of students in its queue or with a booked slot, and chats with students it called; students are told this
+  when they join. **A student who leaves a company's queue disappears from that company's view at once, except for interviews already
+  held.**
+- 2026-10-04 (phase 9, queues): The university's students plus graduates from the last 12 months; at most 3 queues at once; "Call
+  next" opens a DM labelled with the company and fair; no answer in 5 minutes = skipped; one interview slot per booth per student; a
+  per-booth row lock keeps positions 1..n with no gaps or duplicates under 200 concurrent joins (tested with 200 parallel PostgREST
+  calls); Realtime updates.
+- 2026-10-04 (phase 9, fair report): Attendance, conversations, interviews and hires within 90 days (phase 8 `hires`); student
+  breakdowns groups of 5+; owner, admins and career office.
+- 2026-10-04 (phase 9, roles): As the 5.23 table: owner everything; admin everything but billing and ownership; career office fairs,
+  recruiter invitations, placement analytics (outcomes) and hackathons; coordinator teacher approvals, announcements, dashboard and
+  records for their own department; communications announcements and events. Hiding content is owner and admin only.
+- 2026-10-04 (phase 9, deferred): University-admin guided tour, accreditation templates, GitHub App hackathon repositories, billing,
+  invoices and sponsorship grants (phase 10), and the full `/ops/universities` tabs (phase 11; this phase builds claims, domain
+  requests and question removal only).
+- 2026-10-04 (phase 9, deviations as built):
+  - **Brand colours per theme.** No single colour reaches 4.5:1 on both page backgrounds (#F0EFED and #0A0A09), so primary and
+    accent each have a light-mode and a dark-mode value, each checked against its own page (Zod and `private.brand_colour_error`).
+  - **Claim letters are PDF only** (5 MB; the browser uploads into the caller's folder and the action checks the `%PDF-` bytes, like
+    credentials). Paper letters are scanned to PDF.
+  - **Onboarding questions show as a Home card** for every student with an unanswered question (dismissible), not as a separate
+    onboarding screen, so the onboarding step numbers and gate stay unchanged.
+  - **Hiding content happens in `/uni/moderation`** (recent University Feed posts and comments with a Hide form): university-official
+    accounts can't open the student feed. Faculty who are also admins use the same page.
+  - **Department membership is enforced by a trigger**: once a university has its own list, a student's department must be on it
+    (`profiles_tcheck_department`); the Zod schema accepts any 2 to 80 characters and the pickers show the university's list.
+  - **Organisers see counts only** for events (going, checked in), never a list of names, so a Basic university gets no
+    individual data through events.
+  - **Fair invites need an existing recruiter account on the invited domain** to accept (`/fairs/invite`); the booth opens to
+    students once Skilient verifies the organisation.
+  - Admin actions go to `university_audit_log` (readable by the owner and admins in Settings → Admins); staff actions stay in
+    `ops_audit_log` (append-only, `on delete restrict`), which would otherwise block deleting a former admin's account.
+
+## Phase 10: billing (decisions)
+
+- 2026-10-05 (phase 10, Ahmed's answers): All 28 planning defaults approved ("proceed with default"): Safepay first for PKR,
+  Paddle Billing as the USD merchant of record (confirm it accepts a Pakistani seller before signing); students and universities pay
+  in PKR, organisations in PKR or USD; USD placeholders are PKR ÷ 280 (Starter $55, Growth $160, sponsored post $18, credit $1.10);
+  prices from the PRD, seeded by migration, recruiter yearly = 10× monthly; Enterprise and university licences are staff-applied;
+  no recruiter trial (Explore = 1 seat, 0 credits, 1 live post); the phase 8/9 keys are aliases of the PRD keys and shortlists and
+  notes need Starter; test grants migrated and retired; faculty at Growth/Campus get the post survey; upgrade credit = unused fraction
+  of the period's price, downgrades and yearly → monthly at renewal; billing emails always instant; invoices rendered on demand;
+  tax only on organisation and university PKR invoices, rates entered by accounts staff; company details in `billing.company`;
+  hiring fees with a 14-day dispute and a contact-request block after 30 days unpaid; credits 5–100 for 90 days, sponsored posts
+  14 days; final year by the phase 6 rule; sponsorship ends at the end of the first month at least 30 days away; two-factor for
+  organisation admin and billing members, the university owner and accounts staff; one accounts staff member may act, audited;
+  revenue as numbers and tables; B6 deferred.
+- 2026-10-05 (phase 10, simulated gateway rule): `BILLING_GATEWAY_LOCAL` / `BILLING_GATEWAY_MOR` choose `simulated`, `safepay` or
+  `paddle`. Outside Vercel production the simulated gateway always runs (with `SIMULATED_GATEWAY_SECRET`). In production it runs only
+  while no real adapter's keys are set, unless `BILLING_ALLOW_SIMULATED=1`, and then only for staff and the user ids in
+  `platform_config` `billing.simulated_testers` (`may_use_simulated()`). The webhook route refuses `simulated` whenever the rule says
+  no. Everything it creates has `live = false`: payments, subscriptions, add-on orders, and invoices in the `TEST-YYYY-NNNNNN` series
+  watermarked TEST; revenue counts live payments only. Staff test tools (`ops_simulate`: end the period, fail the next charge, retry
+  now, end the grace period) refuse any live subscription.
+- 2026-10-05 (phase 10, deviation): **The simulated result is a real HTTP webhook.** The checkout page's server action signs the event
+  and POSTs it to `/api/billing/webhook/simulated` (with Vercel's automation-bypass header on protected previews) instead of calling
+  the handler in-process as planned: storing an event needs the service role, which CLAUDE.md keeps out of server actions. Same
+  verify → store → queue path as Safepay and Paddle.
+- 2026-10-05 (phase 10, deviation): **No `pending` subscription state.** A checkout is a `checkout_sessions` row (amount, tax and
+  currency fixed by SQL from `plans` and config, idempotency key per click); the subscription is created or changed only when the
+  verified payment event is applied. Webhooks are stored in `billing_webhook_events` (gateway + event id unique), not
+  `webhook_events`, to keep them apart from the recruiter API's webhooks.
+- 2026-10-05 (phase 10, deviation): **Where the jobs run.** Queued events are applied by SQL (`billing-events`, pg_cron every 10 s)
+  because applying needs no outside call; the `billing-worker` Edge Function only calls gateways (renewal charges on saved cards,
+  refunds) and records each outcome as an event of gateway `worker`. `billing-tick` (every 5 min) ends trials and periods, queues
+  renewals and retries (days 1, 3, 6), expires after 7 days' grace, lapses unpaid licences 14 days after their due date, sends
+  prepaid reminders (7, 3, 1 days), expires abandoned checkouts, flags overdue hiring fees and opens 45-day offer follow-ups.
+  `sponsorship-sync` runs nightly at 01:15 PKT after graduate-rollover. There is no `quota-reset` job: a new period is a new
+  `usage_counters` row (PRD 4b.4).
+- 2026-10-05 (phase 10, deviation): **Quotas are spent inside the paid SQL write.** `consume_quota` runs in the same transaction as
+  the contact request, so a failed write never spends a credit; the TS layer has `getEntitlements` and `requireEntitlement` only
+  (`release_quota` exists in SQL). Every paid action first calls `require_entitlement(key)`, which refuses with SQLSTATE `PT402`
+  (HTTP 402 through PostgREST) and the action returns `payment_required`; the upgrade sheet opens on that code. Purchased credits
+  are spent after the period's allowance, oldest-expiring first.
+- 2026-10-05 (phase 10, deviation): **Invoices.** Numbers come from a gapless counter per series and year (`SKL`, `TEST`, `SKL-CN`,
+  `TEST-CN`), never reused; an issued invoice can't change or be deleted (trigger; content hash printed); voids issue a credit note.
+  PDFs are rendered on demand by the CV Chromium from the immutable row; nothing is stored in Storage (Free-plan space). An invoice
+  is DRAFT while `billing.company` lacks legal name, NTN or address (or STRN when it carries tax) or the province has no tax rate.
+  Hiring-fee and licence invoices are TEST until `billing.live_mode` is turned on (the setup checklist's last step). USD payments
+  get no Skilient invoice; the merchant of record's invoice number is stored on the payment.
+- 2026-10-05 (phase 10, gateways as built): Safepay and Paddle adapters are implemented from public docs and SDKs and tested with
+  fixtures built from them (`tests/fixtures/billing/README.md`): Paddle `Paddle-Signature ts:body` HMAC-SHA256 with rotation,
+  Safepay `X-SFPY-SIGNATURE` HMAC-SHA512 of the `data` object. Not confirmable without a sandbox, so marked `CONFIRM` in code:
+  Safepay event names and fields, wallets on hosted checkout, its refund API and saved cards. Until confirmed, **Safepay payments
+  save no card** (every Safepay plan is a prepaid period with reminders, never auto-debited) and Safepay refunds are done in its
+  dashboard. **Paddle renews its own subscriptions**: the worker's charge for a Paddle subscription is `deferred` and the renewal
+  arrives as `transaction.completed` (origin `subscription_recurring`), matched by Paddle's subscription id, never by the first
+  checkout's session. A verified event's live flag decides whether money really moved (sandbox = test), except that a simulated
+  session can never be completed by a live event.
+- 2026-10-05 (phase 10, entitlements as built): Keys and free values in `entitlement_keys`; `privacy.viewer_names`, `seats`,
+  `saved_searches`, `analytics`, `competitions.create` are aliases of `cv.viewer_names`, `org.seats`, `recruit.saved_searches`,
+  `recruit.analytics`, `competitions.run`. `uni.dashboard` is an enum (none, summary, full, accreditation) and `uni.dashboard_full`
+  means "full or above"; `uni.benchmark` moved from Campus to Growth and up (answer 12). `uni.plan`, `org.plan`, `student.plan`
+  enums name the level. `has_entitlement` for a number means "more than the free value". Shortlist and note *writes* need
+  `recruit.shortlists`; reads stay open so nothing is lost after a downgrade. Fairs and hackathons now count per licence year
+  (from the licence's start), replacing the rolling 365 days. The phase 8 `org_quota_usage` counters moved to `usage_counters`.
+  No production test grants existed; the migration still copies any into 30-day admin grants and adds an empty final version of
+  `entitlements.test_grants`, `uni.test_plans` and `org.trial_limits` (platform_config is append-only).
+- 2026-10-05 (phase 10, organisations): Billing-only members take no seat and see Plan and Billing only. At a seat downgrade the kept
+  list must include an admin; without a choice, admins then the most recently signed-in members keep seats; the rest become
+  `inactive` (they can't open the portal until reactivated; their notes and shortlists stay). A PKR checkout needs the province
+  first (it sets the tax). Live posts over the limit pause (new job status `paused`, newest first) and reopen from Billing when a
+  slot is free. Dropping below Growth revokes API tokens and pauses webhooks. Hires recorded before phase 10 are waived ("recorded
+  before billing launched"). The 45-day offer follow-up is built; the "student says hired at X" trigger waits for that field.
+- 2026-10-05 (phase 10, sponsored posts): `job_posts.sponsored_until` drives the "Sponsored" label on the Jobs tab
+  (`opportunities()` returns it). pgTAP 39's check that "For you" has no sponsorship input now asserts no ORDER BY in the function
+  mentions sponsorship (the label itself has to read the column).
+- 2026-10-05 (phase 10, licences): Staff issue a licence with a PO number at `/ops/billing`; it is active on issue, invoiced on 30-day
+  terms (bank transfer with the reference, or a pay link) and lapses 14 days after an unpaid due date. A renewal can be issued in a
+  licence's last 60 days and starts when the current year ends. Owners ask for a licence at `/uni/billing` (a staff task).
+- 2026-10-05 (phase 10, deferred): **B6** (real PKR and USD test transactions) waits for the merchant accounts; the checklist is in
+  `docs/setup-checklist.md` "B6". Also deferred: a PayFast adapter, recording a dashboard-made Safepay refund from `/ops/billing`
+  (until Safepay's refund API is confirmed staff refund there and void or credit by hand), accreditation report templates, and the
+  visual design-gate pass (phase 14; this phase ran axe in both themes on every new screen).
+- 2026-10-02 (phase 10, fix): Invoice PDFs answered `render_failed` on Vercel: the route's function didn't include the headless
+  Chromium files (`outputFileTracingIncludes` in `next.config.ts` lists them per route). Added `/api/billing/invoice/**`, and
+  `/api/uni/export` (the phase 9 dashboard PDF had the same gap); invoices now embed Spectral and Barlow like CVs, since
+  Vercel's Chromium has no system fonts.

@@ -10,7 +10,7 @@
     "typecheck": "next typegen && tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:worker": "vitest run --config vitest.worker.config.ts",
+    "test:worker": "vitest run --config vitest.worker.config.mts",
     "test:ats": "vitest run --config vitest.ats.config.mts",
     "test:e2e": "playwright test",
     "db:start": "supabase start",

@@ -45,10 +45,9 @@ select isnt(pg_temp.issue('L', 'KKKKK00001', repeat('3', 64)), null, 'L has a CV
 -- Entitlements: false until phase 10, except test-only grants
 -- ---------------------------------------------------------------------------
 select ok(not private.has_entitlement(pg_temp.u('S'), 'cv.pdf_export'), 'no entitlement by default');
-insert into public.platform_config (key, version, value, reason)
-values ('entitlements.test_grants', (select max(version) + 1 from public.platform_config where key = 'entitlements.test_grants'),
-        jsonb_build_object('cv.pdf_export', jsonb_build_array(pg_temp.u('S'))), 'pgTAP 38');
-select ok(private.has_entitlement(pg_temp.u('S'), 'cv.pdf_export'), 'a test grant counts');
+insert into public.entitlement_grants (subject_type, subject_id, key, value, source, ends_at, reason)
+values ('user', pg_temp.u('S'), 'cv.pdf_export', 'true', 'admin', now() + interval '1 day', 'pgTAP 38');
+select ok(private.has_entitlement(pg_temp.u('S'), 'cv.pdf_export'), 'a staff grant counts');
 select ok(not private.has_entitlement(pg_temp.u('S'), 'cv.templates'), 'for its key only');
 select ok(not private.has_entitlement(pg_temp.u('O'), 'cv.pdf_export'), 'and its users only');
 
