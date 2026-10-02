@@ -355,6 +355,42 @@ Ops portal (decisions.md "Phase 11").
   ```
 
   Sign out and back in with your code afterwards; every later role change goes through `/ops/staff`.
+- [ ] **Old emergency bans** (slice 2). If anyone was banned by hand before phase 11, turn each `emergency_ban` audit row that is
+      still in force into a real ban so it shows in `/ops/sanctions`, can be appealed and lifted. Run in the SQL editor; it changes
+      nothing when there are none:
+
+  ```sql
+  -- What there is: bans recorded by hand and not undone since.
+  select l.target_id::uuid as user_id, l.reason, l.created_at, u.banned_until
+    from public.ops_audit_log l
+    join auth.users u on u.id = l.target_id::uuid
+   where l.action = 'emergency_ban'
+     and not exists (select 1 from public.ops_audit_log x where x.action = 'emergency_unban' and x.target_id = l.target_id and x.created_at > l.created_at)
+     and u.banned_until > now();
+
+  -- Turn them into sanctions (staff_id = whoever recorded the ban; they must hold super_admin).
+  with old as (
+    select distinct on (l.target_id) l.target_id::uuid as user_id, l.staff_id, l.reason, u.banned_until
+      from public.ops_audit_log l
+      join auth.users u on u.id = l.target_id::uuid
+     where l.action = 'emergency_ban'
+       and not exists (select 1 from public.ops_audit_log x where x.action = 'emergency_unban' and x.target_id = l.target_id and x.created_at > l.created_at)
+       and u.banned_until > now()
+       and not exists (select 1 from public.sanctions s where s.user_id = u.id and s.kind = 'ban' and s.lifted_at is null)
+     order by l.target_id, l.created_at desc
+  ), added as (
+    insert into public.sanctions (user_id, kind, until, reason, staff_id)
+    select o.user_id, 'ban', case when o.banned_until > now() + interval '100 years' then null else o.banned_until end,
+           left('Emergency ban before phase 11: ' || o.reason, 2000), o.staff_id
+      from old o
+    returning id, user_id, staff_id, until
+  )
+  insert into public.ops_audit_log (staff_id, action, target_type, target_id, reason, before, after)
+  select a.staff_id, 'sanction.ban', 'user', a.user_id::text, 'Converted from an emergency ban (setup checklist, phase 11)',
+         jsonb_build_object('via', 'supabase_dashboard'), jsonb_build_object('sanction', a.id, 'until', a.until)
+    from added a;
+  ```
+
 - [ ] **A second super admin** (before the closed beta). An appeal on a super admin's decision needs a different super admin, and
       the last one can't be removed. Once the person has a Skilient account with two-factor on, grant it at `/ops/staff`.
 

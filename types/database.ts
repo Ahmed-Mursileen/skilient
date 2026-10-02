@@ -206,6 +206,25 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"appeals": {
+                  Row: {
+                    "appellant_id": string,"body": string,"claimed_at": string | null,"claimed_by": string | null,"created_at": string,"decided_at": string | null,"decided_by": string | null,"decider_role": Database["public"]['Enums']["staff_role"],"decision_id": string,"decision_reason": string | null,"decision_type": Database["public"]['Enums']["appeal_decision_type"],"filed_by": string | null,"id": string,"org_id": string | null,"original_staff_id": string,"outcome": Json | null,"status": Database["public"]['Enums']["appeal_status"],"summary": NonNullable<Json>
+                  }
+                  Insert: {
+                    "appellant_id": string,"body": string,"claimed_at"?: string | null,"claimed_by"?: string | null,"created_at"?: string,"decided_at"?: string | null,"decided_by"?: string | null,"decider_role": Database["public"]['Enums']["staff_role"],"decision_id": string,"decision_reason"?: string | null,"decision_type": Database["public"]['Enums']["appeal_decision_type"],"filed_by"?: string | null,"id"?: string,"org_id"?: string | null,"original_staff_id": string,"outcome"?: Json | null,"status"?: Database["public"]['Enums']["appeal_status"],"summary"?: NonNullable<Json>
+                  }
+                  Update: {
+                    "appellant_id"?: string,"body"?: string,"claimed_at"?: string | null,"claimed_by"?: string | null,"created_at"?: string,"decided_at"?: string | null,"decided_by"?: string | null,"decider_role"?: Database["public"]['Enums']["staff_role"],"decision_id"?: string,"decision_reason"?: string | null,"decision_type"?: Database["public"]['Enums']["appeal_decision_type"],"filed_by"?: string | null,"id"?: string,"org_id"?: string | null,"original_staff_id"?: string,"outcome"?: Json | null,"status"?: Database["public"]['Enums']["appeal_status"],"summary"?: NonNullable<Json>
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "appeals_org_id_fkey"
+      columns: ["org_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"application_events": {
                   Row: {
                     "actor_id": string | null,"application_id": string,"at": string,"id": number,"reject_reason": string | null,"stage": Database["public"]['Enums']["application_stage"]
@@ -2632,13 +2651,13 @@ isOneToOne: false
                   ]
                 },"sanctions": {
                   Row: {
-                    "case_id": string | null,"created_at": string,"id": string,"kind": Database["public"]['Enums']["sanction_kind"],"reason": string,"staff_id": string,"until": string | null,"user_id": string
+                    "case_id": string | null,"created_at": string,"id": string,"kind": Database["public"]['Enums']["sanction_kind"],"lift_reason": string | null,"lifted_at": string | null,"lifted_by": string | null,"org_id": string | null,"per_day": number | null,"reason": string,"staff_id": string,"until": string | null,"user_id": string | null
                   }
                   Insert: {
-                    "case_id"?: string | null,"created_at"?: string,"id"?: string,"kind": Database["public"]['Enums']["sanction_kind"],"reason": string,"staff_id": string,"until"?: string | null,"user_id": string
+                    "case_id"?: string | null,"created_at"?: string,"id"?: string,"kind": Database["public"]['Enums']["sanction_kind"],"lift_reason"?: string | null,"lifted_at"?: string | null,"lifted_by"?: string | null,"org_id"?: string | null,"per_day"?: number | null,"reason": string,"staff_id": string,"until"?: string | null,"user_id"?: string | null
                   }
                   Update: {
-                    "case_id"?: string | null,"created_at"?: string,"id"?: string,"kind"?: Database["public"]['Enums']["sanction_kind"],"reason"?: string,"staff_id"?: string,"until"?: string | null,"user_id"?: string
+                    "case_id"?: string | null,"created_at"?: string,"id"?: string,"kind"?: Database["public"]['Enums']["sanction_kind"],"lift_reason"?: string | null,"lifted_at"?: string | null,"lifted_by"?: string | null,"org_id"?: string | null,"per_day"?: number | null,"reason"?: string,"staff_id"?: string,"until"?: string | null,"user_id"?: string | null
                   }
                   Relationships: [
                     {
@@ -2646,6 +2665,12 @@ isOneToOne: false
       columns: ["case_id"]
 isOneToOne: false
       referencedRelation: "report_cases"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "sanctions_org_id_fkey"
+      columns: ["org_id"]
+isOneToOne: false
+      referencedRelation: "organizations"
       referencedColumns: ["id"]
     }
                   ]
@@ -3777,6 +3802,9 @@ isOneToOne: false
 "choose_seats":
 { Args: { "p_keep": (string)[] }; Returns: undefined
                            },
+"claim_appeal":
+{ Args: { "p_claim": boolean,"p_id": string }; Returns: undefined
+                           },
 "claim_case":
 { Args: { "p_case": string,"p_claim": boolean }; Returns: undefined
                            },
@@ -3895,6 +3923,9 @@ isOneToOne: false
 { Args: Record<PropertyKey, never>; Returns: {
               "pdf_export": boolean,"refresh_on_demand": boolean,"templates": boolean
             }[]
+                           },
+"decide_appeal":
+{ Args: { "p_id": string,"p_outcome": string,"p_reason": string }; Returns: undefined
                            },
 "decide_application":
 { Args: { "p_accept": boolean,"p_thread": string }; Returns: Database["public"]['Enums']["application_status"]
@@ -4165,6 +4196,9 @@ isOneToOne: false
 "leave_venture":
 { Args: { "p_venture": string }; Returns: undefined
                            },
+"lift_sanction":
+{ Args: { "p_id": string,"p_reason": string }; Returns: undefined
+                           },
 "link_venture_repo":
 { Args: { "p_repo"?: number,"p_venture": string }; Returns: undefined
                            },
@@ -4202,6 +4236,12 @@ isOneToOne: false
                            },
 "mute_user":
 { Args: { "p_mute": boolean,"p_username": string }; Returns: undefined
+                           },
+"my_appealable":
+{ Args: Record<PropertyKey, never>; Returns: Json
+                           },
+"my_appeals":
+{ Args: Record<PropertyKey, never>; Returns: Json
                            },
 "my_blocked_companies":
 { Args: Record<PropertyKey, never>; Returns: Json
@@ -4289,6 +4329,9 @@ isOneToOne: false
 "my_recruiter_prefs":
 { Args: Record<PropertyKey, never>; Returns: Json
                            },
+"my_restriction":
+{ Args: Record<PropertyKey, never>; Returns: Json
+                           },
 "my_score":
 { Args: Record<PropertyKey, never>; Returns: Json
                            },
@@ -4341,6 +4384,12 @@ isOneToOne: false
               "detail": string,"href": string,"id": string,"kind": string,"org_name": string,"sponsored": boolean,"starts_at": string,"title": string
             }[]
                            },
+"ops_appeal_case":
+{ Args: { "p_id": string }; Returns: Json
+                           },
+"ops_appeals":
+{ Args: { "p_open"?: boolean }; Returns: Json
+                           },
 "ops_audit_export":
 { Args: { "p_action"?: string,"p_from"?: string,"p_reason": string,"p_staff"?: string,"p_target_type"?: string,"p_to"?: string }; Returns: Json
                            },
@@ -4367,6 +4416,9 @@ isOneToOne: false
 "ops_case":
 { Args: { "p_case": string }; Returns: Json
                            },
+"ops_case_owner":
+{ Args: { "p_case": string }; Returns: string
+                           },
 "ops_close_task":
 { Args: { "p_note": string,"p_task": string }; Returns: undefined
                            },
@@ -4383,6 +4435,12 @@ isOneToOne: false
                            },
 "ops_end_subscription":
 { Args: { "p_reason": string,"p_sub": string }; Returns: undefined
+                           },
+"ops_file_appeal":
+{ Args: { "p_body": string,"p_id": string,"p_reason": string,"p_type": string }; Returns: string
+                           },
+"ops_find_account":
+{ Args: { "p_query": string }; Returns: Json
                            },
 "ops_gateway_activity":
 { Args: Record<PropertyKey, never>; Returns: Json
@@ -4439,6 +4497,9 @@ isOneToOne: false
                            },
 "ops_revoke_grant":
 { Args: { "p_grant": string,"p_reason": string }; Returns: undefined
+                           },
+"ops_sanctions":
+{ Args: { "p_active"?: boolean }; Returns: Json
                            },
 "ops_set_final_year_batch":
 { Args: { "p_batch": number,"p_reason": string,"p_university": string }; Returns: undefined
@@ -4721,6 +4782,12 @@ isOneToOne: false
                            } |
 { Args: { "p_post": string,"p_status": Database["public"]['Enums']["rsvp_status"] }; Returns: undefined
                            },
+"sanction_org":
+{ Args: { "p_kind": string,"p_org": string,"p_per_day": number,"p_reason": string,"p_until": string }; Returns: string
+                           },
+"sanction_user":
+{ Args: { "p_case"?: string,"p_kind": string,"p_reason": string,"p_until": string,"p_user": string }; Returns: string
+                           },
 "save_badge":
 { Args: { "p": Json,"p_id": string }; Returns: string
                            },
@@ -4901,6 +4968,9 @@ isOneToOne: false
 { Args: Record<PropertyKey, never>; Returns: {
               "bucket": string,"bytes": number,"objects": number,"quota_bytes": number
             }[]
+                           },
+"submit_appeal":
+{ Args: { "p_body": string,"p_id": string,"p_type": string }; Returns: string
                            },
 "submit_competition":
 { Args: { "p_id": string }; Returns: undefined
@@ -5210,7 +5280,7 @@ isOneToOne: false
                            }
           }
           Enums: {
-            "account_role": "student"|"faculty"|"recruiter"|"university_admin","account_status": "active"|"graduate"|"deleting","anti_gaming_kind": "ring"|"rapid_gain","application_stage": "applied"|"screening"|"interview"|"offer"|"hired"|"rejected"|"withdrawn","application_status": "pending"|"accepted"|"declined"|"withdrawn"|"closed","billing_subject": "user"|"org"|"university","chat_thread_type": "dm"|"group","code_check_status": "preparing"|"ready"|"in_progress"|"submitted"|"passed"|"failed"|"unavailable"|"expired","competition_status": "draft"|"in_review"|"rejected"|"approved"|"live"|"frozen"|"judged","contact_status": "pending"|"accepted"|"declined"|"expired","contribution_kind": "code"|"design"|"research"|"docs"|"management"|"other","contribution_source": "manual"|"github","credential_status": "pending"|"approved"|"rejected"|"expired","cv_visibility": "private"|"link"|"recruiters","domain_kind": "student"|"faculty"|"both","email_channel": "instant_email"|"digest"|"off","entitlement_kind": "bool"|"int"|"limit"|"enum","fair_queue_status": "waiting"|"called"|"talking"|"done"|"skipped"|"left","fair_status": "draft"|"published"|"cancelled","feedback_status": "received"|"reviewing"|"planned"|"shipped"|"wont_do","feedback_type": "bug"|"idea"|"confusing"|"praise","friend_request_status": "pending"|"accepted"|"declined","github_commit_status": "pending"|"counted"|"held"|"excluded","github_repo_kind": "owned"|"collaborator"|"fork"|"template","grant_source": "plan"|"add_on"|"sponsorship"|"trial"|"admin","idea_audience": "university"|"global","idea_difficulty": "intro"|"intermediate"|"advanced","idea_status": "open"|"closed","job_run_status": "running"|"succeeded"|"failed","job_status": "draft"|"live"|"closed"|"paused","looking_for_option": "internship"|"job"|"teammates"|"project"|"mentorship","org_role": "admin"|"recruiter"|"billing","org_status": "pending"|"verified"|"suspended"|"rejected","post_audience": "university"|"global","post_stage": "seed"|"limited"|"full"|"global_boost"|"demoted"|"held","post_type": "general"|"invite"|"announcement"|"event"|"poll"|"shipped","profile_visibility": "friends"|"university"|"global","ranking_adjustment_kind": "penalty"|"rapid_gain","ranking_tier": "raw"|"spark"|"flare"|"shine"|"radiant"|"luminary","report_case_status": "open"|"dismissed"|"removed"|"warned","report_reason": "spam"|"harassment"|"inappropriate"|"misinformation"|"impersonation"|"other","report_target": "post"|"comment"|"message"|"profile"|"venture","review_flag_kind": "burst"|"backdating"|"cross_account_duplicate","review_flag_status": "open"|"cleared"|"upheld","review_request_status": "open"|"submitted"|"declined"|"expired"|"cancelled","rsvp_status": "going"|"interested","sanction_kind": "warn"|"suspend"|"ban"|"throttle","skill_category": "language"|"framework"|"library"|"tool"|"platform"|"practice","staff_role": "moderator"|"trust_reviewer"|"accounts"|"super_admin","subscription_status": "trialing"|"active"|"past_due"|"expired"|"cancelled","supervisor_status": "invited"|"active"|"ended","sync_status": "queued"|"running"|"done"|"failed"|"cancelled","teacher_status": "pending"|"approved"|"revoked","uni_admin_role": "owner"|"admin"|"career"|"coordinator"|"comms","uni_event_scope": "university"|"global","uni_event_type": "talk"|"workshop"|"hackathon"|"competition"|"other","uni_hide_status": "hidden"|"restored"|"removed","uni_request_status": "pending"|"approved"|"rejected","venture_invite_status": "pending"|"accepted"|"declined"|"revoked","venture_stage": "idea"|"prototype"|"launched"|"revenue","venture_status": "recruiting"|"in_progress"|"completed"|"abandoned","venture_team_role": "lead"|"developer"|"designer"|"researcher"|"other","venture_type": "project"|"startup","venture_visibility": "public"|"university"|"unlisted"
+            "account_role": "student"|"faculty"|"recruiter"|"university_admin","account_status": "active"|"graduate"|"deleting","anti_gaming_kind": "ring"|"rapid_gain","appeal_decision_type": "sanction"|"report_case"|"cv_revocation"|"credential"|"code_check","appeal_status": "pending"|"upheld"|"overturned","application_stage": "applied"|"screening"|"interview"|"offer"|"hired"|"rejected"|"withdrawn","application_status": "pending"|"accepted"|"declined"|"withdrawn"|"closed","billing_subject": "user"|"org"|"university","chat_thread_type": "dm"|"group","code_check_status": "preparing"|"ready"|"in_progress"|"submitted"|"passed"|"failed"|"unavailable"|"expired","competition_status": "draft"|"in_review"|"rejected"|"approved"|"live"|"frozen"|"judged","contact_status": "pending"|"accepted"|"declined"|"expired","contribution_kind": "code"|"design"|"research"|"docs"|"management"|"other","contribution_source": "manual"|"github","credential_status": "pending"|"approved"|"rejected"|"expired","cv_visibility": "private"|"link"|"recruiters","domain_kind": "student"|"faculty"|"both","email_channel": "instant_email"|"digest"|"off","entitlement_kind": "bool"|"int"|"limit"|"enum","fair_queue_status": "waiting"|"called"|"talking"|"done"|"skipped"|"left","fair_status": "draft"|"published"|"cancelled","feedback_status": "received"|"reviewing"|"planned"|"shipped"|"wont_do","feedback_type": "bug"|"idea"|"confusing"|"praise","friend_request_status": "pending"|"accepted"|"declined","github_commit_status": "pending"|"counted"|"held"|"excluded","github_repo_kind": "owned"|"collaborator"|"fork"|"template","grant_source": "plan"|"add_on"|"sponsorship"|"trial"|"admin","idea_audience": "university"|"global","idea_difficulty": "intro"|"intermediate"|"advanced","idea_status": "open"|"closed","job_run_status": "running"|"succeeded"|"failed","job_status": "draft"|"live"|"closed"|"paused","looking_for_option": "internship"|"job"|"teammates"|"project"|"mentorship","org_role": "admin"|"recruiter"|"billing","org_status": "pending"|"verified"|"suspended"|"rejected","post_audience": "university"|"global","post_stage": "seed"|"limited"|"full"|"global_boost"|"demoted"|"held","post_type": "general"|"invite"|"announcement"|"event"|"poll"|"shipped","profile_visibility": "friends"|"university"|"global","ranking_adjustment_kind": "penalty"|"rapid_gain","ranking_tier": "raw"|"spark"|"flare"|"shine"|"radiant"|"luminary","report_case_status": "open"|"dismissed"|"removed"|"warned","report_reason": "spam"|"harassment"|"inappropriate"|"misinformation"|"impersonation"|"other","report_target": "post"|"comment"|"message"|"profile"|"venture","review_flag_kind": "burst"|"backdating"|"cross_account_duplicate","review_flag_status": "open"|"cleared"|"upheld","review_request_status": "open"|"submitted"|"declined"|"expired"|"cancelled","rsvp_status": "going"|"interested","sanction_kind": "warn"|"suspend"|"ban"|"throttle","skill_category": "language"|"framework"|"library"|"tool"|"platform"|"practice","staff_role": "moderator"|"trust_reviewer"|"accounts"|"super_admin","subscription_status": "trialing"|"active"|"past_due"|"expired"|"cancelled","supervisor_status": "invited"|"active"|"ended","sync_status": "queued"|"running"|"done"|"failed"|"cancelled","teacher_status": "pending"|"approved"|"revoked","uni_admin_role": "owner"|"admin"|"career"|"coordinator"|"comms","uni_event_scope": "university"|"global","uni_event_type": "talk"|"workshop"|"hackathon"|"competition"|"other","uni_hide_status": "hidden"|"restored"|"removed","uni_request_status": "pending"|"approved"|"rejected","venture_invite_status": "pending"|"accepted"|"declined"|"revoked","venture_stage": "idea"|"prototype"|"launched"|"revenue","venture_status": "recruiting"|"in_progress"|"completed"|"abandoned","venture_team_role": "lead"|"developer"|"designer"|"researcher"|"other","venture_type": "project"|"startup","venture_visibility": "public"|"university"|"unlisted"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -5330,7 +5400,7 @@ export const Constants = {
           }
         },"public": {
           Enums: {
-            "account_role": ["student", "faculty", "recruiter", "university_admin"],"account_status": ["active", "graduate", "deleting"],"anti_gaming_kind": ["ring", "rapid_gain"],"application_stage": ["applied", "screening", "interview", "offer", "hired", "rejected", "withdrawn"],"application_status": ["pending", "accepted", "declined", "withdrawn", "closed"],"billing_subject": ["user", "org", "university"],"chat_thread_type": ["dm", "group"],"code_check_status": ["preparing", "ready", "in_progress", "submitted", "passed", "failed", "unavailable", "expired"],"competition_status": ["draft", "in_review", "rejected", "approved", "live", "frozen", "judged"],"contact_status": ["pending", "accepted", "declined", "expired"],"contribution_kind": ["code", "design", "research", "docs", "management", "other"],"contribution_source": ["manual", "github"],"credential_status": ["pending", "approved", "rejected", "expired"],"cv_visibility": ["private", "link", "recruiters"],"domain_kind": ["student", "faculty", "both"],"email_channel": ["instant_email", "digest", "off"],"entitlement_kind": ["bool", "int", "limit", "enum"],"fair_queue_status": ["waiting", "called", "talking", "done", "skipped", "left"],"fair_status": ["draft", "published", "cancelled"],"feedback_status": ["received", "reviewing", "planned", "shipped", "wont_do"],"feedback_type": ["bug", "idea", "confusing", "praise"],"friend_request_status": ["pending", "accepted", "declined"],"github_commit_status": ["pending", "counted", "held", "excluded"],"github_repo_kind": ["owned", "collaborator", "fork", "template"],"grant_source": ["plan", "add_on", "sponsorship", "trial", "admin"],"idea_audience": ["university", "global"],"idea_difficulty": ["intro", "intermediate", "advanced"],"idea_status": ["open", "closed"],"job_run_status": ["running", "succeeded", "failed"],"job_status": ["draft", "live", "closed", "paused"],"looking_for_option": ["internship", "job", "teammates", "project", "mentorship"],"org_role": ["admin", "recruiter", "billing"],"org_status": ["pending", "verified", "suspended", "rejected"],"post_audience": ["university", "global"],"post_stage": ["seed", "limited", "full", "global_boost", "demoted", "held"],"post_type": ["general", "invite", "announcement", "event", "poll", "shipped"],"profile_visibility": ["friends", "university", "global"],"ranking_adjustment_kind": ["penalty", "rapid_gain"],"ranking_tier": ["raw", "spark", "flare", "shine", "radiant", "luminary"],"report_case_status": ["open", "dismissed", "removed", "warned"],"report_reason": ["spam", "harassment", "inappropriate", "misinformation", "impersonation", "other"],"report_target": ["post", "comment", "message", "profile", "venture"],"review_flag_kind": ["burst", "backdating", "cross_account_duplicate"],"review_flag_status": ["open", "cleared", "upheld"],"review_request_status": ["open", "submitted", "declined", "expired", "cancelled"],"rsvp_status": ["going", "interested"],"sanction_kind": ["warn", "suspend", "ban", "throttle"],"skill_category": ["language", "framework", "library", "tool", "platform", "practice"],"staff_role": ["moderator", "trust_reviewer", "accounts", "super_admin"],"subscription_status": ["trialing", "active", "past_due", "expired", "cancelled"],"supervisor_status": ["invited", "active", "ended"],"sync_status": ["queued", "running", "done", "failed", "cancelled"],"teacher_status": ["pending", "approved", "revoked"],"uni_admin_role": ["owner", "admin", "career", "coordinator", "comms"],"uni_event_scope": ["university", "global"],"uni_event_type": ["talk", "workshop", "hackathon", "competition", "other"],"uni_hide_status": ["hidden", "restored", "removed"],"uni_request_status": ["pending", "approved", "rejected"],"venture_invite_status": ["pending", "accepted", "declined", "revoked"],"venture_stage": ["idea", "prototype", "launched", "revenue"],"venture_status": ["recruiting", "in_progress", "completed", "abandoned"],"venture_team_role": ["lead", "developer", "designer", "researcher", "other"],"venture_type": ["project", "startup"],"venture_visibility": ["public", "university", "unlisted"]
+            "account_role": ["student", "faculty", "recruiter", "university_admin"],"account_status": ["active", "graduate", "deleting"],"anti_gaming_kind": ["ring", "rapid_gain"],"appeal_decision_type": ["sanction", "report_case", "cv_revocation", "credential", "code_check"],"appeal_status": ["pending", "upheld", "overturned"],"application_stage": ["applied", "screening", "interview", "offer", "hired", "rejected", "withdrawn"],"application_status": ["pending", "accepted", "declined", "withdrawn", "closed"],"billing_subject": ["user", "org", "university"],"chat_thread_type": ["dm", "group"],"code_check_status": ["preparing", "ready", "in_progress", "submitted", "passed", "failed", "unavailable", "expired"],"competition_status": ["draft", "in_review", "rejected", "approved", "live", "frozen", "judged"],"contact_status": ["pending", "accepted", "declined", "expired"],"contribution_kind": ["code", "design", "research", "docs", "management", "other"],"contribution_source": ["manual", "github"],"credential_status": ["pending", "approved", "rejected", "expired"],"cv_visibility": ["private", "link", "recruiters"],"domain_kind": ["student", "faculty", "both"],"email_channel": ["instant_email", "digest", "off"],"entitlement_kind": ["bool", "int", "limit", "enum"],"fair_queue_status": ["waiting", "called", "talking", "done", "skipped", "left"],"fair_status": ["draft", "published", "cancelled"],"feedback_status": ["received", "reviewing", "planned", "shipped", "wont_do"],"feedback_type": ["bug", "idea", "confusing", "praise"],"friend_request_status": ["pending", "accepted", "declined"],"github_commit_status": ["pending", "counted", "held", "excluded"],"github_repo_kind": ["owned", "collaborator", "fork", "template"],"grant_source": ["plan", "add_on", "sponsorship", "trial", "admin"],"idea_audience": ["university", "global"],"idea_difficulty": ["intro", "intermediate", "advanced"],"idea_status": ["open", "closed"],"job_run_status": ["running", "succeeded", "failed"],"job_status": ["draft", "live", "closed", "paused"],"looking_for_option": ["internship", "job", "teammates", "project", "mentorship"],"org_role": ["admin", "recruiter", "billing"],"org_status": ["pending", "verified", "suspended", "rejected"],"post_audience": ["university", "global"],"post_stage": ["seed", "limited", "full", "global_boost", "demoted", "held"],"post_type": ["general", "invite", "announcement", "event", "poll", "shipped"],"profile_visibility": ["friends", "university", "global"],"ranking_adjustment_kind": ["penalty", "rapid_gain"],"ranking_tier": ["raw", "spark", "flare", "shine", "radiant", "luminary"],"report_case_status": ["open", "dismissed", "removed", "warned"],"report_reason": ["spam", "harassment", "inappropriate", "misinformation", "impersonation", "other"],"report_target": ["post", "comment", "message", "profile", "venture"],"review_flag_kind": ["burst", "backdating", "cross_account_duplicate"],"review_flag_status": ["open", "cleared", "upheld"],"review_request_status": ["open", "submitted", "declined", "expired", "cancelled"],"rsvp_status": ["going", "interested"],"sanction_kind": ["warn", "suspend", "ban", "throttle"],"skill_category": ["language", "framework", "library", "tool", "platform", "practice"],"staff_role": ["moderator", "trust_reviewer", "accounts", "super_admin"],"subscription_status": ["trialing", "active", "past_due", "expired", "cancelled"],"supervisor_status": ["invited", "active", "ended"],"sync_status": ["queued", "running", "done", "failed", "cancelled"],"teacher_status": ["pending", "approved", "revoked"],"uni_admin_role": ["owner", "admin", "career", "coordinator", "comms"],"uni_event_scope": ["university", "global"],"uni_event_type": ["talk", "workshop", "hackathon", "competition", "other"],"uni_hide_status": ["hidden", "restored", "removed"],"uni_request_status": ["pending", "approved", "rejected"],"venture_invite_status": ["pending", "accepted", "declined", "revoked"],"venture_stage": ["idea", "prototype", "launched", "revenue"],"venture_status": ["recruiting", "in_progress", "completed", "abandoned"],"venture_team_role": ["lead", "developer", "designer", "researcher", "other"],"venture_type": ["project", "startup"],"venture_visibility": ["public", "university", "unlisted"]
           }
         }
 } as const

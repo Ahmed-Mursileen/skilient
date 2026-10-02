@@ -86,6 +86,22 @@ describe("describeNotification", () => {
     expect(pass.text).toBe("You passed your Python code check. Python is now L4.");
   });
 
+  it("tells an account about sanctions and appeals without naming staff, and links to /appeals", () => {
+    const suspended = describeNotification({ ...base, type: "account_restricted", entityType: "sanction", data: { kind: "suspend", until: "2026-10-09T10:00:00Z" } });
+    expect(suspended.text).toBe("Your account is suspended until 9 October 2026. You can still read, appeal or delete your account.");
+    expect(suspended.href).toBe("/appeals");
+    expect(describeNotification({ ...base, type: "account_restricted", data: { kind: "ban", until: null } }).text).toBe("Your Skilient account is banned.");
+    expect(describeNotification({ ...base, type: "restriction_lifted", data: { kind: "suspend" } }).text).toBe("The suspension on your account was lifted.");
+    expect(describeNotification({ ...base, type: "org_sanctioned", data: { kind: "throttle", per_day: 3, org_name: "Acme", until: "2026-10-09T10:00:00Z" } }).text).toBe(
+      "Skilient limited Acme to 3 contact requests a day until 9 October.",
+    );
+    expect(describeNotification({ ...base, type: "appeal_decided", data: { outcome: "overturned" } }).text).toBe("Your appeal was accepted and the decision was reversed.");
+    expect(describeNotification({ ...base, type: "appeal_decided", data: { outcome: "upheld" } }).text).toContain("This is final.");
+    for (const t of ["account_restricted", "restriction_lifted", "org_sanctioned", "appeal_decided"]) {
+      expect(describeNotification({ ...base, type: t, data: {} }).text).not.toContain("Amna Khan");
+    }
+  });
+
   it("falls back to 'Someone' and 'a venture' when details are missing", () => {
     const d = describeNotification({ type: "application_received", actorName: null, entityType: "application", entityId: "x", data: {} });
     expect(d.text).toBe("Someone applied to join a venture.");
