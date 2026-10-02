@@ -1720,3 +1720,25 @@ Append-only. One dated entry per product decision, with the reason. Carried over
   against the surface, so every chart also has a table view); one axis per chart, legends for two or more series, hover
   tooltips, 2px lines, 4px rounded bar ends; the chart itself is hidden from screen readers and not focusable, and the table view
   carries the numbers.
+- 2026-10-02 (phase 11, slice 5): Audit sweep. pgTAP 49 reads the whole catalogue: every `private` function that requires a
+  staff role and writes a table must insert into `ops_audit_log` with both `before` and `after` (or go through
+  `private.billing_audit`, which does). Four older functions recorded one side only (`add_exam_period`, `remove_exam_period`,
+  `ops_remove_uni_question`, `ops_resolve_spam_review`); they are redefined with both, behaviour unchanged. Two are excluded on
+  purpose: `create_post` (a staff announcement is its own record, with its author) and `ops_view_as_page` (it appends to the view
+  session, which is the log of that view). A new staff write function without both sides fails CI.
+- 2026-10-02 (phase 11, slice 5): Organisation verification documents are optional: an organisation admin uploads a PDF (5 MB,
+  `%PDF-` checked like the claim letter; the bucket also allows WebP for a later image path) at `/org/settings` into the private
+  bucket `org-documents/{org_id}/`; a new upload replaces the old file (queued for deletion). Only that organisation's admins and
+  accounts staff on two-factor can read it; `/ops/orgs/[id]` opens it through a 60-second link. Verification itself is unchanged
+  (decide_org; unverified organisations still can't send contact requests or post jobs).
+- 2026-10-02 (phase 11, slice 5): University onboarding at `/ops/universities` (search the HEC list by name or domain) and
+  `/ops/universities/[id]` (admins and domains, ecosphere, exam calendar, invoices; plans and licences stay at `/ops/billing`).
+  Accounts staff can assign an owner without a claim letter for a partner that signed with Skilient: the person must already
+  have a university staff account at that university with two-factor on, and a university keeps one owner (the claim path's
+  lock and rules). Staff can also add email domains (source `ops`, never touched by the HEC sync; public email domains and
+  domains of another university are refused). Both audited. The phase 9 `ops_universities()` (the teacher form's list) is
+  unchanged; the new reads are `ops_uni_list`/`ops_uni_record`.
+- 2026-10-02 (phase 11): Phase 11 is done: five slices, PRs #55-#59. Every build-plan check is proven in pgTAP: a moderator
+  can't suspend past 7 days (46) or read a chat outside a report (47); every ops write has its audit row (49, plus each slice's
+  own tests); an appeal can't be decided by the original staff member (46); an unverified organisation can't send a contact
+  request (41); a weight change shows up only after the next recompute (48).

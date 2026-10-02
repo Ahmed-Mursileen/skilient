@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { OrgDocumentForm } from "@/components/recruit/org-document-form";
 import { CompanyPageForm } from "@/components/recruit/org-forms";
+import { rpcJson } from "@/lib/data/rpc-json";
+import { dayLabel } from "@/lib/format/time";
 import { getMyOrg } from "@/lib/data/recruit";
 
 export const metadata: Metadata = { title: "Company page" };
@@ -10,6 +13,7 @@ export const metadata: Metadata = { title: "Company page" };
 export default async function CompanySettingsPage() {
   const org = await getMyOrg();
   if (org?.role !== "admin") notFound();
+  const doc = await rpcJson<{ path: string | null; at: string | null } | null>("my_org_document");
   return (
     <main className="flex max-w-2xl flex-col gap-6">
       <div>
@@ -20,6 +24,7 @@ export default async function CompanySettingsPage() {
         </p>
       </div>
       <CompanyPageForm initial={{ about: org.about ?? "", locations: org.locations, industry: org.industry, size: org.size, linkedinUrl: org.linkedin_url ?? "" }} />
+      <OrgDocumentForm orgId={org.id} uploadedLabel={doc?.at ? dayLabel(doc.at) : null} />
     </main>
   );
 }
