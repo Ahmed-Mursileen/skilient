@@ -4067,6 +4067,9 @@ isOneToOne: false
 "grade_code_check":
 { Args: { "p_feedback": string,"p_id": string,"p_rubric": Json }; Returns: boolean
                            },
+"grant_staff_role":
+{ Args: { "p_email": string,"p_reason": string,"p_role": Database["public"]['Enums']["staff_role"] }; Returns: string
+                           },
 "health_check":
 { Args: Record<PropertyKey, never>; Returns: boolean
                            },
@@ -4338,6 +4341,15 @@ isOneToOne: false
               "detail": string,"href": string,"id": string,"kind": string,"org_name": string,"sponsored": boolean,"starts_at": string,"title": string
             }[]
                            },
+"ops_audit_export":
+{ Args: { "p_action"?: string,"p_from"?: string,"p_reason": string,"p_staff"?: string,"p_target_type"?: string,"p_to"?: string }; Returns: Json
+                           },
+"ops_audit_filters":
+{ Args: Record<PropertyKey, never>; Returns: Json
+                           },
+"ops_audit_search":
+{ Args: { "p_action"?: string,"p_before"?: string,"p_from"?: string,"p_limit"?: number,"p_staff"?: string,"p_target_id"?: string,"p_target_type"?: string,"p_to"?: string }; Returns: Json
+                           },
 "ops_batches":
 { Args: Record<PropertyKey, never>; Returns: {
               "final_year_batch": number,"graduates": number,"name": string,"students": number,"university_id": string
@@ -4377,6 +4389,9 @@ isOneToOne: false
                            },
 "ops_grant":
 { Args: { "p_ends_at": string,"p_id": string,"p_key": string,"p_reason": string,"p_type": string,"p_value": Json }; Returns: string
+                           },
+"ops_inbox":
+{ Args: { "p_queue"?: string }; Returns: Json
                            },
 "ops_issue_licence":
 { Args: { "p_level": string,"p_po": string,"p_reason": string,"p_starts": string,"p_university": string }; Returns: string
@@ -4436,6 +4451,9 @@ isOneToOne: false
                            },
 "ops_spam_reviews":
 { Args: { "p_status"?: string }; Returns: Json
+                           },
+"ops_staff":
+{ Args: Record<PropertyKey, never>; Returns: Json
                            },
 "ops_uni_claim":
 { Args: { "p_id": string }; Returns: Json
@@ -4688,6 +4706,9 @@ isOneToOne: false
                            },
 "revoke_share_link":
 { Args: { "p_id": string }; Returns: undefined
+                           },
+"revoke_staff_role":
+{ Args: { "p_reason": string,"p_role": Database["public"]['Enums']["staff_role"],"p_user": string }; Returns: undefined
                            },
 "revoke_teacher":
 { Args: { "p_reason": string,"p_user": string }; Returns: undefined

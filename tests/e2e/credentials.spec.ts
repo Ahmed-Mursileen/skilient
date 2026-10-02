@@ -102,8 +102,10 @@ test.describe("Credentials", () => {
     await tPage.getByRole("button", { name: "Confirm" }).click();
     await tPage.getByRole("checkbox", { name: "I've saved these codes" }).check();
     await tPage.getByRole("button", { name: "Done" }).click();
+    // The inbox lists the pending credential; the Evidence area has the full queue.
     await tPage.goto("/ops");
-    await expect(tPage).toHaveURL(/\/ops\/evidence$/);
+    await expect(tPage.getByTestId("inbox-item").filter({ hasText: `AWS Cloud Practitioner ${tag}` })).toBeVisible();
+    await tPage.goto("/ops/evidence");
     await expect(tPage.getByTestId("storage-use")).toContainText("of 1 GB");
     const queue = tPage.getByTestId("credential-queue");
     await expect(queue.getByTestId("credential-row").filter({ hasText: `AWS Cloud Practitioner ${tag}` })).toContainText("Nobody yet");

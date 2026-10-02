@@ -92,7 +92,7 @@ test.describe("Reports and /ops", () => {
     await mPage.getByRole("button", { name: "Confirm" }).click();
     await mPage.getByRole("checkbox", { name: "I've saved these codes" }).check();
     await mPage.getByRole("button", { name: "Done" }).click();
-    await mPage.goto("/ops");
+    await mPage.goto("/ops/reports");
     await expect(mPage.getByTestId("staff-marker").locator("visible=true")).toBeVisible({ timeout: 15_000 });
     const queue = mPage.getByTestId("ops-queue");
     await expect(queue.getByTestId("ops-case").filter({ hasText: `Rude message ${tag}` })).toBeVisible();
@@ -114,7 +114,7 @@ test.describe("Reports and /ops", () => {
     await expect(mPage.getByTestId("case-outcome")).toContainText("Removed by Maryam Moderator");
 
     // Post case: warn the author.
-    await mPage.goto("/ops");
+    await mPage.goto("/ops/reports");
     await mPage.getByTestId("ops-case").filter({ hasText: `Buy exam leaks ${tag}` }).getByRole("link", { name: "Post" }).click();
     await mPage.getByRole("button", { name: "Claim" }).click();
     await mPage.getByRole("radio", { name: /Warn the owner/ }).check();
@@ -127,7 +127,7 @@ test.describe("Reports and /ops", () => {
     await expect(mPage.getByTestId("case-outcome")).toContainText("Owner warned");
     const { data: penalties } = await db.from("ranking_adjustments").select("severity").eq("user_id", author.id).order("severity");
     expect(penalties!.map((p) => p.severity)).toEqual(["low", "medium"]);
-    await mPage.goto("/ops?status=resolved");
+    await mPage.goto("/ops/reports?status=resolved");
     await expect(mPage.getByTestId("ops-case").filter({ hasText: `Rude message ${tag}` })).toContainText("Removed");
 
     // The friend's chat shows the message as deleted; the author hears why.

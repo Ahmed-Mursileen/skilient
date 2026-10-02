@@ -25,6 +25,7 @@ export async function claimCase(caseId: string, claim: boolean): Promise<ActionR
   return call(ctx, session.supabase, session.userId, "claim_case", { p_case: parsed.data.id, p_claim: parsed.data.claim }, [
     `/ops/reports/${parsed.data.id}`,
     "/ops",
+    "/ops/reports",
   ]);
 }
 
@@ -63,6 +64,6 @@ export async function resolveCase(caseId: string, action: CaseAction, reason: st
       p_reason: parsed.data.reason,
       p_severity: parsed.data.action === "dismiss" ? null : parsed.data.severity,
     },
-    [`/ops/reports/${parsed.data.id}`, "/ops"],
+    [`/ops/reports/${parsed.data.id}`, "/ops", "/ops/reports"],
   );
 }

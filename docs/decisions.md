@@ -1610,3 +1610,41 @@ Append-only. One dated entry per product decision, with the reason. Carried over
   exists only on Vercel; elsewhere the URL fell through to the auth gate and returned HTML, a "Refused to execute script"
   error that the E2E CSP checks (rightly) fail on. Both are cookieless and same-origin (`'self'` already covers them);
   PostHog (EU) stays the product analytics.
+
+## Phase 11: ops portal (decisions)
+
+- 2026-10-02 (phase 11, Ahmed's answers): Five slices, one PR each: (1) ops shell, unified inbox, staff roles, audit log viewer;
+  (2) sanctions and appeals; (3) users, view-as, staff 2FA reset; (4) versioned config editor and metrics; (5) org verification
+  documents, full university onboarding, the audit before/after sweep over phases 3-10, wrap-up. Every planning default approved
+  except charts: **a chart library** (not hand-built SVG) for `/ops/metrics`. Defaults, as approved: a suspension keeps sign-in but
+  allows only reading, appealing and account deletion (sessions revoked so it bites now); a ban blocks sign-in and revokes CVs;
+  appealable: moderation removals, warnings, suspensions, bans, CV revocations, credential rejections, code-check grades and org
+  suspension/throttling (not dismissals or config), within 30 days; an appeal is decided by any staff holding the deciding role
+  (super admins cover all) except the original decider, and a super admin's ban goes to a different super admin (with only one,
+  the appeal waits and Ahmed is told); reset 2FA is super admin only; view-as covers profile, Me (score, skills, work), CV,
+  opportunities/applications, privacy and notifications, never chat, card details or settings forms, open to any staff role with
+  a reason, and notifies the user in-app and by instant email with the PRD wording; plan prices get a versioned editor in
+  `/ops/config` (new subscriptions and renewals only); the skill dictionary is edited at `/ops/config/skills` (add, rename, retire,
+  never delete); org verification gains an optional document (PDF/WebP, 5 MB, private, accounts staff only); a staff role needs
+  the account's two-factor already on, no domain rule, no self-removal of super admin, never the last super admin; ops below
+  1024px shows a notice but stays usable; each slice is merged by Claude once CI is green; any production `emergency_ban` rows are
+  turned into sanctions by checklist SQL in slice 2.
+- 2026-10-02 (phase 11, slice 1): `/ops` is now the inbox: one `ops_inbox()` call returns counts, oldest age, unclaimed/yours and
+  overdue counts per queue plus the 200 oldest items across reports, credentials, GitHub flags, routed code checks, ranking flags,
+  teacher requests, pending organisations, university claims and domain requests, open billing tasks and feedback, each limited to
+  the caller's roles. Overdue marks: reports 24 h, code checks 48 h, organisations 48 h, feedback 7 days, the rest 72 h (fixed in
+  SQL for now; config in slice 4). Claiming from the inbox calls each queue's own claim function, so "someone else has it" and the
+  audit row are unchanged. Teacher, organisation, university and billing items have no claim (their pages never had one); appeals
+  join the inbox in slice 2. The reports list moved to `/ops/reports`; staff no longer get redirected from `/ops` to their area.
+- 2026-10-02 (phase 11, slice 1): The ops shell is its own layout: a role-filtered sidebar from `lib/ops/nav.ts` (one config),
+  the Staff marker with the caller's roles and the storage line; the student shell steps aside on `/ops`. A staff member's
+  areas are unchanged (moderators: reports and universities; trust: evidence and teachers; accounts: organisations, universities,
+  teachers, exam periods, graduation, billing; everyone: inbox, feedback, audit log; super admins: all plus Staff).
+- 2026-10-02 (phase 11, slice 1): Staff roles: `grant_staff_role(email, role, reason)` and `revoke_staff_role(user, role,
+  reason)` for super admins on two-factor, audited with the roles before and after. The account must have a verified
+  authenticator; a super admin can't remove their own super admin role, and the last super admin can't be removed (super admin
+  rows are locked while counting). The audit log is readable by every staff role at `/ops/audit` (filters: staff, action, target
+  type and id, Karachi dates; 50 a page); CSV export (10,000 rows max, formula-escaped) is super admin only, needs a reason and
+  writes an `audit.export` row before returning.
+- 2026-10-02 (phase 11, slice 1): Two-factor for staff was already enforced in SQL (`private.is_staff()` counts a role only on
+  aal2) and in `proxy.ts` (aal2 for `/ops`); slice 1 adds pgTAP proving the new functions refuse aal1 staff.
