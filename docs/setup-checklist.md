@@ -361,12 +361,15 @@ Ops portal (decisions.md "Phase 11").
 ## Before phase 13
 
 - [x] **PostHog** Cloud **EU** project: project key, host, personal API key; set billing limit to **$0**. — *done: EU, $0 limits*
-- [ ] **Axiom** via the Vercel integration (30-day retention).
+- [ ] **Axiom** via the Vercel integration (30-day retention). Needs Vercel Pro (the integration uses Log Drains, Pro only);
+      deferred until the Pro upgrade below. Until then: Vercel → project → Logs (about an hour of history on Hobby).
 - [ ] **UptimeRobot** monitors on `/` and `/api/health`, alerts to your email.
 - [ ] **security@** mailbox for `/.well-known/security.txt`.
 
 ## Before the closed beta ⏳
 
+- [ ] **Vercel Pro**: Hobby is for non-commercial use only, and Skilient takes payments; Pro also unlocks Log Drains, so install
+      Axiom (above) right after upgrading.
 - [ ] **Resend paid plan**: the free plan's ~100 emails a day is shared by Supabase Auth (verification codes, magic links), security and notification emails; notification emails stop at 60 a day until then (decisions.md 2026-09-30).
 
 - [ ] **Move skilient.com to the app project** (Vercel → the Skilient project → Domains; DNS at your
