@@ -6,7 +6,7 @@
 /* The hero headline: two lines at 1280 px in an 8-column measure (decisions 2026-10-02). */
 .text-hero {
   font-family: var(--font-display);
-  font-size: clamp(2rem, 1.1rem + 2.6vw, 2.75rem);
+  font-size: clamp(2.25rem, 1.1rem + 2.6vw, 2.75rem);
   font-weight: 500;
   line-height: 1.08;
   letter-spacing: -0.022em;
@@ -91,10 +91,6 @@
   border-bottom: 0;
   border-radius: 2.25rem 2.25rem 0 0;
   background: var(--bg-elevated);
-  box-shadow: var(--elevation-3);
-}
-.dark .hero-phone {
-  box-shadow: none;
 }
 .hero-screen {
   position: relative;
@@ -106,6 +102,13 @@
 @media (max-width: 639px) {
   .hero-top {
     display: none;
+  }
+  /* Narrower on phones, so the headline (painted first) stays the page's largest element. */
+  .hero-phone {
+    width: min(100%, 17.5rem);
+  }
+  .hero-screen {
+    height: 22rem;
   }
 }
 @media (min-width: 1024px) {
@@ -191,4 +194,115 @@
   content: "/";
   margin-inline: 0.6em;
   color: var(--interactive-primary);
+}
+
+/* ------------------------------------------------------------------------- */
+/* Feedback motion: arrows nudge on hover (120 ms)                            */
+/* ------------------------------------------------------------------------- */
+.cta-arrow {
+  transition: transform 120ms var(--motion-ease-standard);
+}
+a:hover > .cta-arrow,
+.org-row:hover .cta-arrow {
+  transform: translateX(4px);
+}
+.org-row:hover > span:first-child {
+  text-decoration: underline;
+  text-underline-offset: 6px;
+  text-decoration-thickness: 2px;
+}
+
+/* How it works: native scroll-snap; a quiet scrollbar in the theme. */
+.how-rail {
+  scrollbar-width: thin;
+  scroll-padding-inline: var(--page-gutter);
+}
+
+/* ------------------------------------------------------------------------- */
+/* Tier ladder: the one scroll-linked element (plan B3)                      */
+/* ------------------------------------------------------------------------- */
+.tier-track,
+.tier-fill {
+  left: 7px;
+  top: 8px;
+  bottom: 8px;
+  width: 2px;
+}
+.tier-fill {
+  transform-origin: top;
+}
+@media (min-width: 768px) {
+  .tier-track,
+  .tier-fill {
+    left: 8px;
+    right: 0;
+    top: 7px;
+    bottom: auto;
+    width: auto;
+    height: 2px;
+  }
+  .tier-fill {
+    transform-origin: left;
+  }
+}
+@keyframes tier-fill-y {
+  from {
+    transform: scaleY(0);
+  }
+}
+@keyframes tier-fill-x {
+  from {
+    transform: scaleX(0);
+  }
+}
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .tier-fill {
+      animation: tier-fill-y linear both;
+      animation-timeline: view();
+      animation-range: entry 35% cover 60%;
+    }
+    @media (min-width: 768px) {
+      .tier-fill {
+        animation-name: tier-fill-x;
+      }
+    }
+  }
+}
+
+/* ------------------------------------------------------------------------- */
+/* Verified CV specimen: the sheet is cut by its frame, not faded            */
+/* ------------------------------------------------------------------------- */
+.cv-specimen {
+  border-bottom: 1px solid var(--border-default);
+}
+
+/* ------------------------------------------------------------------------- */
+/* FAQ: 250 ms height, CSS only (instant under reduced motion)               */
+/* ------------------------------------------------------------------------- */
+.faq-item {
+  interpolate-size: allow-keywords;
+}
+.faq-item::details-content {
+  height: 0;
+  overflow: clip;
+  transition:
+    height 250ms var(--motion-ease-standard),
+    content-visibility 250ms allow-discrete;
+}
+.faq-item[open]::details-content {
+  height: auto;
+}
+.faq-caret {
+  transition: transform 200ms var(--motion-ease-standard);
+}
+.faq-item[open] .faq-caret {
+  transform: rotate(180deg);
+}
+@media (prefers-reduced-motion: reduce) {
+  .faq-item::details-content,
+  .faq-caret,
+  .cta-arrow {
+    transition: none;
+  }
 }

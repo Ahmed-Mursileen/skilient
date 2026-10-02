@@ -19,6 +19,8 @@ export const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
   weight: ["400"],
   display: "swap",
+  // Real data only (hashes, repos, codes): rarely above the fold, so it isn't preloaded on every page.
+  preload: false,
   variable: "--font-jetbrains-mono",
 });
 

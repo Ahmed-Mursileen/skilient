@@ -52,7 +52,7 @@ test.describe("Marketing: hero", () => {
   test("axe in both themes, on desktop and phone", async ({ page }) => {
     const problems = watchConsole(page);
     await page.goto("/");
-    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+    await expect(page.locator("#hero-title")).toBeVisible();
     await axeBothThemes(page, "landing");
     expect(problems).toEqual([]);
   });
@@ -77,12 +77,76 @@ test.describe("Marketing: hero", () => {
   });
 });
 
+test.describe("Marketing: landing sections", () => {
+  const SECTIONS = [
+    "Anyone can write \u201cReact\u201d on a CV.",
+    "How it works",
+    "Posts go viral because they provide value, not entertainment.",
+    "Build in teams of up to six.",
+    "Skills you\u2019ve proven, not skills you\u2019ve typed.",
+    "A CV anyone can check.",
+    "Opportunities come to you.",
+    "Our rules",
+    "For organisations",
+    "Free is enough to prove yourself.",
+    "Questions",
+    "Prove it. Don\u2019t claim it.",
+  ];
+
+  test("every section is there, in order, with JavaScript off", async ({ browser }, info) => {
+    test.skip(info.project.name !== "desktop", "one browser is enough");
+    const page = await (await browser.newContext({ javaScriptEnabled: false })).newPage();
+    await page.goto("/");
+    const headings = await page.locator("main h2").allTextContents();
+    const order = SECTIONS.map((h) => headings.indexOf(h));
+    expect(order.every((i) => i >= 0), JSON.stringify(headings)).toBe(true);
+    expect([...order].sort((a, b) => a - b)).toEqual(order);
+    for (const h of SECTIONS) await expect(page.getByRole("heading", { level: 2, name: h, exact: true })).toBeVisible();
+    // The FAQ works without JavaScript too.
+    await page.getByText("What happens when I graduate?").click();
+    await expect(page.getByText("Your account becomes a graduate account.")).toBeVisible();
+  });
+
+  test("tier ladder shows filled under reduced motion; FAQ and the how-it-works rail work from the keyboard", async ({ browser }, info) => {
+    test.skip(info.project.name !== "desktop", "one browser is enough");
+    const page = await (await browser.newContext({ reducedMotion: "reduce" })).newPage();
+    await page.goto("/");
+    const ladder = page.getByTestId("tier-ladder");
+    await ladder.scrollIntoViewIfNeeded();
+    const scale = await ladder.locator(".tier-fill").evaluate((el) => getComputedStyle(el).transform);
+    expect(["none", "matrix(1, 0, 0, 1, 0, 0)"]).toContain(scale);
+    // Without scroll-driven animation support the ladder is filled as well.
+    await page.addStyleTag({ content: ".tier-fill { animation: none !important; }" });
+    expect(await ladder.locator(".tier-fill").evaluate((el) => getComputedStyle(el).transform)).toMatch(/none|matrix\(1, 0, 0, 1, 0, 0\)/);
+
+    const summary = page.locator("summary", { hasText: "How do recruiters contact me?" });
+    await summary.focus();
+    await page.keyboard.press("Enter");
+    await expect(page.getByText("Through a contact request that names the company and the role.")).toBeVisible();
+
+    await page.setViewportSize({ width: 390, height: 844 });
+    const rail = page.getByTestId("how-rail");
+    await rail.focus();
+    const before = await rail.evaluate((el) => el.scrollLeft);
+    await page.keyboard.press("ArrowRight");
+    await page.keyboard.press("ArrowRight");
+    await expect.poll(() => rail.evaluate((el) => el.scrollLeft)).toBeGreaterThan(before);
+  });
+
+  test("the pricing teaser reads Student Pro from plans", async ({ page }, info) => {
+    test.skip(!hasBackend || info.project.name !== "desktop", "needs the local Supabase stack");
+    const { data } = await adminClient().from("plans").select("price_pkr").eq("id", "student_pro_monthly").single();
+    await page.goto("/");
+    await expect(page.getByTestId("pricing-teaser")).toContainText(`PKR ${Number(data!.price_pkr).toLocaleString("en-PK")}`);
+  });
+});
+
 test.describe("Marketing: without JavaScript", () => {
   test("content shows its end state and the email field posts to /join", async ({ browser }, info) => {
     test.skip(info.project.name !== "desktop", "one browser is enough");
     const page = await (await browser.newContext({ javaScriptEnabled: false })).newPage();
     await page.goto("/");
-    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+    await expect(page.locator("#hero-title")).toBeVisible();
     await expect(page.locator(".hero-a-before")).toBeHidden();
     await expect(page.locator(".hero-a-after").first()).toBeVisible();
     // Nothing on the page is hidden waiting for a script.

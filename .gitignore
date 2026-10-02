@@ -46,3 +46,6 @@ next-env.d.ts
 /playwright-report/
 /.lighthouseci/
 size-limit.txt
+
+# impeccable review captures (local only)
+.impeccable/review/

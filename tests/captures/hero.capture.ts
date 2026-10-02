@@ -1,4 +1,4 @@
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { createClient } from "@supabase/supabase-js";
 import { expect, test, type Locator, type Page } from "@playwright/test";
@@ -169,7 +169,9 @@ test("hero: the University Feed on a phone, before and after the tick", async ({
   const after = await shoot(page, "hero-post-a-after", cardA);
   const lineAfter = await shootClip(page, "hero-line-12", { x: a12.x + line.x, y: a12.y + line.y, width: line.w, height: line.h });
 
+  const existing = await readFile(MANIFEST, "utf8").then((t) => JSON.parse(t) as Record<string, unknown>, () => ({}));
   const manifest = {
+    ...existing,
     hero: { screen: SCREEN, top, postB: shotB, postABefore: before, postAAfter: after, line, lineBefore, lineAfter, tick },
   };
   await writeFile(MANIFEST, `${JSON.stringify(manifest, null, 2)}\n`);
