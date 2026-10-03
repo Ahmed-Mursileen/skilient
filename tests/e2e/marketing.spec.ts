@@ -101,7 +101,7 @@ test.describe("Marketing: landing sections", () => {
     const order = SECTIONS.map((h) => headings.indexOf(h));
     expect(order.every((i) => i >= 0), JSON.stringify(headings)).toBe(true);
     expect([...order].sort((a, b) => a - b)).toEqual(order);
-    for (const h of SECTIONS) await expect(page.getByRole("heading", { level: 2, name: h, exact: true })).toBeVisible();
+    for (const h of SECTIONS) await expect(page.getByRole("main").getByRole("heading", { level: 2, name: h, exact: true })).toBeVisible();
     // The FAQ works without JavaScript too.
     await page.getByText("What happens when I graduate?").click();
     await expect(page.getByText("Your account becomes a graduate account.")).toBeVisible();

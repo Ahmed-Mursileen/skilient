@@ -30,7 +30,6 @@ export default async function OpsMetricsPage() {
   const actives = m.weeklyActives.filter((a) => a.day === lastDay).sort((a, b) => b.value - a.value).slice(0, 10);
   const sent = m.contacts.reduce((n, w) => n + w.sent, 0);
   const accepted = m.contacts.reduce((n, w) => n + w.accepted, 0);
-  const pct = (v: number) => `${v}%`;
   return (
     <main className="flex flex-col gap-5">
       <header className="flex flex-wrap items-end justify-between gap-2">
@@ -113,7 +112,7 @@ export default async function OpsMetricsPage() {
           subtitle="Students with at least one skill at level 2 or higher"
           table={{ head: ["University", "Students", "L2+", "Rate"], rows: evidence.map((e) => [e.university, e.students, e.l2, `${e.rate}%`]) }}
         >
-          {evidence.length ? <RankedBars data={evidence} label="university" value="rate" name="L2+ rate" format={pct} /> : <p className="text-body-sm text-text-secondary">No students yet.</p>}
+          {evidence.length ? <RankedBars data={evidence} label="university" value="rate" name="L2+ rate" unit="percent" /> : <p className="text-body-sm text-text-secondary">No students yet.</p>}
         </ChartCard>
         <ChartCard
           title="Hires"

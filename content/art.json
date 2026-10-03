@@ -1,0 +1,50 @@
+{
+  "recruiters": {
+    "width": 960,
+    "height": 1280,
+    "alt": "A screenprint of stacked certificates under a round vermillion seal, with a magnifying glass resting on top.",
+    "model": "z_image",
+    "job": "6b7e9629-d97f-4b87-98a9-e1360f286902",
+    "prompt": "Vintage two-colour risograph poster print, flat 2D illustration, NOT a photograph. Bold flat shapes of only two inks: black and vermillion red-orange, printed on cream paper with coarse halftone dots, grain and slightly misaligned colour layers, like a screenprint. Subject: a stack of certificates with a big round vermillion seal stamp, a magnifying glass on top, a lanyard. Lots of empty cream paper. No text, no letters."
+  },
+  "faculty": {
+    "width": 960,
+    "height": 1280,
+    "alt": "A screenprint of a marked-up page with vermillion marks in its margin and a fountain pen across it.",
+    "model": "z_image",
+    "job": "92d639f2-dafa-41ad-95b2-1bb399c67986",
+    "prompt": "Mid-century screenprint illustration in exactly two flat inks, black and vermillion red-orange, on cream paper, coarse halftone texture, misregistered colour layers, flat graphic shapes, not a photo. Subject: a sheet of paper covered only in plain horizontal black bars of different lengths (no writing at all), with bold vermillion tick marks and circles in the margin, a fountain pen lying diagonally across it. Empty cream margins. Absolutely no text, no letters, no numbers, no characters."
+  },
+  "universities": {
+    "width": 960,
+    "height": 1280,
+    "alt": "A screenprint of a cork notice board with pinned notices and a vermillion folder below it.",
+    "model": "z_image",
+    "job": "6a2d3417-2efc-4e17-aa1c-1dddaf740db1",
+    "prompt": "Mid-century screenprint illustration in exactly two flat inks, black and vermillion red-orange, on cream paper, coarse halftone texture, misregistered colour layers, flat graphic shapes, not a photo. Subject: a cork notice board with pinned blank paper notices shown as simple rectangles with plain bars, a row of vermillion push pins, a ribbon-tied folder leaning below. Empty cream margins. Absolutely no text, no letters, no numbers."
+  },
+  "about-corridor": {
+    "width": 1600,
+    "height": 900,
+    "alt": "",
+    "model": "z_image",
+    "job": "ae4d7910-5ec6-49f4-89ed-d7bed7fa0915",
+    "prompt": "Mid-century screenprint illustration in exactly two flat inks, black and vermillion red-orange, on cream paper, coarse halftone texture, misregistered colour layers, flat graphic shapes, not a photo. Wide view of a long empty university corridor with a row of identical doors in one-point perspective, afternoon sunlight falling on the floor as flat vermillion shapes. No people, no signs, no text, no letters, no numbers."
+  },
+  "about-desk": {
+    "width": 1600,
+    "height": 900,
+    "alt": "",
+    "model": "z_image",
+    "job": "9275d463-915f-40c8-b067-e42ecc857548",
+    "prompt": "Mid-century screenprint illustration in exactly two flat inks, black and vermillion red-orange, on cream paper, coarse halftone texture, misregistered colour layers, flat graphic shapes, not a photo. Wide top-down view of a study desk: an open laptop with a plain grid on screen, a blank sheet with a round vermillion seal, a cup of chai on a saucer, a pencil. No people, no hands, no text, no letters, no numbers."
+  },
+  "og-plate": {
+    "width": 1200,
+    "height": 630,
+    "alt": "",
+    "model": "z_image",
+    "job": "ef7efd05-f49a-4c72-ac80-2c6dd3b53897",
+    "prompt": "Mid-century screenprint print in exactly two flat inks, black and vermillion red-orange, on cream paper, coarse halftone texture, misregistered layers, flat graphic, not a photo. Abstract composition: one large round vermillion seal stamp impression with a bold arrow inside pointing up and to the right, placed in the right third, a black halftone ring offset behind it, the left two thirds plain empty cream paper. No text, no letters, no numbers."
+  }
+}

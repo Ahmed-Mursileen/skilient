@@ -86,3 +86,26 @@ export const getPublicPlans = unstable_cache(
   ["marketing-public-plans"],
   { revalidate: 3600 },
 );
+
+export interface PricingExtras {
+  add_ons: { sponsored_post?: { pkr: number; days: number }; contact_credits?: { pkr: number } } | null;
+  hire_fees: { intern?: number; full_time?: number } | null;
+  trial_days: number | null;
+}
+
+/** Add-ons, hiring fees and the trial length for /pricing, from platform_config (what billing charges). */
+export const getPricingExtras = unstable_cache(
+  async (): Promise<PricingExtras> => {
+    const empty: PricingExtras = { add_ons: null, hire_fees: null, trial_days: null };
+    const { data, error } = await Promise.resolve()
+      .then(() => createPublicClient().rpc("public_pricing_extras"))
+      .then((r) => r, (e: unknown) => ({ data: null, error: { code: e instanceof Error ? e.message.slice(0, 60) : "unknown" } }));
+    if (error) {
+      logger.error("marketing.pricing_extras", { action: "public_pricing_extras", outcome: "error", error_code: error.code ?? "unknown" });
+      return empty;
+    }
+    return { ...empty, ...(data as Partial<PricingExtras> | null) };
+  },
+  ["marketing-pricing-extras"],
+  { revalidate: 3600 },
+);

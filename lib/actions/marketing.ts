@@ -2,7 +2,7 @@
 
 import { randomBytes } from "node:crypto";
 import { z } from "zod";
-import { requestUniversity as copy } from "@/content/marketing";
+import { requestUniversity as copy, universitiesPage } from "@/content/marketing";
 import { actionContext } from "@/lib/actions/context";
 import { fail, fieldErrors, ok, type ActionResult } from "@/lib/actions/result";
 import { sendEmail } from "@/lib/email/send";
@@ -120,5 +120,78 @@ export async function unsubscribeUniversityRequest(_prev: ActionResult | null, f
     return fail("not_found", copy.badLink);
   }
   ctx.done("ok");
+  return ok(null);
+}
+
+// ---------------------------------------------------------------------------------------------
+// "Talk to us" on /universities (PRD 5.1): a sales lead for accounts staff in /ops/leads.
+// ---------------------------------------------------------------------------------------------
+
+const leadSchema = z.object({
+  name: z.string().trim().min(2, "Enter your name.").max(80, "Keep your name under 80 characters."),
+  role: z.string().trim().min(2, "Enter your role.").max(80, "Keep your role under 80 characters."),
+  organisation: z.string().trim().min(2, "Enter your university.").max(200, "Keep the name under 200 characters."),
+  email: z.email("Enter a valid email address.").trim().toLowerCase().max(254),
+  message: z.string().trim().min(10, "Tell us a little about what you need.").max(2000, "Keep your message under 2,000 characters."),
+  website: z.string().max(0).optional(),
+  turnstileToken: z.string().max(4096).optional(),
+});
+
+const LEADS_PER_IP = 5;
+const LEADS_ALL = 200;
+
+export async function submitSalesLead(_prev: ActionResult | null, formData: FormData): Promise<ActionResult> {
+  const ctx = await actionContext("marketing.submit_sales_lead");
+  const values = Object.fromEntries(
+    ["name", "role", "organisation", "email", "message", "website", "turnstileToken"].map((k) => [k, formData.get(k) ?? undefined]),
+  );
+  const parsed = leadSchema.safeParse(values);
+  if (!parsed.success) {
+    if (typeof values.website === "string" && values.website.length > 0) {
+      ctx.done("refused", { error_code: "honeypot" });
+      return ok(null);
+    }
+    ctx.done("refused", { error_code: "invalid_input" });
+    return fail("invalid_input", "Check the highlighted fields.", { fields: fieldErrors(parsed.error.issues) });
+  }
+  const input = parsed.data;
+
+  const turnstile = await verifyTurnstile(input.turnstileToken, ctx.ip);
+  if (!turnstile.ok) {
+    ctx.done("refused", { error_code: `turnstile_${turnstile.reason}` });
+    return fail("captcha", "Complete the check that you're human, then try again.", { requestId: ctx.requestId });
+  }
+
+  const supabase = await createClient();
+  const [ipOk, allOk] = await Promise.all([
+    rateLimit(supabase, "sales_lead", ctx.ip ?? "unknown", LEADS_PER_IP, 3600),
+    rateLimit(supabase, "sales_lead_all", "all", LEADS_ALL, 3600),
+  ]);
+  if (!ipOk || !allOk) {
+    ctx.done("refused", { error_code: "rate_limited" });
+    return fail("rate_limited", universitiesPage.talk.rateLimited);
+  }
+
+  const { error } = await supabase.rpc("submit_sales_lead", {
+    p_name: input.name,
+    p_role: input.role,
+    p_organisation: input.organisation,
+    p_email: input.email,
+    p_message: input.message,
+  });
+  if (error) {
+    // One open lead per address: the visitor already reached us, so this reads as sent.
+    if (error.code === "23505") {
+      ctx.done("ok", { status: "exists" });
+      return ok(null);
+    }
+    if (error.code === "22023") {
+      ctx.done("refused", { error_code: "refused" });
+      return fail("refused", error.message);
+    }
+    ctx.done("error", { error_code: error.code ?? "unknown" });
+    return fail("unavailable", "We couldn't send your message. Try again in a minute.", { requestId: ctx.requestId });
+  }
+  ctx.done("ok", { status: "created" });
   return ok(null);
 }
