@@ -11,7 +11,7 @@
  */
 import type { Db, Fetch, Log } from "../github/types.ts";
 import { describeNotification } from "./describe.ts";
-import { digestEmail, instantEmail, teacherDigestEmail, type EmailMessage } from "./email.ts";
+import { digestEmail, instantEmail, teacherDigestEmail, universityLaunchEmail, type EmailMessage } from "./email.ts";
 
 export interface NotifyConfig {
   resendApiKey: string;
@@ -50,7 +50,7 @@ const MAX_ATTEMPTS = 5;
 interface QueueRow {
   msg_id: number | string;
   read_ct: number;
-  message: { kind?: string; notification_id?: string; user_id?: string };
+  message: { kind?: string; notification_id?: string; user_id?: string; request_id?: string };
 }
 
 /** Resend's error body: { statusCode, message, name } (its SDK's ErrorResponse). */
@@ -183,6 +183,19 @@ export async function runNotifyWorker(opts: {
       }
       email = built.email;
       key = `teacher-digest-${userId}-${now().toISOString().slice(0, 10)}`;
+    } else if (kind === "university_launch" && row.message.request_id) {
+      // A requester's university went live (PRD 5.1): the one launch email, queued by the live_at trigger.
+      const [r] = await db.query<{ email: string; university: string }>("select email, university from private.university_launch_email($1::uuid)", [
+        row.message.request_id,
+      ]);
+      if (!r) {
+        await archive(row.msg_id);
+        result.skipped++;
+        log("notify.skipped", { outcome: "ok", reason: "not_wanted", kind: "university_launch" });
+        continue;
+      }
+      email = universityLaunchEmail(r.email, cfg.appUrl, r.university);
+      key = `university-launch-${row.message.request_id}`;
     } else {
       await archive(row.msg_id);
       result.skipped++;

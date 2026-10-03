@@ -1799,3 +1799,25 @@ Append-only. One dated entry per product decision, with the reason. Carried over
 - Fixed in passing: `/ops/metrics` crashed once any university had evidence, because a format function was passed into a client chart. `RankedBars` now takes a format name (`unit="percent"`).
 - Lighthouse mobile locally: /recruiters 92–93, /universities 92–93, /faculty 94–97, /pricing 97, /about 95. On phones the portrait prints are served at 480 px, because the print is the largest paint.
 - The Gate B review ran in-thread (desktop and phone, both themes) and `impeccable detect` found nothing.
+
+### 2026-10-03: Phase 12 slice 4 (SEO, verify, legal, launch email) and the About content
+
+- About: Ahmed supplied the team (Huzaifa Khan, CEO and Founder; Ahmed Mursileen, CTO and Co-Founder; Laiba Owais, CHRO and Social Media Manager) and the incubation (NEIC, the NUTECH Entrepreneurial and Incubation Center).
+- Portraits: on Ahmed's instruction the photos were converted to SVG. Each is a two-colour vector trace (ink and vermillion on paper, vtracer) with the background faded to paper, so all three match the risograph art and the 85 px source doesn't matter. Only the traces are committed.
+- Copy: no wording about launching first anywhere, pre-beta or beta (Ahmed). The About story no longer says "opens first at NUTECH", and the "Prices may change" note is gone from /pricing. Ahmed will set prices himself.
+- `/verify` moved into the marketing frame (same URLs). The entry page is indexable; code pages stay noindex.
+- `/terms` renders the agreement from `agreement_versions`; `/privacy` lists the headings only. Both are built (in the footer) but noindex and outside the sitemap until the final text exists (`NOINDEX_PAGES`).
+- SEO:
+  - `metadataBase` comes from `NEXT_PUBLIC_SITE_URL`, with a canonical URL per page.
+  - `robots.ts` disallows every signed-in area; the signed-in layout already says noindex.
+  - `sitemap.ts` comes from `BUILT_PAGES`, and Organization JSON-LD is in the marketing layout.
+  - Open Graph cards use `next/og` per page over the shifted OG plate.
+  - Satori can't read woff2, so `lib/og/fonts/` holds TTF copies of Spectral 500 and Barlow 500 (OFL, converted with fonttools).
+- `/demo` is a public path so it answers 404 instead of redirecting to sign-in (PRD 5.1: "/demo returns 404").
+- Launch email:
+  - A trigger on `universities.live_at` (null to set) queues one `university_launch` message per confirmed, consenting, subscribed request, and sets `notified_at` at queue time. Closing and reopening never emails anyone twice.
+  - The worker checks again that the request is still subscribed and the university still live, and skips otherwise.
+  - Launch emails count toward the 60-a-day notification cap.
+- `getViewer` now rethrows Next's own signals (`unstable_rethrow`) instead of logging them as errors at build.
+- DESIGN.md and `.impeccable/design.json` were written from the shipped tokens. The documenter's qualitative questions were answered with the plan's thesis ("The Record You Can Check"), not asked, per the one-question-list rule. The documenter ran inline (no subagent in this harness).
+- The talent-search, dashboard and ecosphere captures stay deferred; the organisation pages ship with the existing captures and the art.

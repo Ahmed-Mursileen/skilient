@@ -15,7 +15,9 @@ export interface NavLink {
  * Marketing pages that exist so far. Phase 12 ships in slices and main deploys to production,
  * so nav and footer links to a page appear only once it is built (each slice adds its pages).
  */
-export const BUILT_PAGES: ReadonlySet<string> = new Set(["/verify", "/recruiters", "/universities", "/faculty", "/pricing", "/about"]);
+export const BUILT_PAGES: ReadonlySet<string> = new Set(["/verify", "/recruiters", "/universities", "/faculty", "/pricing", "/about", "/terms", "/privacy"]);
+/** Built but kept out of search until their final text exists. */
+export const NOINDEX_PAGES: ReadonlySet<string> = new Set(["/terms", "/privacy"]);
 export const isBuilt = (href: string) => BUILT_PAGES.has(href);
 
 export const nav: { links: NavLink[]; signIn: NavLink; join: NavLink; open: string } = {
@@ -429,7 +431,7 @@ export const pricingPage = {
   universities: {
     heading: "Universities",
     free: { label: "Every university", items: ["Your ecosphere: feed, announcements, rankings, faculty, exam periods", "One admin seat"] },
-    note: "Licences are yearly and invoiced. Prices may change before launch.",
+    note: "Licences are yearly and invoiced.",
   },
   faq: [
     { q: "Does paying change my rank?", a: "No. Rank, tiers, leaderboards and recruiter search never use payment. Student Pro adds conveniences such as PDF export, more CV layouts and seeing who viewed your CV." },
@@ -438,15 +440,24 @@ export const pricingPage = {
   ],
 };
 
-/** /about (PRD 5.1). Founders, incubation and the award appear once Ahmed supplies them. */
+/** /about (PRD 5.1). Team and incubation from Ahmed (2026-10-03); portraits are two-colour traces in public/marketing/team/. */
 export const aboutPage = {
   title: "About",
   description: "Why Skilient exists: a CV should show the work behind it.",
   headline: "A CV should show the work behind it.",
   story: [
     "In Pakistan, thousands of students graduate every year with CVs that look the same. A recruiter can’t tell who has built something and who has only listed it, so good students are passed over and companies hire on guesswork.",
-    "Skilient opens first at NUTECH: a place where students build with classmates and prove what they can do with real work. Code, teammates and faculty confirm each skill, and the proof travels with the student as a signed CV anyone can check.",
+    "Skilient is a place where students build with classmates and prove what they can do with real work. Code, teammates and faculty confirm each skill, and the proof travels with the student as a signed CV anyone can check.",
   ],
+  team: {
+    heading: "The team",
+    people: [
+      { slug: "huzaifa-khan", name: "Huzaifa Khan", role: "CEO and Founder" },
+      { slug: "ahmed-mursileen", name: "Ahmed Mursileen", role: "CTO and Co-Founder" },
+      { slug: "laiba-owais", name: "Laiba Owais", role: "CHRO and Social Media Manager" },
+    ],
+  },
+  incubation: { label: "Incubated at", name: "NEIC", full: "NUTECH Entrepreneurial and Incubation Center" },
   values: {
     heading: "What we hold to",
     items: [
@@ -454,6 +465,31 @@ export const aboutPage = {
       { term: "Rank can’t be bought", detail: "No payment touches rank, tiers, leaderboards or search." },
       { term: "Students decide", detail: "Recruiters ask before they contact anyone, and students choose whether they can be found." },
       { term: "No ads, no data sales", detail: "We earn from organisations’ plans, never from selling students’ attention or data." },
+    ],
+  },
+};
+
+/** /terms and /privacy (PRD 5.1). Both are noindex until the final text is written (setup checklist, Phase 12). */
+export const legalPages = {
+  terms: {
+    title: "Terms",
+    description: "The Skilient user agreement every account accepts at signup.",
+    unavailable: "The agreement couldn't be loaded. Try again in a minute.",
+    version: "Version {version}",
+  },
+  privacy: {
+    title: "Privacy",
+    description: "What Skilient collects, who can see it, and how to delete it.",
+    intro: "This policy is being written. The headings below are what it will cover.",
+    headings: [
+      "What we collect when you sign up",
+      "What we read from GitHub",
+      "Who can see your profile, skills and CV",
+      "What recruiters see, and when",
+      "What your university sees",
+      "How long we keep your data",
+      "Deleting your account",
+      "Your rights and how to contact us",
     ],
   },
 };

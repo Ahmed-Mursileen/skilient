@@ -1,10 +1,14 @@
 import type { Metadata, Route } from "next";
 import { redirect } from "next/navigation";
-import { PublicFrame } from "@/components/cv/public-frame";
+import { VerifyColumn } from "@/components/marketing/verify-column";
 import { Button, Field, Input } from "@/components/ui";
 import { normaliseCode } from "@/supabase/functions/_shared/cv/sign.ts";
 
-export const metadata: Metadata = { title: "Check a verified CV", robots: { index: false } };
+export const metadata: Metadata = {
+  title: "Check a verified CV",
+  description: "Enter the code printed on a Skilient CV to see whether it is genuine and current.",
+  alternates: { canonical: "/verify" },
+};
 
 /** /verify: type the code printed on a CV (works without JavaScript). */
 export default async function VerifyIndexPage({ searchParams }: PageProps<"/verify">) {
@@ -13,7 +17,7 @@ export default async function VerifyIndexPage({ searchParams }: PageProps<"/veri
   const code = typed ? normaliseCode(typed) : null;
   if (code) redirect(`/verify/${code}` as Route);
   return (
-    <PublicFrame>
+    <VerifyColumn>
       <div className="rounded-lg border border-border-default bg-bg-surface p-6 shadow-1 sm:p-8">
         <h1 className="font-display text-h2">Check a verified CV</h1>
         <p className="mt-2 text-body text-text-secondary">
@@ -26,6 +30,6 @@ export default async function VerifyIndexPage({ searchParams }: PageProps<"/veri
           <Button type="submit">Check</Button>
         </form>
       </div>
-    </PublicFrame>
+    </VerifyColumn>
   );
 }

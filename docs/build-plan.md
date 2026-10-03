@@ -198,7 +198,7 @@ Legend: 📖 = PRD files to read (in `docs/prd/`), ✅ = done-when checks.
 
 📖 `05-01-marketing-and-public-pages.md`
 
-- [ ] Landing (15 sections, university email detection, focal hero motion, tier ladder), recruiters/universities/faculty pages, about, pricing, university requests, SEO
+- [x] Landing (15 sections, university email detection, focal hero motion, tier ladder), recruiters/universities/faculty pages, about, pricing, university requests, SEO
 
 ✅ Lighthouse mobile ≥ 90 · hero fits the first screen at 1280×720 and 390×844 · content visible with JavaScript off · live numbers hidden below 200
 

@@ -1,0 +1,229 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-03T00:51:45Z",
+  "title": "Design System: Skilient",
+  "extensions": {
+    "colorMeta": {
+      "vermillion": {
+        "role": "primary",
+        "displayName": "Stamp Vermillion",
+        "canonical": "#C03910"
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Press Ink",
+        "canonical": "#0E0D0B"
+      },
+      "paper-page": {
+        "role": "neutral",
+        "displayName": "Page Paper",
+        "canonical": "#F0EFED"
+      },
+      "paper-surface": {
+        "role": "neutral",
+        "displayName": "Surface Paper",
+        "canonical": "#FAF9F7"
+      },
+      "graphite": {
+        "role": "neutral",
+        "displayName": "Graphite",
+        "canonical": "#484744"
+      },
+      "rule": {
+        "role": "neutral",
+        "displayName": "Hairline Rule",
+        "canonical": "#CECDCA"
+      },
+      "verified-teal": {
+        "role": "tertiary",
+        "displayName": "Verified Teal",
+        "canonical": "#076C6A"
+      },
+      "chalk": {
+        "role": "neutral",
+        "displayName": "Chalk (dark text)",
+        "canonical": "#E7E7E3"
+      },
+      "night-page": {
+        "role": "neutral",
+        "displayName": "Night Ground",
+        "canonical": "#0A0A09"
+      },
+      "vermillion-night": {
+        "role": "primary",
+        "displayName": "Stamp Vermillion (dark)",
+        "canonical": "#E04020"
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Page headlines on the public site (.text-hero)."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Section headings on the public site."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Sub-sections and product page titles."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Running text, Barlow 15/1.6."
+      },
+      "code": {
+        "displayName": "Code",
+        "purpose": "CV codes and data only."
+      }
+    },
+    "shadows": [
+      {
+        "name": "elevation-1",
+        "value": "0 1px 2px rgb(14 13 11 / 0.05), 0 1px 3px rgb(14 13 11 / 0.04)",
+        "purpose": "Cards at rest (none in dark mode)."
+      },
+      {
+        "name": "elevation-2",
+        "value": "0 2px 6px rgb(14 13 11 / 0.06), 0 4px 14px rgb(14 13 11 / 0.06)",
+        "purpose": "Popovers and menus."
+      },
+      {
+        "name": "elevation-4",
+        "value": "0 8px 24px rgb(14 13 11 / 0.1), 0 20px 52px rgb(14 13 11 / 0.12)",
+        "purpose": "Sheets and dialogs."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease-standard",
+        "value": "cubic-bezier(0.4, 0, 0.2, 1)",
+        "purpose": "State transitions (FAQ height 250 ms, toggles 200 ms, press 120 ms)."
+      },
+      {
+        "name": "ease-out-expo",
+        "value": "cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "The hero's FLIP move (400 ms), the page's one focal moment."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "sm",
+        "value": "640px"
+      },
+      {
+        "name": "md",
+        "value": "768px"
+      },
+      {
+        "name": "lg",
+        "value": "1024px"
+      },
+      {
+        "name": "page",
+        "value": "1280px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The page's one call to action.",
+      "html": "<a class=\"ds-btn-primary\" href=\"#\">Create a recruiter account <span aria-hidden=\"true\">&#8594;</span></a>",
+      "css": ".ds-btn-primary{display:inline-flex;align-items:center;gap:8px;height:48px;padding:0 24px;border-radius:6px;background:#C03910;color:#fff;font:600 18px/1 Barlow,system-ui,sans-serif;text-decoration:none;transition:background-color 120ms cubic-bezier(0.4,0,0.2,1),transform 120ms cubic-bezier(0.4,0,0.2,1)}.ds-btn-primary:hover{background:#9E2E08}.ds-btn-primary:active{transform:scale(.98)}.ds-btn-primary:focus-visible{outline:2px solid #C03910;outline-offset:2px}"
+    },
+    {
+      "name": "Text Link",
+      "kind": "custom",
+      "description": "Underlined ink link with an arrow.",
+      "html": "<a class=\"ds-link\" href=\"#\">See pricing &#8594;</a>",
+      "css": ".ds-link{color:#0E0D0B;font:600 15px/1.6 Barlow,system-ui,sans-serif;text-decoration:underline;text-underline-offset:4px}.ds-link:hover{color:#C03910}.ds-link:focus-visible{outline:2px solid #C03910;outline-offset:2px}"
+    },
+    {
+      "name": "Input",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Labelled field; errors below, linked by aria-describedby.",
+      "html": "<label class=\"ds-label\" for=\"ds-e\">University email</label><input class=\"ds-input\" id=\"ds-e\" placeholder=\"you@university.edu.pk\">",
+      "css": ".ds-label{display:block;margin-bottom:8px;font:600 13px/1.4 Barlow,system-ui,sans-serif;color:#0E0D0B}.ds-input{height:48px;width:100%;padding:0 14px;border:1px solid #CECDCA;border-radius:6px;background:#fff;color:#0E0D0B;font:400 15px Barlow,system-ui,sans-serif}.ds-input:focus-visible{outline:2px solid #C03910;outline-offset:1px;border-color:#AEADA8}"
+    },
+    {
+      "name": "Plan Column",
+      "kind": "card",
+      "description": "A plan as a column: top rule, Spectral price, lines from grants.",
+      "html": "<div class=\"ds-plan\"><h3>Growth</h3><p class=\"ds-price\">PKR 45,000 <span>a month</span></p><ul><li>100 contact requests a month</li><li>5 seats</li><li>No hiring fee</li></ul></div>",
+      "css": ".ds-plan{border-top:1px solid #CECDCA;padding-top:24px;font:400 15px/1.6 Barlow,system-ui,sans-serif;color:#0E0D0B}.ds-plan h3{margin:0 0 12px;font:600 22px/1.25 Barlow,system-ui,sans-serif}.ds-price{margin:0 0 12px;font:500 30px/1.15 Spectral,Georgia,serif}.ds-price span{font:400 15px Barlow,system-ui,sans-serif;color:#484744}.ds-plan ul{margin:0;padding-left:18px}"
+    },
+    {
+      "name": "Verified Status",
+      "kind": "chip",
+      "description": "Teal, only for something Skilient checked.",
+      "html": "<span class=\"ds-verified\">Verified by Skilient</span>",
+      "css": ".ds-verified{display:inline-flex;align-items:center;padding:8px 14px;border:1px solid rgba(7,108,106,.4);border-radius:6px;background:#E8F8F6;color:#0E0D0B;font:600 15px Barlow,system-ui,sans-serif}"
+    },
+    {
+      "name": "Rules Band",
+      "kind": "custom",
+      "description": "The one full-bleed vermillion field.",
+      "html": "<section class=\"ds-rules\"><p>Rank can&rsquo;t be bought.</p><p>Proof is free.</p></section>",
+      "css": ".ds-rules{background:#C03910;color:#fff;padding:48px 32px}.ds-rules p{margin:0;font:500 40px/1.1 Spectral,Georgia,serif;letter-spacing:-0.02em}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Record You Can Check",
+    "overview": "Skilient reads like a printed record: an attested document, a stamped result card, a notice board. Every claim on a page is either a real capture of the product, a sourced figure, or a rule we commit to, so the system is built from paper, ink and one vermillion stamp. Type does the heavy lifting: Spectral for the headline voice, Barlow for everything that has to be read quickly.\n\nDensity is calm and editorial on the public site (an 80 px section rhythm, 62ch measures) and compact in the product. Light and dark are designed as equals. Light is paper with ink; dark is a night ground with chalk text and a brighter vermillion. Art is two-colour risograph print (ink and vermillion on cream, halftone, slight misregistration), never photography, and never used for the product itself, which only ever appears as real captures.",
+    "keyCharacteristics": [
+      "Paper grounds, ink text, one vermillion accent for actions and the single full-bleed \"Our rules\" field.",
+      "Teal appears only where verification appears.",
+      "Spectral 500 for display, h1 and h2; Barlow from h3 down; JetBrains Mono only for codes and data.",
+      "Hairline rules separate real content; no decorative grids, no eyebrows.",
+      "Motion is feedback, plus one focal moment per page at most."
+    ],
+    "rules": [
+      {
+        "name": "The One Stamp Rule",
+        "body": "Vermillion is the only accent. It marks actions and one drenched field per page, never decoration.",
+        "section": "colors"
+      },
+      {
+        "name": "The Proof Colour Rule",
+        "body": "Teal means \"checked by Skilient\". Never use it for anything that isn't verified.",
+        "section": "colors"
+      },
+      {
+        "name": "The Tier Colour Rule",
+        "body": "The six tier colours (Raw to Luminary) appear only on tier badges and the tier ladder.",
+        "section": "colors"
+      },
+      {
+        "name": "The No Eyebrow Rule",
+        "body": "No small tracked labels above headings. A heading stands on its own.",
+        "section": "typography"
+      },
+      {
+        "name": "The No Em-Dash Rule",
+        "body": "Visible copy uses full stops, commas and colons.",
+        "section": "typography"
+      },
+      {
+        "name": "The Paper Stack Rule",
+        "body": "Separate layers with tone and a hairline first; reach for a shadow only for things that float (menus, sheets).",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "**Do** show the product only as real captures in both themes, with alt text that says the content is a sample.",
+      "**Do** read every price and limit from `plans` and `platform_config`; copy never repeats a number billing enforces.",
+      "**Do** keep every page complete with JavaScript off. Motion only adds to a page that already works.",
+      "**Do** honour reduced motion: the hero becomes a 200 ms crossfade, and everything else is instant."
+    ],
+    "donts": [
+      "**Don't** use gradient blobs, stock photos, logo walls, emoji or icon tiles.",
+      "**Don't** use teal or tier colours outside verification and tiers.",
+      "**Don't** add section reveals, parallax or marquees.",
+      "**Don't** use generated art for anything that depicts the product."
+    ]
+  }
+}

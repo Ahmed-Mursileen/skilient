@@ -1,6 +1,7 @@
 import "server-only";
 
 import { unstable_cache } from "next/cache";
+import { unstable_rethrow } from "next/navigation";
 import { cache } from "react";
 import { homeFor, type GateState } from "@/lib/auth/gate";
 import { logger } from "@/lib/log";
@@ -28,6 +29,8 @@ export const getViewer = cache(async (): Promise<Viewer | null> => {
     const gate = (state as GateState | null) ?? null;
     return { home: gate ? homeFor(gate) : "/feed", role: gate?.role ?? null };
   } catch (err) {
+    // Next's own signals (dynamic rendering, redirects) pass through untouched.
+    unstable_rethrow(err);
     // The public pages never fail because auth is unreachable: the visitor just sees "Join".
     logger.error("marketing.viewer", { action: "getViewer", outcome: "error", error_code: err instanceof Error ? err.message.slice(0, 80) : "unknown" });
     return null;

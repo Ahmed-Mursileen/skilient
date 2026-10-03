@@ -3,7 +3,7 @@ import type { Metadata, Route } from "next";
 import Link from "next/link";
 import { CvPaper } from "@/components/cv/cv-paper";
 import { PdfCheck } from "@/components/cv/pdf-check";
-import { PublicFrame } from "@/components/cv/public-frame";
+import { VerifyColumn } from "@/components/marketing/verify-column";
 import { siteUrl } from "@/lib/cv/site";
 import { STATUS_TEXT, type VerifyStatus } from "@/lib/cv/status";
 import { verifyCode } from "@/lib/data/cv";
@@ -61,17 +61,17 @@ export default async function VerifyPage({ params, searchParams }: PageProps<"/v
 
   if (result.status === "rate_limited") {
     return (
-      <PublicFrame>
+      <VerifyColumn>
         <section className="rounded-lg border border-border-strong bg-bg-surface p-6" role="alert">
           <h1 className="font-display text-h2">Too many checks</h1>
           <p className="mt-2 text-body">You can check up to 30 CVs a minute. Try again in a minute.</p>
         </section>
-      </PublicFrame>
+      </VerifyColumn>
     );
   }
   if (result.status === "not_found") {
     return (
-      <PublicFrame>
+      <VerifyColumn>
         <StatusCard status="not_found">
           <p className="mt-4 text-body-sm">
             <Link href="/verify" className="font-semibold underline underline-offset-4">
@@ -79,12 +79,12 @@ export default async function VerifyPage({ params, searchParams }: PageProps<"/v
             </Link>
           </p>
         </StatusCard>
-      </PublicFrame>
+      </VerifyColumn>
     );
   }
   if (result.status === "revoked") {
     return (
-      <PublicFrame>
+      <VerifyColumn>
         <StatusCard status="revoked">
           <dl className="mt-4 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-body-sm">
             <dt className="text-text-secondary">Code</dt>
@@ -95,14 +95,14 @@ export default async function VerifyPage({ params, searchParams }: PageProps<"/v
             <dd>{result.revokedLabel}</dd>
           </dl>
         </StatusCard>
-      </PublicFrame>
+      </VerifyColumn>
     );
   }
 
   // A signed-in recruiter whose organisation may open this student gets the contact entry point (PRD 5.20).
   const candidateId = result.status === "valid" || result.status === "superseded" ? await getCandidateForCode(result.code) : null;
   return (
-    <PublicFrame>
+    <VerifyColumn>
       <StatusCard status={result.status}>
         <dl className="mt-4 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-body-sm">
           <dt className="text-text-secondary">Code</dt>
@@ -146,6 +146,6 @@ export default async function VerifyPage({ params, searchParams }: PageProps<"/v
         <PdfCheck code={result.code} />
       </div>
       <CvPaper snapshot={result.snapshot} code={result.code} issuedAt={result.issuedAt} siteUrl={siteUrl()} />
-    </PublicFrame>
+    </VerifyColumn>
   );
 }

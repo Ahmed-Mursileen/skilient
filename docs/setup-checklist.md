@@ -412,10 +412,19 @@ Marketing site (`docs/marketing-design-plan.md`, decisions.md "phase 12"). Later
       `content/art.json` and inside each file. To redo a piece, generate it in the same style and replace it under `public/marketing/art/`.
 - [ ] **University leads** (slice 3). "Talk to us" on `/universities` lands in `/ops/leads` for accounts staff; nobody is emailed.
       Check that queue regularly until an alert exists. It uses the same Turnstile keys as the request form.
-- [ ] **About page content** (slice 3). `/about` shows only the story and values. Send the founders' names and roles, the
-      incubation, the award and any real photos to add them; also review the story wording in `content/marketing.ts` (`aboutPage`).
-- [ ] **Placeholder prices** (slice 3). `/pricing` shows the `plans` table and `billing.*` config as they are. Change prices at
-      `/ops/config/plans` before launch, after the pricing interviews.
+- [x] **About page content** (slice 3, done 2026-10-03). The team and the NEIC incubation are on `/about`; portraits are two-colour
+      traces in `public/marketing/team/`. Send new photos to replace one, or an award line to add.
+- [ ] **Domain and public URL** (slice 4). Set `NEXT_PUBLIC_SITE_URL` on Vercel to the production origin (for example
+      `https://skilient.com`). Canonical links, the sitemap, robots.txt, Open Graph cards and CV verify links all use it.
+- [ ] **Search Console** (slice 4). Verify the domain in Google Search Console and submit `https://<domain>/sitemap.xml`.
+- [ ] **Share previews** (slice 4). Paste `/`, `/recruiters` and `/universities` into the LinkedIn Post Inspector and the Facebook
+      Sharing Debugger once the domain is live, so they fetch the new cards.
+- [ ] **Terms and privacy text** (slice 4, launch blocker). `/terms` shows the agreement in `agreement_versions` (still "[To be written]");
+      `/privacy` shows headings only. Both stay noindex until the text is final; then remove them from `NOINDEX_PAGES` in
+      `content/marketing.ts`. Publishing a new agreement version makes everyone accept it again at next sign-in.
+- [ ] **Launch emails** (slice 4). When staff open a university (`/ops/universities/<id>` → Signup, or Public launch), everyone who
+      confirmed a request for it is emailed once through the notify worker. Notification emails stop at 60 a day until the
+      Resend plan is upgraded (see "Before the closed beta"), so a big launch sends over several days.
 
 ## Before phase 13
 

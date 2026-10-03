@@ -100,3 +100,17 @@ export function teacherDigestEmail(to: string, appUrl: string, counts: Record<st
     text: `${subject}\n\n${lines.map((i) => `- ${i.text} ${appUrl}${i.href}`).join("\n")}\n\nOpen the teacher portal: ${appUrl}/teach\n\n${footer}\n`,
   };
 }
+
+/** The one email a university requester gets (PRD 5.1): their university is now open for signup. */
+export function universityLaunchEmail(to: string, appUrl: string, university: string): EmailMessage {
+  const subject = `${university} is on Skilient`;
+  const join = `${appUrl}/signup?email=${encodeURIComponent(to)}`;
+  const footer = "You asked us to email you when your university joined. This is the only email we send about it.";
+  const body = `<p style="margin:0 0 16px 0;font-size:15px;line-height:24px;">You can now join with your university email: build with classmates, prove your skills with real work, and get a CV recruiters can check.</p>`;
+  return {
+    to,
+    subject,
+    html: layout(subject, body + button(join, "Join Skilient"), footer),
+    text: `${subject}\n\nYou can now join with your university email: build with classmates, prove your skills with real work, and get a CV recruiters can check.\n\nJoin Skilient: ${join}\n\n${footer}\n`,
+  };
+}

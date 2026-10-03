@@ -5,7 +5,7 @@ import { Section, SectionHeading } from "@/components/marketing/sections/section
 import { facultyPage as copy, nav } from "@/content/marketing";
 import { getViewer } from "@/lib/data/marketing";
 
-export const metadata: Metadata = { title: copy.title, description: copy.description };
+export const metadata: Metadata = { title: copy.title, description: copy.description, alternates: { canonical: "/faculty" } };
 
 const ICONS = { ideas: Lightbulb, supervise: ChalkboardTeacher, confirm: SealCheck, review: NotePencil, endorse: Medal, grade: Code } as const;
 

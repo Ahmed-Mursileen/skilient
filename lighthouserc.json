@@ -10,7 +10,8 @@
         "http://localhost:3200/universities",
         "http://localhost:3200/faculty",
         "http://localhost:3200/pricing",
-        "http://localhost:3200/about"
+        "http://localhost:3200/about",
+        "http://localhost:3200/verify"
       ],
       "numberOfRuns": 1,
       "settings": {

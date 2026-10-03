@@ -21,6 +21,7 @@ import { turnstileSiteKey } from "@/lib/security/turnstile";
 export const metadata: Metadata = {
   title: { absolute: "Skilient: prove your skills with real work" },
   description: hero.subline,
+  alternates: { canonical: "/" },
 };
 
 /**
