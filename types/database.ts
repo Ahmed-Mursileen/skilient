@@ -1400,13 +1400,13 @@ isOneToOne: false
                   ]
                 },"github_user_repos": {
                   Row: {
-                    "classified_at": string | null,"discovered_at": string,"excluded": boolean,"harvested_at": string | null,"installation_id": number,"kind": Database["public"]['Enums']["github_repo_kind"] | null,"last_synced_at": string | null,"repo_id": number,"user_id": string
+                    "agent_prs_checked_at": string | null,"classified_at": string | null,"discovered_at": string,"excluded": boolean,"harvested_at": string | null,"installation_id": number,"kind": Database["public"]['Enums']["github_repo_kind"] | null,"last_synced_at": string | null,"repo_id": number,"user_id": string
                   }
                   Insert: {
-                    "classified_at"?: string | null,"discovered_at"?: string,"excluded"?: boolean,"harvested_at"?: string | null,"installation_id": number,"kind"?: Database["public"]['Enums']["github_repo_kind"] | null,"last_synced_at"?: string | null,"repo_id": number,"user_id": string
+                    "agent_prs_checked_at"?: string | null,"classified_at"?: string | null,"discovered_at"?: string,"excluded"?: boolean,"harvested_at"?: string | null,"installation_id": number,"kind"?: Database["public"]['Enums']["github_repo_kind"] | null,"last_synced_at"?: string | null,"repo_id": number,"user_id": string
                   }
                   Update: {
-                    "classified_at"?: string | null,"discovered_at"?: string,"excluded"?: boolean,"harvested_at"?: string | null,"installation_id"?: number,"kind"?: Database["public"]['Enums']["github_repo_kind"] | null,"last_synced_at"?: string | null,"repo_id"?: number,"user_id"?: string
+                    "agent_prs_checked_at"?: string | null,"classified_at"?: string | null,"discovered_at"?: string,"excluded"?: boolean,"harvested_at"?: string | null,"installation_id"?: number,"kind"?: Database["public"]['Enums']["github_repo_kind"] | null,"last_synced_at"?: string | null,"repo_id"?: number,"user_id"?: string
                   }
                   Relationships: [
                     {
