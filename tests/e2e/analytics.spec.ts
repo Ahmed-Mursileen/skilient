@@ -41,7 +41,9 @@ async function fakePostHog(page: Page): Promise<FakePostHog> {
   await page.addInitScript(
     ({ key, session }) => {
       // posthog-js drops events from automated browsers; this page must look like a person's.
+      // It checks navigator.webdriver and the userAgentData brands (headless Chromium lists "HeadlessChrome").
       Object.defineProperty(Navigator.prototype, "webdriver", { get: () => false });
+      Object.defineProperty(Navigator.prototype, "userAgentData", { get: () => undefined });
       const store = `ph_${key}_posthog`;
       if (!localStorage.getItem(store)) {
         localStorage.setItem(store, JSON.stringify({ $sesid: [Date.now(), session, Date.now()], $session_is_sampled: session, $replay_sample_rate: 0.2 }));
