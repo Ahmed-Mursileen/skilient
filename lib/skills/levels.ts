@@ -116,3 +116,26 @@ export const DETECTOR_LABELS: Record<string, string> = {
   manifest: "added as a dependency",
   import: "imported",
 };
+
+/**
+ * AI-assisted work (decisions 2026-10-03): commits an AI coding agent wrote in a pull request the
+ * student opened and merged count like their own, and a skill mostly written that way carries this
+ * label until a passed code check removes it.
+ */
+export const AI_ASSISTED = {
+  label: "AI-assisted",
+  own: "Most of the code behind this skill was written with an AI coding agent in pull requests you opened and merged. Pass a code check to remove this label.",
+  other:
+    "Most of the code behind this skill was written with an AI coding agent in pull requests they opened and merged. A passed code check would remove this label.",
+};
+
+/** The agent's name for an identity stored on a commit (display only; the list lives in platform_config). */
+export function agentName(identity: string | null | undefined): string {
+  const id = (identity ?? "").toLowerCase();
+  if (id.includes("anthropic") || id.startsWith("claude")) return "Claude";
+  if (id.includes("copilot")) return "GitHub Copilot";
+  if (id.includes("devin")) return "Devin";
+  if (id.includes("cursor")) return "Cursor";
+  if (id.includes("codex") || id.includes("openai")) return "Codex";
+  return "an AI agent";
+}

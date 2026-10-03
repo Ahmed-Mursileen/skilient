@@ -26,12 +26,17 @@ export interface EvidenceItem {
   status: "counted" | "held" | "excluded" | "pending";
   exclusion: string | null;
   signed: boolean;
+  /** The AI agent that wrote it, through the student's own pull request (null: their own commit). */
+  aiAgent: string | null;
 }
 
-/** What L3 and L4 rest on (PRD 5.5): merged pull requests, confirmed entries, endorsements. */
+/**
+ * What L3 and L4 rest on (PRD 5.5): merged pull requests, confirmed entries, endorsements; and
+ * the student's own pull requests whose commits an AI agent wrote (L2, decisions 2026-10-03).
+ */
 export interface ProofItem {
-  kind: "pull_request" | "contribution" | "endorsement" | "code_check";
-  level: 3 | 4;
+  kind: "pull_request" | "contribution" | "endorsement" | "code_check" | "ai_pull_request";
+  level: 2 | 3 | 4;
   title: string;
   detail: string | null;
   /** GitHub link for a pull request. */
@@ -89,7 +94,7 @@ export async function loadSkillEvidence(skillId: string): Promise<ActionResult<S
   const repoIds = [...new Set(evidence.map((e) => e.repo_id))];
   const [commits, repos] = await Promise.all([
     shas.length
-      ? supabase.from("github_commits").select("repo_id, sha, status, exclusion, signed").eq("user_id", user.id).in("sha", shas)
+      ? supabase.from("github_commits").select("repo_id, sha, status, exclusion, signed, ai_agent").eq("user_id", user.id).in("sha", shas)
       : Promise.resolve({ data: [], error: null }),
     repoIds.length
       ? supabase.from("github_repos").select("repo_id, full_name").in("repo_id", repoIds)
@@ -117,11 +122,12 @@ export async function loadSkillEvidence(skillId: string): Promise<ActionResult<S
       status: commit?.status ?? "pending",
       exclusion: commit?.exclusion ?? null,
       signed: commit?.signed ?? false,
+      aiAgent: commit?.ai_agent ?? null,
     };
   });
   const proofItems: ProofItem[] = (proofs.data ?? []).map((p) => ({
     kind: p.kind as ProofItem["kind"],
-    level: p.level === 4 ? 4 : 3,
+    level: p.level === 4 ? 4 : p.level === 2 ? 2 : 3,
     title: p.title,
     detail: p.detail,
     url: p.url,

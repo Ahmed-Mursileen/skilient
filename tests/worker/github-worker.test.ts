@@ -53,6 +53,9 @@ const file = (filename: string, added: string[], extra: Record<string, unknown> 
 interface Fixture {
   sha: string;
   author: number | null;
+  /** The linked account's login, and the git author email (agent commits). */
+  login?: string;
+  email?: string;
   date: string;
   parents: number;
   files: ReturnType<typeof file>[];
@@ -75,13 +78,29 @@ const COMMITS: Record<number, Fixture[]> = {
 };
 const gitCommit = (c: Fixture) => ({
   sha: c.sha,
-  author: c.author === null ? null : { id: c.author },
+  author: c.author === null ? null : { id: c.author, login: c.login },
   parents: Array.from({ length: c.parents }, (_, i) => ({ sha: sha(`${c.sha}-parent-${i}`) })),
-  commit: { author: { date: c.date }, committer: { date: c.date }, verification: { verified: false } },
+  commit: { author: { date: c.date, email: c.email ?? null }, committer: { date: c.date }, verification: { verified: false } },
 });
 
 /** Commits pushed to 801's default branch after connecting (listed from then on too). */
 const EXTRA: Fixture[] = [];
+
+// --- AI agent fixtures: pull requests in the student's own repositories ---------------
+
+const CLAUDE_EMAIL = "noreply@anthropic.com";
+interface AgentPull {
+  number: number;
+  user: { login: string; id: number; type: string };
+  merged_at: string | null;
+  merge_commit_sha: string | null;
+}
+/** `/repositories/:id/pulls?state=closed`, by repository; tests fill it. */
+const AGENT_PULLS: Record<number, AgentPull[]> = {};
+/** `/repositories/:id/pulls/:n/commits`, by "repo/number". */
+const PULL_COMMITS: Record<string, Fixture[]> = {};
+/** Commits reachable only by sha (merge commits, commits that came through a pull request). */
+const BY_SHA: Fixture[] = [];
 
 // --- Pull request fixtures (L3), in GitHub's REST shapes ---------------------------------
 
@@ -94,6 +113,9 @@ const ACCOUNTS: Record<string, { login: string; id: number; type: string; create
   newbie: { ...NEWBIE, created_at: "2026-07-25T00:00:00Z" }, // 16 days before its approval counted
 };
 interface PrFixture {
+  /** Who opened it (the student when absent). */
+  author?: { login: string; id: number; type: string };
+  mergeCommit?: string;
   repo: string;
   repoId: number;
   owner: { login: string; id: number; type: string };
@@ -186,13 +208,19 @@ function fakeGithub() {
           : reply({ message: "Not Found" }, 404);
       }
       if (sub[3]) {
-        const c = [...visible, ...EXTRA].find((x) => x.sha === sub[3]);
+        const c = [...visible, ...EXTRA, ...BY_SHA].find((x) => x.sha === sub[3]);
         return c ? reply({ ...gitCommit(c), files: c.files }) : reply({ message: "No commit" }, 422);
       }
       // GitHub filters by the login's verified emails; a spoofed email can slip into the list,
       // which is why the worker checks author.id again.
       expect(url.searchParams.get("author")).toBe("student");
       return reply([...visible, ...(id === 801 ? EXTRA : [])].map(gitCommit));
+    }
+    const pulls = /^\/repositories\/(\d+)\/pulls(?:\/(\d+)\/commits)?$/.exec(url.pathname);
+    if (method === "GET" && pulls) {
+      if (pulls[2]) return reply((PULL_COMMITS[`${pulls[1]}/${pulls[2]}`] ?? []).map(gitCommit));
+      expect(url.searchParams.get("state")).toBe("closed");
+      return reply(AGENT_PULLS[Number(pulls[1])] ?? []);
     }
     if (method === "GET" && url.pathname === "/search/issues") {
       const q = url.searchParams.get("q") ?? "";
@@ -230,9 +258,10 @@ function fakeGithub() {
         id: 100_000 + p.number,
         number: p.number,
         state: "closed",
-        user: STUDENT,
+        user: p.author ?? STUDENT,
         merged: p.mergedAt !== null,
         merged_at: p.mergedAt,
+        merge_commit_sha: p.mergeCommit ?? null,
         merged_by: p.mergedBy,
         base: { ref: "main", repo: { id: p.repoId, full_name: p.repo, private: false, owner: p.owner } },
         head: { ref: "feature", repo: { id: 4242, full_name: "student/lib", private: false, owner: STUDENT } },
@@ -512,6 +541,78 @@ describe("github-link and github-worker", () => {
     expect(pr).toEqual({ counted: true });
     const [ts] = await sql`select level from public.user_skills where user_id = ${userId} and skill_id = 'typescript'`;
     expect(ts.level).toBe(3);
+    await sql`delete from private.github_webhook_events where delivery_id = ${delivery}`;
+  });
+
+  it("credits an AI agent's commits from the student's own merged pull requests, labelled AI-assisted", async () => {
+    const gh = fakeGithub();
+    const at = "2026-08-21T10:00:00Z";
+    const merge = (name: string, parents: number): Fixture => ({ sha: sha(name), author: STUDENT_GITHUB_ID, date: at, parents, files: [] });
+    const agent = (name: string, extra: Partial<Fixture> = {}): Fixture => ({
+      sha: sha(name), author: null, email: CLAUDE_EMAIL, date: at, parents: 1, files: [file(`app/${name}.py`, lines(150))], ...extra,
+    });
+    const OTHER = { login: "other", id: 999, type: "User" };
+    AGENT_PULLS[801] = [
+      { number: 21, user: STUDENT, merged_at: at, merge_commit_sha: sha("m21") },
+      { number: 22, user: OTHER, merged_at: at, merge_commit_sha: sha("m22") }, // someone else's pull request
+      { number: 23, user: STUDENT, merged_at: at, merge_commit_sha: sha("m23") }, // squash-merged
+      { number: 24, user: STUDENT, merged_at: null, merge_commit_sha: null }, // closed unmerged
+    ];
+    BY_SHA.push(merge("m21", 2), merge("m22", 2), merge("m23", 1));
+    PULL_COMMITS["801/21"] = [
+      agent("ag1"), // unlinked, the agent's email
+      agent("cl1", { author: 81847, login: "claude" }), // linked to the agent's own account
+      agent("ag2", { author: 4242, login: "mallory" }), // a person's account using the agent's email
+      agent("hc1", { author: 999, login: "other", email: "other@example.com" }), // a human co-author
+    ];
+    PULL_COMMITS["801/22"] = [agent("ag3")];
+    PULL_COMMITS["801/23"] = [agent("ag4")];
+    BY_SHA.push(...PULL_COMMITS["801/21"], agent("ag3"), agent("ag4"));
+
+    // The first sync after the change: nothing checked yet.
+    await sql`update public.github_user_repos set agent_prs_checked_at = null where user_id = ${userId} and repo_id = 801`;
+    await sql`select private.enqueue_github(${JSON.stringify({ stage: "harvest", user_id: userId, repo_id: 801 })}::text::jsonb)`;
+    expect((await runWorker({ db, cfg, fetch: gh.fetch, log, visibilitySeconds: 0 })).failed).toBe(0);
+
+    const rows = await sql`select sha, status::text, ai_agent, via_pr from public.github_commits
+                           where user_id = ${userId} and ai_agent is not null order by sha`;
+    expect(Object.fromEntries(rows.map((r) => [r.sha, [r.status, r.ai_agent, r.via_pr]]))).toEqual({
+      [sha("ag1")]: ["counted", CLAUDE_EMAIL, 21],
+      [sha("cl1")]: ["counted", "claude", 21],
+    });
+    for (const name of ["ag2", "hc1", "ag3", "ag4"]) {
+      const [n] = await sql`select count(*)::int as n from public.github_commits where user_id = ${userId} and sha = ${sha(name)}`;
+      expect(n.n, name).toBe(0);
+    }
+    expect(gh.calls).not.toContain("GET /repositories/801/pulls/22/commits");
+    expect(gh.calls).not.toContain("GET /repositories/801/pulls/23/commits");
+    const [python] = await sql`select ai_lines, ai_assisted from public.user_skills where user_id = ${userId} and skill_id = 'python'`;
+    expect(python).toEqual({ ai_lines: 300, ai_assisted: true });
+
+    // A second sync checks only pull requests merged since, and stores nothing twice.
+    const before = gh.calls.length;
+    await sql`select private.enqueue_github(${JSON.stringify({ stage: "harvest", user_id: userId, repo_id: 801 })}::text::jsonb)`;
+    await runWorker({ db, cfg, fetch: gh.fetch, log, visibilitySeconds: 0 });
+    expect(gh.calls.slice(before).filter((c) => c.includes("/pulls/"))).toEqual([]);
+    const [count] = await sql`select count(*)::int as n from public.github_commits where user_id = ${userId} and ai_agent is not null`;
+    expect(count.n).toBe(2);
+
+    // A merged pull_request webhook in the student's own repository records its agent commits.
+    PR_FIXTURES.push({ repo: "student/robot", repoId: 801, owner: STUDENT, number: 25, mergedAt: at, mergedBy: STUDENT,
+      mergeCommit: sha("m25"), reviews: [], files: [] });
+    BY_SHA.push(merge("m25", 2), agent("ag5"));
+    PULL_COMMITS["801/25"] = [agent("ag5")];
+    const delivery = randomUUID();
+    const body = JSON.stringify({
+      action: "closed", installation: { id: INSTALLATION }, repository: { id: 801, full_name: "student/robot" },
+      pull_request: { id: 100_025, number: 25, merged: true, merged_at: at, merged_by: { id: STUDENT_GITHUB_ID }, user: { id: STUDENT_GITHUB_ID }, base_repo: { id: 801 } },
+    });
+    await sql`select private.record_github_webhook(${delivery}, 'pull_request', 'closed', ${INSTALLATION}, ${body}::text::jsonb)`;
+    await runWorker({ db, cfg, fetch: gh.fetch, log, visibilitySeconds: 0 });
+    const [ag5] = await sql`select status::text, ai_agent, via_pr from public.github_commits where user_id = ${userId} and sha = ${sha("ag5")}`;
+    expect(ag5).toEqual({ status: "counted", ai_agent: CLAUDE_EMAIL, via_pr: 25 });
+    const [own] = await sql`select exclusion from public.github_pull_requests where user_id = ${userId} and repo_full_name = 'student/robot' and number = 25`;
+    expect(own).toEqual({ exclusion: "own_repo" }); // never L3
     await sql`delete from private.github_webhook_events where delivery_id = ${delivery}`;
   });
 

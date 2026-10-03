@@ -25,6 +25,8 @@ export interface CvSnapshotV1 {
     id: string;
     name: string;
     level: number;
+    /** Mostly written with an AI coding agent (decisions 2026-10-03). Added later: absent means false. */
+    ai_assisted?: boolean;
     evidence: { repos: number; active_days: number; pull_requests: number; entries: number; endorsements: number };
   }[];
   projects: {

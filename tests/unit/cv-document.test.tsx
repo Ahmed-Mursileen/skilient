@@ -41,6 +41,16 @@ describe("CV document", () => {
     expect(renderToStaticMarkup(<CvDocument {...input} />)).toBe(cvDocumentHtml(input));
   });
 
+  it("prints AI-assisted skills as such, and older snapshots without the flag as before", () => {
+    const s = structuredClone(FULL_SNAPSHOT);
+    s.skills[0].ai_assisted = true;
+    const input: CvDocumentInput = { snapshot: s, code: "ABCDE12345", issuedAt: "2026-10-01T19:30:00Z", template: "standard", siteUrl: "https://skilient.com" };
+    const html = cvDocumentHtml(input);
+    expect(html).toContain(`: Level ${s.skills[0].level}, AI-assisted`);
+    expect(html.match(/AI-assisted/g)).toHaveLength(1);
+    expect(renderToStaticMarkup(<CvDocument {...input} />)).toBe(html);
+  });
+
   it("leaves out empty sections and keeps the chosen order", () => {
     const s = { ...FULL_SNAPSHOT, credentials: [], sections: ["credentials", "education", "skills"] as typeof FULL_SNAPSHOT.sections };
     const html = cvDocumentHtml({ snapshot: s, code: "ABCDE12345", issuedAt: "2026-10-01T19:30:00Z", template: "compact", siteUrl: "https://skilient.com/" });

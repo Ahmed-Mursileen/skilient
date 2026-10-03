@@ -66,6 +66,8 @@ export interface TalentSkill {
   name: string;
   level: number;
   code_check: boolean;
+  /** Mostly written with an AI coding agent (decisions 2026-10-03); absent in older index rows. */
+  ai_assisted?: boolean;
 }
 export interface TalentRow {
   /** Present only in full results. */

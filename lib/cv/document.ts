@@ -108,7 +108,7 @@ function sectionBody(s: CvSnapshotV1, section: CvSection): SectionBody | null {
             e.entries && plural(e.entries, "confirmed contribution"),
             e.endorsements && plural(e.endorsements, "endorsement"),
           ].filter(Boolean);
-          return [{ strong: k.name }, `: Level ${k.level}${parts.length ? ` (${parts.join(", ")})` : ""}`];
+          return [{ strong: k.name }, `: Level ${k.level}${k.ai_assisted ? ", AI-assisted" : ""}${parts.length ? ` (${parts.join(", ")})` : ""}`];
         }),
       };
     case "projects":

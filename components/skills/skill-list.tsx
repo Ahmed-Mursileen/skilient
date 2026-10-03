@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowSquareOut, CheckCircle, Circle, LockSimple } from "@phosphor-icons/react/dist/ssr";
+import { ArrowSquareOut, CheckCircle, Circle, LockSimple, Robot } from "@phosphor-icons/react/dist/ssr";
 import type { Route } from "next";
 import Link from "next/link";
 import { useEffect, useRef, useState, useTransition } from "react";
@@ -13,6 +13,8 @@ import { STATUS_LABELS, type CodeCheckStatus } from "@/lib/code-checks/constants
 import { cn } from "@/lib/cn";
 import type { ProfileSkill } from "@/lib/data/skills";
 import {
+  agentName,
+  AI_ASSISTED,
   CATEGORY_LABELS,
   CATEGORY_NAMES,
   CATEGORY_ORDER,
@@ -65,10 +67,10 @@ export function SkillList({
                       opener.current = e.currentTarget;
                       setOpen(s);
                     }}
-                    aria-label={`${s.name}, level ${s.level}: ${isOwner ? LEVELS[s.level].own : LEVELS[s.level].other}${s.peerVerified ? ", peer-verified" : ""}. Details`}
+                    aria-label={`${s.name}, level ${s.level}: ${isOwner ? LEVELS[s.level].own : LEVELS[s.level].other}${s.peerVerified ? ", peer-verified" : ""}${s.aiAssisted ? ", AI-assisted" : ""}. Details`}
                     className="rounded-sm transition-colors duration-[120ms] hover:[&>span]:border-border-strong"
                   >
-                    <SkillChip name={s.name} level={s.level} peerVerified={s.peerVerified} />
+                    <SkillChip name={s.name} level={s.level} peerVerified={s.peerVerified} aiAssisted={s.aiAssisted} />
                   </button>
                 </li>
               ))}
@@ -123,6 +125,14 @@ function SkillDrawer({
             Peer-verified: at least two teammates endorsed {isOwner ? "you" : ownerName} for {skill.name}.
           </p>
         ) : null}
+        {skill.aiAssisted ? (
+          <p className="flex items-start gap-2 text-body-sm text-text-primary">
+            <Robot aria-hidden weight="bold" className="mt-0.5 size-4 shrink-0 text-text-secondary" />
+            <span>
+              <span className="font-semibold">{AI_ASSISTED.label}.</span> {isOwner ? AI_ASSISTED.own : AI_ASSISTED.other}
+            </span>
+          </p>
+        ) : null}
 
         {isOwner && skill.stats ? (
           <>
@@ -135,6 +145,12 @@ function SkillDrawer({
               )}
               <Stat label="Repositories" value={skill.stats.repos} />
             </dl>
+            {skill.stats.aiLines > 0 && skill.stats.lines > 0 ? (
+              <p className="text-body-sm text-text-secondary">
+                {Math.round((Math.min(skill.stats.aiLines, skill.stats.lines) / skill.stats.lines) * 100)}% of these lines were written with an AI
+                coding agent.
+              </p>
+            ) : null}
             {step ? (
               <p className="rounded-md border border-border-default bg-bg-subtle px-4 py-3 text-body-sm text-text-primary">{step}</p>
             ) : null}
@@ -236,14 +252,32 @@ function EvidenceList({ skillId }: { skillId: string }) {
         ) : (
           <>
             <CodeCheckPanel skillId={skillId} state={state.data.codeCheck} />
-            {state.data.proofs.length ? (
+            {state.data.proofs.some((p) => p.kind !== "ai_pull_request") ? (
               <>
                 <h4 className="text-label text-text-secondary uppercase">Accepted and vouched for</h4>
                 <ul className="mb-4 divide-y divide-border-muted">
-                  {state.data.proofs.map((p, i) => (
-                    <ProofRow key={`${p.kind}-${i}`} item={p} />
-                  ))}
+                  {state.data.proofs
+                    .filter((p) => p.kind !== "ai_pull_request")
+                    .map((p, i) => (
+                      <ProofRow key={`${p.kind}-${i}`} item={p} />
+                    ))}
                 </ul>
+              </>
+            ) : null}
+            {state.data.proofs.some((p) => p.kind === "ai_pull_request") ? (
+              <>
+                <h4 className="text-label text-text-secondary uppercase">Written with an AI agent</h4>
+                <ul className="mb-4 divide-y divide-border-muted">
+                  {state.data.proofs
+                    .filter((p) => p.kind === "ai_pull_request")
+                    .map((p, i) => (
+                      <ProofRow key={`${p.kind}-${i}`} item={p} />
+                    ))}
+                </ul>
+              </>
+            ) : null}
+            {state.data.proofs.length ? (
+              <>
                 {state.data.items.length ? <h4 className="text-label text-text-secondary uppercase">Your commits</h4> : null}
               </>
             ) : null}
@@ -327,6 +361,7 @@ function CodeCheckPanel({ skillId, state }: { skillId: string; state: SkillEvide
 const PROOF_LABELS: Record<SkillEvidence["proofs"][number]["kind"], string> = {
   code_check: "Code check passed",
   pull_request: "Pull request",
+  ai_pull_request: "Your pull request, AI-assisted",
   contribution: "Confirmed contribution",
   endorsement: "Endorsement tied to your work",
 };
@@ -378,7 +413,7 @@ function ProofRow({ item }: { item: SkillEvidence["proofs"][number] }) {
         )}
         </p>
       )}
-      {item.kind === "pull_request" && item.detail ? <p className="text-body-sm text-text-secondary">{item.detail}</p> : null}
+      {(item.kind === "pull_request" || item.kind === "ai_pull_request") && item.detail ? <p className="text-body-sm text-text-secondary">{item.detail}</p> : null}
     </li>
   );
 }
@@ -405,6 +440,7 @@ function EvidenceRow({ item }: { item: SkillEvidence["items"][number] }) {
           </a>
         ) : null}
         {item.signed ? <Badge tone="neutral">Signed</Badge> : null}
+        {item.aiAgent ? <Badge tone="neutral">AI-assisted ({agentName(item.aiAgent)})</Badge> : null}
         {item.status === "held" ? (
           <Badge tone="warning">Being reviewed</Badge>
         ) : null}

@@ -451,6 +451,8 @@ export interface Contribution {
   beforeVenture: boolean;
   /** Skills the current version is tagged with (a teammate's confirmation makes them L3). */
   skillIds: string[];
+  /** A GitHub commit an AI agent wrote in the author's own pull request (decisions 2026-10-03). */
+  aiAgent: string | null;
 }
 
 /** The venture's timeline, newest first (RLS: whoever can see the venture). */
@@ -458,7 +460,7 @@ export async function getContributions(ventureId: string): Promise<Contribution[
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("contributions_with_status")
-    .select("id, user_id, kind, description, evidence_url, hours, source, created_at, corrected_at, confirmations, peer_verified, confirmed_by_me, by_member, before_venture, skill_ids, faculty_confirmed")
+    .select("id, user_id, kind, description, evidence_url, hours, source, created_at, corrected_at, confirmations, peer_verified, confirmed_by_me, by_member, before_venture, skill_ids, faculty_confirmed, ai_agent")
     .eq("venture_id", ventureId)
     .order("created_at", { ascending: false })
     .limit(300);
@@ -480,6 +482,7 @@ export async function getContributions(ventureId: string): Promise<Contribution[
     byMember: Boolean(c.by_member),
     beforeVenture: Boolean(c.before_venture),
     skillIds: c.skill_ids ?? [],
+    aiAgent: c.ai_agent,
   }));
 }
 

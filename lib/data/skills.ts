@@ -15,8 +15,10 @@ export interface ProfileSkill {
   lastUsedLabel: string | null;
   /** Endorsed by 2+ different teammates (PRD 5.16). */
   peerVerified: boolean;
+  /** Mostly written with an AI coding agent, and no passed code check (decisions 2026-10-03). */
+  aiAssisted: boolean;
   /** The owner's own counts; absent for everyone else (PRD 6: others see the level). */
-  stats?: SkillStats & { repos: number };
+  stats?: SkillStats & { repos: number; aiLines: number };
 }
 
 const byStrength = (a: ProfileSkill, b: ProfileSkill) =>
@@ -52,14 +54,15 @@ export const getProfileSkills = cache(async (userId: string, isOwner: boolean): 
         lastUsedAt: s.last_used_at,
         lastUsedLabel: s.last_used_at ? dayLabel(s.last_used_at) : null,
         peerVerified: peerVerified.has(s.skill_id),
-        stats: { activeDays: s.active_days, lines: s.lines, hits: s.hits, repos: s.repos },
+        aiAssisted: s.ai_assisted,
+        stats: { activeDays: s.active_days, lines: s.lines, hits: s.hits, repos: s.repos, aiLines: s.ai_lines },
       }))
       .sort(byStrength);
   }
 
   const { data, error } = await supabase
     .from("user_skills")
-    .select("skill_id, level, last_used_at, peer_verified, skills!inner(name, category)")
+    .select("skill_id, level, last_used_at, peer_verified, ai_assisted, skills!inner(name, category)")
     .eq("user_id", userId)
     .gte("level", 1);
   if (error) throw new Error(`profile skills: ${error.code}`);
@@ -72,6 +75,7 @@ export const getProfileSkills = cache(async (userId: string, isOwner: boolean): 
       lastUsedAt: s.last_used_at,
       lastUsedLabel: s.last_used_at ? dayLabel(s.last_used_at) : null,
       peerVerified: s.peer_verified,
+      aiAssisted: s.ai_assisted,
     }))
     .sort(byStrength);
 });

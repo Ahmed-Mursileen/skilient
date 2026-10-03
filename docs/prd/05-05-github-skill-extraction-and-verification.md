@@ -2,6 +2,8 @@
 
 Skills come from verified evidence of the student's own work, never from repo tags or self-claims. Every skill carries an evidence level (L1–L4) that links to the commits, PRs or endorsements behind it. The feature verifies ownership and understanding. It does not try to detect AI-written code: AI-assisted work is legitimate, and stylometry and AI detectors fail against a motivated adversary and cause harmful false positives.
 
+> **AI-assisted commits (decisions 2026-10-03).** Commits a known AI coding agent wrote count as the student's work when they reach the default branch through a merged pull request the student opened, in a repository they shared. They count toward L1/L2. A skill mostly written that way is labelled "AI-assisted" on profiles, evidence lists, recruiter views and the verified CV until a passed code check removes the label. Ranking treats it like any L2.
+
 **Flow:** connect via GitHub App → bind identity → import repos and commits in the background → extract evidence → compute levels → show on profile → stay current via webhooks.
 
 #### Connect and identity binding (P0, must ship before any skill is shown)

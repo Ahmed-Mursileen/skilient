@@ -426,6 +426,10 @@ Marketing site (`docs/marketing-design-plan.md`, decisions.md "phase 12"). Later
       confirmed a request for it is emailed once through the notify worker. Notification emails stop at 60 a day until the
       Resend plan is upgraded (see "Before the closed beta"), so a big launch sends over several days.
 
+- [ ] **AI-assisted commits** (2026-10-03). After this migration reaches the hosted project, open Settings → GitHub → Resync once.
+      The sync then reads your merged pull requests and credits the commits an AI agent wrote in them, labelled AI-assisted.
+      The agent list is `github.ai_agents` in `/ops/config`.
+
 ## Before phase 13
 
 - [x] **PostHog** Cloud **EU** project: project key, host, personal API key; set billing limit to **$0**. — *done: EU, $0 limits*
