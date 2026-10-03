@@ -5,6 +5,15 @@ import { hasVerifiedFactor, redirectWithCookies, refreshSession } from "@/lib/su
 import { newRequestId, REQUEST_ID_HEADER } from "@/lib/request-id";
 
 export async function proxy(request: NextRequest) {
+  // next.config.ts sets skipTrailingSlashRedirect for PostHog's /ingest paths; every other path keeps
+  // Next's usual behaviour: "/feed/" redirects to "/feed".
+  const { pathname: rawPath } = request.nextUrl;
+  if (rawPath.length > 1 && rawPath.endsWith("/")) {
+    const url = request.nextUrl.clone();
+    url.pathname = rawPath.replace(/\/+$/, "") || "/";
+    return NextResponse.redirect(url, 308);
+  }
+
   // Always mint our own id and nonce; never trust ones from the client.
   const requestId = newRequestId();
   const nonce = newNonce();
@@ -60,7 +69,7 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    // Everything except static assets and image optimisation.
-    "/((?!_next/static|_next/image|brand/|icon.svg|manifest.webmanifest|.*\\.(?:svg|png|jpg|jpeg|gif|webp|avif|ico)$).*)",
+    // Everything except static assets, image optimisation and the PostHog proxy (/ingest).
+    "/((?!_next/static|_next/image|ingest/|brand/|icon.svg|manifest.webmanifest|.*\\.(?:svg|png|jpg|jpeg|gif|webp|avif|ico)$).*)",
   ],
 };

@@ -19,14 +19,24 @@ export default defineConfig({
     { name: "desktop", use: { ...devices["Desktop Chrome"] } },
     { name: "phone", use: { ...devices["Pixel 7"] } },
   ],
-  // Against a production build with the dev-only gallery switched on.
+  // Against a production build with the dev-only gallery switched on. A second server runs the same
+  // build with a PostHog project key for tests/e2e/analytics.spec.ts; PostHog itself is faked there.
   webServer: process.env.E2E_BASE_URL
     ? undefined
-    : {
-        command: `pnpm start --port ${PORT}`,
-        url: `${baseURL}/ui`,
-        reuseExistingServer: false,
-        timeout: 120_000,
-        env: { ENABLE_UI_GALLERY: "1" },
-      },
+    : [
+        {
+          command: `pnpm start --port ${PORT}`,
+          url: `${baseURL}/ui`,
+          reuseExistingServer: false,
+          timeout: 120_000,
+          env: { ENABLE_UI_GALLERY: "1" },
+        },
+        {
+          command: `pnpm start --port ${PORT + 1}`,
+          url: `http://127.0.0.1:${PORT + 1}/`,
+          reuseExistingServer: false,
+          timeout: 120_000,
+          env: { NEXT_PUBLIC_POSTHOG_KEY: "phc_e2e" },
+        },
+      ],
 });

@@ -6,6 +6,7 @@ import { useEffect, useId, useRef, useState, type FormEvent } from "react";
 import { Input, Label } from "@/components/ui/field";
 import { emailField as copy, requestUniversity as requestCopy } from "@/content/marketing";
 import { detectUniversity, normalizeEmail, universityLabel, type Detection, type DomainDirectory } from "@/lib/auth/email-domain";
+import { track } from "@/lib/analytics/client";
 import { fetchDomainDirectory } from "@/lib/hooks/use-domain-directory";
 import { UniversityRequestForm } from "./university-request-form";
 
@@ -44,6 +45,9 @@ export function UniEmailField({
   const [sheetFor, setSheetFor] = useState<{ email: string; university: string | null } | null>(null);
   const dialog = useRef<HTMLDialogElement>(null);
   const input = useRef<HTMLInputElement>(null);
+  const source = idPrefix === "final" ? "final" : "hero";
+  // PRD 5.1 landing events, once per field and outcome (typing "…edu.p" then "…edu.pk" isn't two visitors).
+  const reported = useRef(new Set<string>());
 
   const load = () => {
     if (!directory) fetchDomainDirectory().then((d) => d && setDirectory(d));
@@ -55,6 +59,17 @@ export function UniEmailField({
     const t = window.setTimeout(() => setDetection(detectUniversity(email, directory)), DEBOUNCE_MS);
     return () => window.clearTimeout(t);
   }, [email, directory]);
+
+  useEffect(() => {
+    if (!detection || reported.current.has(detection.kind)) return;
+    if (detection.kind === "match") {
+      reported.current.add(detection.kind);
+      track("uni_detected", { source, university_id: detection.universities[0]?.id ?? null });
+    } else if (detection.kind === "not_live" || detection.kind === "unknown") {
+      reported.current.add(detection.kind);
+      track("uni_not_live", { source, known: detection.kind === "not_live" });
+    }
+  }, [detection, source]);
 
   useEffect(() => {
     const d = dialog.current;
@@ -72,6 +87,7 @@ export function UniEmailField({
     const d = detectUniversity(email, directory);
     setDetection(d);
     if (d.kind === "match") {
+      track("signup_start", { source });
       router.push(`/signup?email=${encodeURIComponent(normalizeEmail(email))}`);
     } else if (d.kind === "not_live" || d.kind === "unknown") {
       openSheet(d);

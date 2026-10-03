@@ -17,7 +17,7 @@ export default async function UniversitiesPage() {
   const plans = await getPublicPlans();
   return (
     <>
-      <OrgHero headline={copy.headline} intro={copy.intro} art="universities" cta={<CtaLink href={copy.cta.href} testId="org-cta">{copy.cta.label}</CtaLink>} />
+      <OrgHero headline={copy.headline} intro={copy.intro} art="universities" cta={<CtaLink href={copy.cta.href} testId="org-cta" track="talk_to_us">{copy.cta.label}</CtaLink>} />
 
       <section aria-label="What your university gets" className="border-b border-border-muted">
         <div className="mx-auto grid max-w-page gap-10 px-[var(--page-gutter)] py-16 sm:py-20 md:grid-cols-12 md:gap-6">

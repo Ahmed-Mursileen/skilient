@@ -13,11 +13,11 @@ const ICONS = { ideas: Lightbulb, supervise: ChalkboardTeacher, confirm: SealChe
 export default async function FacultyPage() {
   const viewer = await getViewer();
   const cta = viewer ? (
-    <CtaLink href={viewer.home} testId="org-cta">
+    <CtaLink href={viewer.home} testId="org-cta" track="open_app">
       {nav.open}
     </CtaLink>
   ) : (
-    <CtaLink href={copy.cta.href} testId="org-cta">
+    <CtaLink href={copy.cta.href} testId="org-cta" track="faculty_signup">
       {copy.cta.label}
     </CtaLink>
   );

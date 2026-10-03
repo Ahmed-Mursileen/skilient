@@ -18,11 +18,11 @@ export const metadata: Metadata = { title: copy.title, description: copy.descrip
 export default async function RecruitersPage() {
   const [viewer, plans] = await Promise.all([getViewer(), getPublicPlans()]);
   const cta = viewer ? (
-    <CtaLink href={viewer.home} testId="org-cta">
+    <CtaLink href={viewer.home} testId="org-cta" track="open_app">
       {viewer.role === "recruiter" ? copy.signedIn : nav.open}
     </CtaLink>
   ) : (
-    <CtaLink href={copy.cta.href} testId="org-cta">
+    <CtaLink href={copy.cta.href} testId="org-cta" track="recruiter_signup">
       {copy.cta.label}
     </CtaLink>
   );

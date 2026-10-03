@@ -8,7 +8,8 @@ export const metadata: Metadata = { title: "Chat" };
 export default async function ChatLayout({ children }: LayoutProps<"/chat">) {
   const threads = await getThreads();
   return (
-    <main className="mx-auto grid w-full max-w-page gap-4 px-[var(--page-gutter)] py-6 md:grid-cols-[320px_minmax(0,1fr)]">
+    // data-ph-block: never in a replay, even for the moment before recording pauses on this route.
+    <main data-ph-block className="mx-auto grid w-full max-w-page gap-4 px-[var(--page-gutter)] py-6 md:grid-cols-[320px_minmax(0,1fr)]">
       <h1 className="sr-only">Chat</h1>
       <ThreadList threads={threads} />
       <div className="min-w-0">{children}</div>

@@ -1,13 +1,14 @@
 "use client";
 
 import { CheckCircle } from "@phosphor-icons/react/dist/ssr";
-import { useActionState, useId, useState } from "react";
+import { useActionState, useEffect, useId, useState } from "react";
 import { Turnstile } from "@/components/auth/turnstile";
 import { FormAlert } from "@/components/auth/form-alert";
 import { Button } from "@/components/ui/button";
 import { FieldError, HelperText, Input, Label } from "@/components/ui/field";
 import { requestUniversity as copy } from "@/content/marketing";
 import { requestUniversity, type RequestUniversityResult } from "@/lib/actions/marketing";
+import { track } from "@/lib/analytics/client";
 import type { ActionResult } from "@/lib/actions/result";
 
 /**
@@ -32,6 +33,11 @@ export function UniversityRequestForm({
   const uid = useId();
   const id = (name: string) => `${idPrefix}-${name}-${uid}`;
   const fields = state && !state.ok ? (state.fields ?? {}) : {};
+  const sent = state?.ok && state.data.status !== "exists";
+
+  useEffect(() => {
+    if (sent) track("uni_requested", { known: university !== null });
+  }, [sent, university]);
 
   if (state?.ok) {
     const name = state.data.university ?? university ?? "your university";

@@ -1,3 +1,5 @@
+import { resetAnalytics } from "@/lib/analytics/client";
+
 /**
  * Cross-tab auth messages. Supabase broadcasts its own client-side events; these cover
  * what happens server-side: an email link confirmed in another tab, or a sign-out.
@@ -26,6 +28,7 @@ export const LOCAL_KEY_PREFIX = "sk:";
 
 /** Sign-out leaves nothing of the previous user in this browser (PRD 5.2: zero residue). */
 export function clearClientState() {
+  resetAnalytics();
   try {
     window.sessionStorage.clear();
     for (const key of Object.keys(window.localStorage)) {

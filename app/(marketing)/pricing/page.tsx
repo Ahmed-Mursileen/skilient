@@ -90,7 +90,7 @@ export default async function PricingPage() {
           </div>
         ) : null}
         <div className="mt-10">
-          <CtaLink href={viewer ? viewer.home : recruitersPage.cta.href}>{viewer ? nav.open : recruitersPage.cta.label}</CtaLink>
+          <CtaLink href={viewer ? viewer.home : recruitersPage.cta.href} track={viewer ? "open_app" : "recruiter_signup"}>{viewer ? nav.open : recruitersPage.cta.label}</CtaLink>
         </div>
       </Section>
 
@@ -101,7 +101,7 @@ export default async function PricingPage() {
         </div>
         <p className="mt-10 text-body text-text-secondary">{copy.universities.note}</p>
         <div className="mt-6">
-          <CtaLink href={"/universities#talk" as Route}>{universitiesPage.talk.heading}</CtaLink>
+          <CtaLink href={"/universities#talk" as Route} track="talk_to_us">{universitiesPage.talk.heading}</CtaLink>
         </div>
       </Section>
 

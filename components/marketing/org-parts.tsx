@@ -15,19 +15,36 @@ export const ctaClass =
   "inline-flex h-12 items-center gap-2 rounded-md bg-primary px-6 text-body-lg font-semibold text-text-on-primary transition-[background-color,transform] duration-[120ms] ease-standard hover:bg-primary-hover active:scale-[0.98]";
 
 /** The page's one call to action: a vermillion link (an anchor on the same page or a route). */
-export function CtaLink({ href, children, testId, className }: { href: string; children: ReactNode; testId?: string; className?: string }) {
+/**
+ * An organisation page's call to action. `track` names it in the `org_cta_click` analytics event
+ * (PRD 5.1), sent by AnalyticsLoader's click listener, so this stays a server component.
+ */
+export function CtaLink({
+  href,
+  children,
+  testId,
+  className,
+  track,
+}: {
+  href: string;
+  children: ReactNode;
+  testId?: string;
+  className?: string;
+  track: string;
+}) {
   const body = (
     <>
       {children}
       <ArrowRight aria-hidden weight="bold" className="cta-arrow size-5" />
     </>
   );
+  const tracking = { "data-track": "org_cta_click", "data-track-cta": track };
   return href.startsWith("#") ? (
-    <a href={href} className={cn(ctaClass, className)} data-testid={testId}>
+    <a href={href} className={cn(ctaClass, className)} data-testid={testId} {...tracking}>
       {body}
     </a>
   ) : (
-    <Link href={href as Route} className={cn(ctaClass, className)} data-testid={testId}>
+    <Link href={href as Route} className={cn(ctaClass, className)} data-testid={testId} {...tracking}>
       {body}
     </Link>
   );
