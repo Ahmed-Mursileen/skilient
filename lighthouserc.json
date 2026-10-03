@@ -5,7 +5,12 @@
       "startServerReadyPattern": "Ready",
       "url": [
         "http://localhost:3200/",
-        "http://localhost:3200/request-university"
+        "http://localhost:3200/request-university",
+        "http://localhost:3200/recruiters",
+        "http://localhost:3200/universities",
+        "http://localhost:3200/faculty",
+        "http://localhost:3200/pricing",
+        "http://localhost:3200/about"
       ],
       "numberOfRuns": 1,
       "settings": {

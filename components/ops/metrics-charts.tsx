@@ -153,8 +153,13 @@ export function StackedBars({ data, x, series, height = 220 }: { data: Row[]; x:
   );
 }
 
+/** Value formats by name: a server page can't pass a function into this client component. */
+const FORMATS = { percent: (v: number) => `${v}%` } as const;
+
 /** One measure per labelled row (universities): horizontal bars, single series, value in the tooltip. */
-export function RankedBars({ data, label, value, name, format, height }: { data: Row[]; label: string; value: string; name: string; format?: (v: number) => string; height?: number }) {
+
+export function RankedBars({ data, label, value, name, unit, height }: { data: Row[]; label: string; value: string; name: string; unit?: keyof typeof FORMATS; height?: number }) {
+  const format = unit ? FORMATS[unit] : undefined;
   return (
     <ResponsiveContainer width="100%" height={height ?? Math.max(120, data.length * 30 + 24)}>
       <BarChart accessibilityLayer={false} data={data} layout="vertical" margin={{ top: 0, right: 16, bottom: 0, left: 8 }} barCategoryGap={6}>

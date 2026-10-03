@@ -408,8 +408,14 @@ Marketing site (`docs/marketing-design-plan.md`, decisions.md "phase 12"). Later
       JavaScript the form can't pass Turnstile in production, so such visitors are asked to turn JavaScript on.
 - [ ] **Recheck the captures** (any slice). Product captures are taken from the app with sample content by
       `pnpm build && pnpm marketing:captures` (local stack). Re-run after a visible change to the feed, then commit the new files.
-- [ ] **Higgsfield credits** (slice 3). The account has 10 free credits. Top up enough for about three tries at each of the six
-      art pieces in the design plan (B8), or say which to drop.
+- [x] **Higgsfield art** (slice 3). Made with the free plan's `z_image` model (about 1.5 credits in all); the prompts are in
+      `content/art.json` and inside each file. To redo a piece, generate it in the same style and replace it under `public/marketing/art/`.
+- [ ] **University leads** (slice 3). "Talk to us" on `/universities` lands in `/ops/leads` for accounts staff; nobody is emailed.
+      Check that queue regularly until an alert exists. It uses the same Turnstile keys as the request form.
+- [ ] **About page content** (slice 3). `/about` shows only the story and values. Send the founders' names and roles, the
+      incubation, the award and any real photos to add them; also review the story wording in `content/marketing.ts` (`aboutPage`).
+- [ ] **Placeholder prices** (slice 3). `/pricing` shows the `plans` table and `billing.*` config as they are. Change prices at
+      `/ops/config/plans` before launch, after the pricing interviews.
 
 ## Before phase 13
 

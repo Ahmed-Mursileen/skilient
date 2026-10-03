@@ -1787,3 +1787,15 @@ Append-only. One dated entry per product decision, with the reason. Carried over
   - The sample CV is one labelled image for assistive tech, so its own h1 isn't the page's.
   - Feed captures carry a shadow only, because the captured card already has its border.
   The finish review ran in-thread: impeccable's reviewer agent isn't installed in this harness.
+
+### 2026-10-03: Phase 12 slice 3 (organisation pages, pricing, about)
+
+- Art: six two-colour risograph prints from Higgsfield `z_image`, the only model on the free plan. The first faculty print had made-up "code" text, so it was redone with plain bars. Each file carries its prompt in EXIF and in `content/art.json`. The prints look the same in both themes, with a hairline frame on the dark ground.
+- The organisation pages use the existing captures (venture team, contact request, jobs) and plan columns read from `plans`. The planned talent-search, dashboard and ecosphere captures are deferred, because they need a seeded recruiter on two-factor and a licensed university. Slice 4 adds them if time allows; the pages stand without them.
+- Plan lines are worded from each plan's `grants` (`lib/marketing/plan-lines.ts`), so the pages can't promise more than billing enforces. Free columns (Every student, Explore, Every university) are copy, matching PRD 4a and the registry's free values.
+- "Talk to us": one open lead per email. A repeat reads as sent; there is no email alert (settled answer 11). There are 5 messages an hour per network and 200 an hour overall.
+- `/pricing` shows PKR only. Enterprise reads "Custom". The USD gateway isn't mentioned until it is confirmed.
+- About: story and values only. Founders, incubation and the award wait for Ahmed. The story says Skilient "opens first at NUTECH" rather than inventing an origin.
+- Fixed in passing: `/ops/metrics` crashed once any university had evidence, because a format function was passed into a client chart. `RankedBars` now takes a format name (`unit="percent"`).
+- Lighthouse mobile locally: /recruiters 92–93, /universities 92–93, /faculty 94–97, /pricing 97, /about 95. On phones the portrait prints are served at 480 px, because the print is the largest paint.
+- The Gate B review ran in-thread (desktop and phone, both themes) and `impeccable detect` found nothing.
