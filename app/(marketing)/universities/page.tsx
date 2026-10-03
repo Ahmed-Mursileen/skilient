@@ -7,7 +7,7 @@ import { pricingPage, universitiesPage as copy } from "@/content/marketing";
 import { getPublicPlans } from "@/lib/data/marketing";
 import { turnstileSiteKey } from "@/lib/security/turnstile";
 
-export const metadata: Metadata = { title: copy.title, description: copy.description };
+export const metadata: Metadata = { title: copy.title, description: copy.description, alternates: { canonical: "/universities" } };
 
 /**
  * /universities (PRD 5.1, 5.23; docs/marketing-design-plan.md B7): an editorial long read with a

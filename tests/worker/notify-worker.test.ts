@@ -242,4 +242,36 @@ describe("notify-worker", () => {
       await sql`delete from auth.users where id = any(${[t, quiet]})`;
     }
   });
+  it("emails each confirmed requester once when their university goes live", async () => {
+    const uni = randomUUID();
+    const tag = uni.slice(0, 8);
+    await sql`insert into public.universities (id, name, city, slug, live_at) values (${uni}, ${`Launch Test University ${tag}`}, 'Quetta', ${`launch-${tag}`}, null)`;
+    const req = (email: string, confirmed: boolean, unsubscribed = false) => sql`
+      insert into public.university_requests (email, domain, university_id, consent, token_hash, confirmed_at, unsubscribed_at)
+      values (${email}, ${`launch-${tag}.edu.pk`}, ${uni}, true, encode(sha256(convert_to(${email}, 'utf8')), 'hex'),
+              ${confirmed ? sql`now()` : null}, ${unsubscribed ? sql`now()` : null})`;
+    const yes = `yes-${tag}@launch-${tag}.edu.pk`;
+    try {
+      await req(yes, true);
+      await req(`pending-${tag}@launch-${tag}.edu.pk`, false);
+      await req(`gone-${tag}@launch-${tag}.edu.pk`, true, true);
+      await sql`update public.universities set live_at = now() where id = ${uni}`;
+      const queued = await sql<{ id: string }[]>`select message->>'request_id' as id from pgmq.q_notification_emails where message->>'kind' = 'university_launch'`;
+      expect(queued).toHaveLength(1);
+      const resend = fakeResend();
+      await runNotifyWorker({ db, cfg, fetch: resend.impl, log });
+      expect(resend.sent).toHaveLength(1);
+      expect(resend.sent[0].body.to).toEqual([yes]);
+      expect(resend.sent[0].body.subject).toBe(`Launch Test University ${tag} is on Skilient`);
+      expect(resend.sent[0].body.text).toContain(`https://app.example.test/signup?email=${encodeURIComponent(yes)}`);
+      expect(resend.sent[0].headers["idempotency-key"]).toBe(`university-launch-${queued[0].id}`);
+      // Closing and reopening the university doesn't email anyone twice.
+      await sql`update public.universities set live_at = null where id = ${uni}`;
+      await sql`update public.universities set live_at = now() where id = ${uni}`;
+      expect(await queueSize()).toBe(0);
+    } finally {
+      await sql`delete from public.university_requests where university_id = ${uni}`;
+      await sql`delete from public.universities where id = ${uni}`;
+    }
+  });
 });

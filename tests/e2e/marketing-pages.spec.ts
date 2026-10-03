@@ -44,6 +44,16 @@ test.describe("Marketing: organisation pages, pricing and about", () => {
     });
   }
 
+  test("/about names the team and the incubator", async ({ page }) => {
+    await page.goto("/about");
+    const team = page.getByTestId("about-team");
+    for (const name of ["Huzaifa Khan", "Ahmed Mursileen", "Laiba Owais"]) {
+      await expect(team.getByRole("img", { name })).toBeVisible();
+      await expect(team.getByText(name, { exact: true })).toBeVisible();
+    }
+    await expect(page.getByTestId("about-incubation")).toContainText("NUTECH Entrepreneurial and Incubation Center");
+  });
+
   test("the nav and footer link to every built page", async ({ page }, info) => {
     test.skip(info.project.name !== "desktop", "the desktop nav shows every link");
     await page.goto("/");
@@ -164,5 +174,64 @@ test.describe("Marketing: Talk to us", () => {
       await expect(page.getByTestId("org-cta").first()).toHaveText(/Open Skilient/);
       await expect(page.getByTestId("org-cta").first()).toHaveAttribute("href", "/feed");
     }
+  });
+});
+
+test.describe("Marketing: search, sharing and legal pages", () => {
+  test("robots, the sitemap, canonicals, Open Graph cards and structured data", async ({ page, request }, info) => {
+    test.skip(info.project.name !== "desktop", "one browser is enough");
+    const robots = await (await request.get("/robots.txt")).text();
+    expect(robots).toContain("Disallow: /feed");
+    expect(robots).toContain("Disallow: /ops");
+    expect(robots).toMatch(/Sitemap: .*\/sitemap\.xml/);
+    const sitemap = await (await request.get("/sitemap.xml")).text();
+    for (const path of ["/recruiters", "/universities", "/faculty", "/pricing", "/about", "/verify"]) expect(sitemap).toContain(`${path}</loc>`);
+    expect(sitemap).not.toContain("/privacy</loc>");
+
+    await page.goto("/recruiters");
+    await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", /\/recruiters$/);
+    const og = await page.locator('meta[property="og:image"]').getAttribute("content");
+    expect(og).toMatch(/\/recruiters\/opengraph-image/);
+    const card = await request.get(new URL(og!).pathname + new URL(og!).search);
+    expect(card.status()).toBe(200);
+    expect(card.headers()["content-type"]).toBe("image/png");
+    const ld = JSON.parse((await page.locator('script[type="application/ld+json"]').textContent()) ?? "{}");
+    expect(ld).toMatchObject({ "@type": "Organization", name: "Skilient" });
+    await page.goto("/");
+    const homeCard = new URL((await page.locator('meta[property="og:image"]').getAttribute("content"))!);
+    expect((await request.get(homeCard.pathname + homeCard.search)).status()).toBe(200);
+  });
+
+  test("/demo is not a page", async ({ request }) => {
+    expect((await request.get("/demo")).status()).toBe(404);
+  });
+
+  test("/terms shows the agreement, /privacy its headings; both stay out of search", async ({ page }) => {
+    await page.goto("/terms");
+    await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+    await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /noindex/);
+    await axeBothThemes(page, "/terms");
+    await page.goto("/privacy");
+    await expect(page.getByRole("heading", { level: 1, name: "Privacy" })).toBeVisible();
+    await expect(page.getByTestId("privacy-headings").getByRole("listitem")).toHaveCount(8);
+    await axeBothThemes(page, "/privacy");
+  });
+
+  test("/verify sits in the marketing frame and code pages are noindex", async ({ page }) => {
+    await page.goto("/verify");
+    await expect(page.getByRole("heading", { level: 1, name: "Check a verified CV" })).toBeVisible();
+    await expect(page.getByRole("navigation", { name: "Main" })).toBeVisible();
+    await expect(page.getByRole("contentinfo")).toBeVisible();
+    await axeBothThemes(page, "/verify");
+    await page.goto("/verify/ABCDE12345");
+    await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /noindex/);
+  });
+
+  test("signed-in pages are noindex", async ({ page }, info) => {
+    test.skip(!hasBackend || info.project.name !== "desktop", "needs the local Supabase stack; once is enough");
+    const student = await createStudent({ domain: "nutech.edu.pk", fullName: "Nida Noindex" });
+    await signInWithPassword(page, student.email, student.password);
+    await page.goto("/feed");
+    await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /noindex/);
   });
 });

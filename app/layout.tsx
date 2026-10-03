@@ -3,11 +3,16 @@ import { headers } from "next/headers";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { ThemeProvider } from "@/components/providers/theme-provider";
+import { siteUrl } from "@/lib/cv/site";
 import { NONCE_HEADER } from "@/lib/security/headers";
 import { fontVariables } from "./fonts";
 import "./globals.css";
 
 export const metadata: Metadata = {
+  // Canonical URLs and Open Graph images resolve against the public origin (NEXT_PUBLIC_SITE_URL).
+  metadataBase: new URL(siteUrl()),
+  openGraph: { type: "website", siteName: "Skilient", locale: "en_PK" },
+  twitter: { card: "summary_large_image" },
   title: {
     default: "Skilient — Prove it. Don't claim it.",
     template: "%s · Skilient",

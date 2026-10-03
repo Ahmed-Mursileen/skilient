@@ -8,7 +8,7 @@ import { nav, pricingPage as copy, recruitersPage, universitiesPage } from "@/co
 import { getPricingExtras, getPublicPlans, getViewer } from "@/lib/data/marketing";
 import { pkr } from "@/lib/marketing/plan-lines";
 
-export const metadata: Metadata = { title: copy.title, description: copy.description };
+export const metadata: Metadata = { title: copy.title, description: copy.description, alternates: { canonical: "/pricing" } };
 
 const fill = (s: string, values: Record<string, string>) => s.replace(/\{(\w+)\}/g, (_, k: string) => values[k] ?? "");
 

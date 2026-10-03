@@ -9,7 +9,7 @@ import { nav, opportunities, pricingPage, recruitersPage as copy, ventures } fro
 import { getPublicPlans, getViewer } from "@/lib/data/marketing";
 import { captures } from "@/lib/marketing/captures";
 
-export const metadata: Metadata = { title: copy.title, description: copy.description };
+export const metadata: Metadata = { title: copy.title, description: copy.description, alternates: { canonical: "/recruiters" } };
 
 /**
  * /recruiters (PRD 5.1, 5.20; docs/marketing-design-plan.md B7): what a recruiter sees, how

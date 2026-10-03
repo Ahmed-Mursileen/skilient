@@ -95,6 +95,10 @@ export function isPublicPath(pathname: string): boolean {
     pathname === "/" ||
     pathname === "/robots.txt" ||
     pathname === "/sitemap.xml" ||
+    // The landing page's Open Graph card (the others sit under their pages' paths); built with a hash suffix.
+    pathname.startsWith("/opengraph-image") ||
+    // PRD 5.1: there is no /demo, and it answers 404 rather than a sign-in redirect.
+    matches(pathname, "/demo") ||
     ["/auth", "/api", "/ui", "/verify", "/cv", "/.well-known", ...MARKETING_PATHS].some((p) => matches(pathname, p))
   );
 }

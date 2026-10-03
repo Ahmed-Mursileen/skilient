@@ -188,7 +188,7 @@ describe("recruiters (PRD 5.20)", () => {
 
 describe("the marketing site (PRD 5.1)", () => {
   it("is public, signed in or not", () => {
-    for (const p of ["/", "/recruiters", "/universities", "/faculty", "/about", "/pricing", "/request-university", "/request-university/confirm", "/join", "/terms", "/privacy", "/robots.txt", "/sitemap.xml"]) {
+    for (const p of ["/", "/recruiters", "/universities", "/faculty", "/about", "/pricing", "/request-university", "/request-university/confirm", "/join", "/terms", "/privacy", "/robots.txt", "/sitemap.xml", "/opengraph-image-pwu6ef", "/pricing/opengraph-image", "/demo"]) {
       expect(isPublicPath(p)).toBe(true);
     }
   });
