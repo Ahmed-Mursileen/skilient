@@ -1821,3 +1821,18 @@ Append-only. One dated entry per product decision, with the reason. Carried over
 - `getViewer` now rethrows Next's own signals (`unstable_rethrow`) instead of logging them as errors at build.
 - DESIGN.md and `.impeccable/design.json` were written from the shipped tokens. The documenter's qualitative questions were answered with the plan's thesis ("The Record You Can Check"), not asked, per the one-question-list rule. The documenter ran inline (no subagent in this harness).
 - The talent-search, dashboard and ecosphere captures stay deferred; the organisation pages ship with the existing captures and the art.
+
+## AI-assisted commits (2026-10-03)
+
+- **Rule (Ahmed, 2026-10-03):** commits an AI coding agent wrote count as the student's work and are labelled "AI-assisted". Before this, a venture linked to a repository built mostly by an agent showed almost no contributions, because the worker kept only commits GitHub attributes to the student's account. PRD 5.5 already says AI-assisted work is legitimate; this is disclosure from the commit itself, not detection.
+- **Trust boundary:** an agent commit is credited to a student only when all of these hold:
+  - its git author is a known agent identity (`platform_config` `github.ai_agents`; editable in `/ops/config`). If GitHub links the commit to an account, that account's login must be on the list; if it doesn't, the git author email must be. A person's account using an agent's email never counts.
+  - it came through a pull request the student's own GitHub account opened and that was merged with a merge commit, in a repository the student shared with the app.
+  - Squash and rebase merges are skipped: they write new commits on the default branch (a squash is already the student's own commit), so counting the pull request's commits too would count the work twice.
+  - A `Co-Authored-By` trailer alone never counts; anyone can write one.
+- **Default agents:** Claude (`noreply@anthropic.com`, `claude[bot]`, the `claude` account), GitHub Copilot's coding agent, Devin, Cursor's agent, OpenAI Codex.
+- **Levels:** agent commits count toward L1 and L2 like the student's own. A skill is labelled AI-assisted when more than half of its counted lines (or uses, for frameworks and tools) came from agents. A passed code check removes the label, because it tests understanding.
+- **Ranking is unchanged:** AI-assisted L2 scores like any L2 (PRD 5.5: AI-assisted work is legitimate).
+- **Where the label shows:** skill chips on profiles, `/me/skills`, the skill drawer (the share of AI lines, the agent pull requests, a badge per commit), the venture Contributions tab ("AI-assisted (Claude)"), recruiter search and the candidate page, and the verified CV ("Level 2, AI-assisted"). `ai_assisted` is optional in `CvSnapshotV1`, so CVs signed before stay valid. CVs pick it up at their next refresh.
+- **Not labelled:** Explore people cards list skill names only, without levels, so they stay as they are.
+- **Backfill:** `github_user_repos.agent_prs_checked_at` records how far a repository's merged pull requests were checked. The first sync after this change checks the newest 100 merged pull requests, and later syncs check only newer ones. Merged-pull-request webhooks are handled as they arrive.

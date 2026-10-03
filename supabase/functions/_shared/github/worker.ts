@@ -11,6 +11,7 @@ import {
   type TaxonomySkill,
 } from "./detectors.ts";
 import { addedRuns, pickWindow } from "../codecheck/snippet.ts";
+import { agentAuthor, parseAgents, type AgentIdentity } from "./agents.ts";
 import type { Db, Fetch, GithubConfig, Log } from "./types.ts";
 
 /**
@@ -46,6 +47,8 @@ export const MAX_PRS = 100;
 /** PRD 5.5 anti-gaming (decisions.md 2026-09-30): whoever corroborates a pull request must
  * have had their GitHub account for at least this long when it was merged. */
 export const APPROVER_MIN_AGE_DAYS = 90;
+/** Merged pull requests checked for agent commits per sync (one page). */
+export const MAX_AGENT_PRS = 100;
 
 type Message =
   | { stage: "discover"; user_id: string; job_id: number }
@@ -220,10 +223,10 @@ interface Installation {
 
 interface ListedCommit {
   sha: string;
-  author: { id: number } | null;
+  author: { id: number; login?: string; type?: string } | null;
   parents: { sha: string }[];
   commit: {
-    author: { date: string } | null;
+    author: { date: string; email?: string | null; name?: string | null } | null;
     committer: { date: string } | null;
     verification?: { verified: boolean };
   };
@@ -267,6 +270,7 @@ interface PullDetail {
   number: number;
   user: GitHubUser | null;
   merged_at: string | null;
+  merge_commit_sha?: string | null;
   merged_by: GitHubUser | null;
   base: { repo: { id: number; full_name: string; private: boolean; owner: GitHubUser } };
 }
@@ -307,6 +311,59 @@ const REPO_QUERY = `
     join public.github_repos g on g.repo_id = ur.repo_id
     join public.github_accounts a on a.user_id = ur.user_id and a.revoked_at is null
    where ur.user_id = $1 and ur.repo_id = $2`;
+
+async function loadAgents(ctx: Ctx): Promise<AgentIdentity[]> {
+  const [{ agents }] = await ctx.db.query<{ agents: unknown }>("select private.ai_agents() as agents");
+  return parseAgents(agents);
+}
+
+/**
+ * AI-assisted work (decisions 2026-10-03): the commits an AI agent wrote in one merged pull
+ * request the student opened, in a repository they shared. Only pull requests merged with a merge
+ * commit: a squash or rebase puts new commits on the default branch (a squash is the student's
+ * own). Stored with the agent and the pull request; extract analyses them. Returns how many.
+ */
+async function recordAgentPr(
+  ctx: Ctx,
+  token: string,
+  userId: string,
+  repoId: number,
+  pr: { number: number; merge_commit_sha?: string | null },
+  agents: AgentIdentity[],
+): Promise<number> {
+  const { db, github } = ctx;
+  if (!agents.length || !pr.merge_commit_sha || !/^[0-9a-f]{40}$/.test(pr.merge_commit_sha)) return 0;
+  try {
+    const { data: merge } = await github.request<ListedCommit>(token, `/repositories/${repoId}/commits/${pr.merge_commit_sha}`);
+    if ((merge.parents?.length ?? 0) < 2) return 0;
+  } catch (error) {
+    if (error instanceof GitHubError && [404, 409, 422].includes(error.status)) return 0;
+    throw error;
+  }
+  const commits = await github.paginate<ListedCommit[], ListedCommit>(
+    token,
+    `/repositories/${repoId}/pulls/${pr.number}/commits?per_page=100`,
+    (page) => page,
+    3,
+  );
+  const mine = commits.flatMap((c) => {
+    const agent = agentAuthor(c, agents);
+    return agent
+      ? [{
+          sha: c.sha,
+          authored_at: c.commit.author?.date ?? null,
+          committed_at: c.commit.committer?.date ?? null,
+          parents: c.parents.length,
+          signed: c.commit.verification?.verified === true,
+          ai_agent: agent,
+          via_pr: pr.number,
+        }]
+      : [];
+  });
+  if (!mine.length) return 0;
+  await db.query("select private.harvest_commits($1, $2, $3::text::jsonb, false)", [userId, repoId, JSON.stringify(mine)]);
+  return mine.length;
+}
 
 /** One handled message of a sync: queue what follows, count commits, close the sync when done. */
 async function advance(ctx: Ctx, jobId: number | undefined, next: Message[], commits = 0, stage: string | null = null) {
@@ -492,6 +549,31 @@ const STAGES: { [S in Message["stage"]]: (ctx: Ctx, msg: Extract<Message, { stag
     }
     const own = listed.filter((c) => c.author?.id === Number(repo.github_id));
 
+    // Agent commits from the student's merged pull requests here, newest first, down to the last check.
+    const agents = await loadAgents(ctx);
+    if (agents.length) {
+      const [{ checked }] = await db.query<{ checked: string | null }>("select private.agent_prs_checked($1, $2, false) as checked", [
+        msg.user_id,
+        msg.repo_id,
+      ]);
+      const since = checked ? Date.parse(checked) : 0;
+      let pulls: PullDetail[] = [];
+      try {
+        ({ data: pulls } = await github.request<PullDetail[]>(
+          token,
+          `/repositories/${msg.repo_id}/pulls?state=closed&sort=updated&direction=desc&per_page=${MAX_AGENT_PRS}`,
+        ));
+      } catch (error) {
+        if (!(error instanceof GitHubError && (error.status === 404 || error.status === 409))) throw error;
+      }
+      for (const pr of pulls) {
+        if (pr.user?.id !== Number(repo.github_id) || !pr.merged_at || Date.parse(pr.merged_at) < since) continue;
+        await recordAgentPr(ctx, token, msg.user_id, msg.repo_id, pr, agents);
+      }
+      // Only once every pull request is stored, so a retry after a failure checks them again.
+      await db.query("select private.agent_prs_checked($1, $2, true)", [msg.user_id, msg.repo_id]);
+    }
+
     await db.query("select private.set_repo_linguist_excludes($1, $2)", [msg.repo_id, await linguistExcludes(ctx, token, msg.repo_id)]);
     const [{ shas }] = await db.query<{ shas: string[] }>("select private.harvest_commits($1, $2, $3::text::jsonb, $4) as shas", [
       msg.user_id,
@@ -537,6 +619,14 @@ const STAGES: { [S in Message["stage"]]: (ctx: Ctx, msg: Extract<Message, { stag
       ),
     );
 
+    const agents = await loadAgents(ctx);
+    const agentShas = new Map(
+      (await db.query<{ sha: string; ai_agent: string; via_pr: number }>("select * from private.agent_commit_shas($1, $2)", [
+        msg.user_id,
+        msg.repo_id,
+      ])).map((r) => [r.sha, r]),
+    );
+
     let recorded = 0;
     for (const sha of msg.shas) {
       if (!/^[0-9a-f]{40}$/.test(sha)) continue;
@@ -547,8 +637,11 @@ const STAGES: { [S in Message["stage"]]: (ctx: Ctx, msg: Extract<Message, { stag
         if (error instanceof GitHubError && (error.status === 404 || error.status === 422)) continue; // rewritten away
         throw error;
       }
-      // Only commits GitHub attributes to the student's account (never the email alone).
-      if (commit.author?.id !== Number(repo.github_id)) continue;
+      // Only commits GitHub attributes to the student's account (never the email alone), or an AI
+      // agent's commits that arrived through the student's own merged pull request.
+      const viaAgent = agentShas.get(sha);
+      const isAgent = !!viaAgent && agentAuthor(commit, agents) === viaAgent.ai_agent;
+      if (commit.author?.id !== Number(repo.github_id) && !isAgent) continue;
 
       const allFiles = changedFiles(commit.files);
       const files = allFiles.filter((f) => !(f.sha && upstream.has(f.sha)));
@@ -568,6 +661,8 @@ const STAGES: { [S in Message["stage"]]: (ctx: Ctx, msg: Extract<Message, { stag
             pushed_at: msg.pushed_at ?? null,
             seen_via: msg.pushed_at ? "push" : "harvest",
             signed: commit.commit.verification?.verified === true,
+            ai_agent: isAgent ? viaAgent!.ai_agent : null,
+            via_pr: isAgent ? viaAgent!.via_pr : null,
             files: allFiles.length,
             meaningful_lines: excluded ? 0 : analysis.meaningfulLines,
             excluded,
@@ -682,6 +777,29 @@ const STAGES: { [S in Message["stage"]]: (ctx: Ctx, msg: Extract<Message, { stag
     }
     if (pr.user?.id !== me || !pr.merged_at) return;
     const repo = pr.base.repo;
+
+    // In a repository the student shared: the AI agent's commits in it are their AI-assisted work.
+    const [shared] = await db.query<{ repo_id: string | null }>("select private.shared_repo_id($1, $2) as repo_id", [msg.user_id, repo.id]);
+    if (shared?.repo_id) {
+      const [row] = await db.query<RepoRow>(REPO_QUERY, [msg.user_id, Number(shared.repo_id)]);
+      if (row && !row.excluded) {
+        const installation = await github.installationToken(Number(row.installation_id));
+        github.ensureBudget(installation);
+        const found = await recordAgentPr(ctx, installation, msg.user_id, repo.id, pr, await loadAgents(ctx));
+        if (found) {
+          const pending = await db.query<{ sha: string }>(
+            "select sha from public.github_commits where user_id = $1 and repo_id = $2 and extracted_at is null and via_pr = $3",
+            [msg.user_id, repo.id, pr.number],
+          );
+          const shas = pending.map((p) => p.sha);
+          const batches: Message[] = [];
+          for (let i = 0; i < shas.length; i += EXTRACT_BATCH) {
+            batches.push({ stage: "extract", user_id: msg.user_id, repo_id: repo.id, shas: shas.slice(i, i + EXTRACT_BATCH) });
+          }
+          await advance(ctx, undefined, batches);
+        }
+      }
+    }
     const record = {
       repo_github_id: repo.id,
       number: pr.number,

@@ -76,7 +76,7 @@ export default async function CandidatePage({ params }: PageProps<"/recruit/cand
               <ul className="flex flex-col gap-2" data-testid="candidate-skills">
                 {cv.skills.map((s) => (
                   <li key={s.id} className="flex flex-wrap items-center gap-2">
-                    <SkillChip name={s.name} level={s.level as SkillLevel} />
+                    <SkillChip name={s.name} level={s.level as SkillLevel} aiAssisted={s.ai_assisted === true} />
                     <span className="text-body-sm text-text-secondary">
                       {[
                         s.evidence.repos ? `${s.evidence.repos} repos` : null,

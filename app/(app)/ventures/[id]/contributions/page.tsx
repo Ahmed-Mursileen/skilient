@@ -1,9 +1,10 @@
-import { ArrowSquareOut, GithubLogo, ListChecks, LockSimple, Plus } from "@phosphor-icons/react/dist/ssr";
+import { ArrowSquareOut, GithubLogo, ListChecks, LockSimple, Plus, Robot } from "@phosphor-icons/react/dist/ssr";
 import { ConfirmAction } from "@/components/ventures/confirm-action";
 import { ContributionSheet } from "@/components/ventures/contribution-sheet";
 import { Badge, Button, EmptyState, SkillChip } from "@/components/ui";
 import { confirmContribution } from "@/lib/actions/ventures";
 import { getContributions, getVenture, type Contribution } from "@/lib/data/ventures";
+import { agentName } from "@/lib/skills/levels";
 import { CONTRIBUTION_KINDS, CORRECTION_WINDOW_MS } from "@/lib/ventures/labels";
 
 const KIND = Object.fromEntries(CONTRIBUTION_KINDS.map((k) => [k.value, k.label]));
@@ -29,6 +30,12 @@ function Status({ c }: { c: Contribution }) {
           <GithubLogo aria-hidden weight="bold" className="size-3.5" />
           {c.beforeVenture ? "From GitHub, before Skilient" : "From GitHub"}
         </Badge>
+        {c.aiAgent ? (
+          <Badge tone="neutral">
+            <Robot aria-hidden weight="bold" className="size-3.5" />
+            AI-assisted ({agentName(c.aiAgent)})
+          </Badge>
+        ) : null}
         {c.beforeVenture ? (verified ?? <Badge tone="neutral">Needs a teammate&apos;s confirmation</Badge>) : null}
       </>
     );

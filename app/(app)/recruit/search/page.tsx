@@ -133,7 +133,7 @@ function ResultRow({ row }: { row: TalentRow }) {
       <ul className="flex flex-wrap gap-1.5" aria-label="Skills">
         {row.skills.map((s) => (
           <li key={s.name}>
-            <SkillChip name={s.name} level={s.level as SkillLevel} verified={s.code_check} />
+            <SkillChip name={s.name} level={s.level as SkillLevel} verified={s.code_check} aiAssisted={s.ai_assisted} />
           </li>
         ))}
       </ul>
