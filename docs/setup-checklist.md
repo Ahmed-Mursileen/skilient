@@ -438,6 +438,52 @@ Marketing site (`docs/marketing-design-plan.md`, decisions.md "phase 12"). Later
 - [ ] **UptimeRobot** monitors on `/` and `/api/health`, alerts to your email.
 - [ ] **security@** mailbox for `/.well-known/security.txt`.
 
+## Phase 13
+
+Hardening (`docs/hardening-plan.md`, questions in `docs/phase-13-questions.md`). Never paste a key into a chat or a
+commit; each goes where the line says.
+
+**Slice 1: PostHog**
+
+- [ ] **Project id.** PostHog → Settings → Project → "Project ID" (a number). Needed for deleting a person's data.
+- [ ] **Personal API key scope.** The personal API key (already created) needs `person:write`. PostHog → Settings → Personal
+      API keys → edit → scopes. Nothing else.
+- [ ] **Project settings.** Session replay → **Record user sessions: on**, sampling **100%** (the app samples 20% itself;
+      two sample rates would multiply), minimum duration 2 s, canvas and network capture off, console logs off.
+      Autocapture → **off**. Heatmaps → on. **Discard client IP data: on**. Retention stays at the free plan's (check the
+      numbers there; the PRD asks for 13 months of events and 30 days of recordings). Authorized URLs: the production origin
+      only.
+- [ ] **Supabase Edge Function secrets** (Supabase → Edge Functions → Secrets), for `analytics-worker`:
+      `POSTHOG_PROJECT_KEY` (the `phc_…` key, same as `NEXT_PUBLIC_POSTHOG_KEY`), `POSTHOG_HOST` = `https://eu.i.posthog.com`,
+      `POSTHOG_API_HOST` = `https://eu.posthog.com`, `POSTHOG_PROJECT_ID` (above), `POSTHOG_PERSONAL_API_KEY`.
+- [ ] **Vercel env** (Production): `NEXT_PUBLIC_POSTHOG_KEY` (already set) must be the `phc_…` key. The app sends to
+      `/ingest` on our own domain, which forwards to PostHog EU; `NEXT_PUBLIC_POSTHOG_HOST` is no longer read by the browser.
+- [ ] **Check after deploy:** open the landing page and the feed, then PostHog → Activity: only named events and
+      `$pageview`, no `$autocapture`; a replay of a feed session shows asterisks for text and grey boxes for photos; no replay
+      exists for a `/chat` visit. Delete a test account and confirm its person is gone a day later.
+- [ ] **Dashboards** from `docs/analytics.md` (question 7 in the questions file).
+
+**Later slices** (listed now so they can be set up in one go)
+
+- [ ] **Alert recipient** (slice 2): the email address that receives alerts; set it in `/ops/config` → `alerts.recipients`.
+- [ ] **Resend webhook** (slice 2): Resend → Webhooks → add `https://<domain>/api/resend/webhook` for `email.delivered` and
+      `email.bounced`; put its signing secret in Vercel as `RESEND_WEBHOOK_SECRET`.
+- [ ] **Sentry alert rules** (slice 2): "A new issue is created" (production) → email; an error-volume alert as the interim
+      5xx alert until Axiom.
+- [ ] **Grafana Cloud** (free; slices 2 and 5): a stack in the closest region. (a) Supabase metrics: create a dedicated
+      secret API key in Supabase (Settings → API keys, named `grafana-metrics`) and add the Supabase integration with it;
+      alert rules CPU > 80% for 10 min and connections > 80% of max, to your email. (b) k6: create a token for GitHub
+      Actions as repo secret `K6_CLOUD_TOKEN` and note the project id as `K6_CLOUD_PROJECT_ID`. Confirm on the stack-limits
+      page that one test may run 300 users.
+- [ ] **UptimeRobot** (slice 2): see "Before phase 13".
+- [ ] **Scratch Supabase project** (slices 4 and 5): a second project in Mumbai (`ap-south-1`), same plan and compute size
+      as production, named `skilient-scratch`. Repo secrets: `SCRATCH_SUPABASE_PROJECT_REF`, `SCRATCH_SUPABASE_DB_PASSWORD`.
+      For the load test also `SCRATCH_SUPABASE_URL`, `SCRATCH_SUPABASE_PUBLISHABLE_KEY` and `SCRATCH_SUPABASE_SECRET_KEY`.
+      Delete or pause it after the load test.
+- [ ] **Vercel preview for the load test** (slice 5): point the Preview environment's Supabase variables at the scratch
+      project for the run, then back.
+- [ ] **security@ mailbox** (slice 3): see "Before phase 13".
+
 ## Before the closed beta ⏳
 
 - [ ] **Vercel Pro**: Hobby is for non-commercial use only, and Skilient takes payments; Pro also unlocks Log Drains, so install

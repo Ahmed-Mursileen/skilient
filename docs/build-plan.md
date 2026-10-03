@@ -213,6 +213,9 @@ Legend: 📖 = PRD files to read (in `docs/prd/`), ✅ = done-when checks.
 
 ✅ Every technical item of the launch gate is green
 
+*Status 2026-10-03: plan in `docs/hardening-plan.md` (eight slices), questions in `docs/phase-13-questions.md`. Slice 1
+(PostHog events, masked replays, heatmaps, deletion) built; its box waits for slice 2 (alerts).*
+
 ---
 
 ## After the build (see `04-scope-and-launch-plan.md`)

@@ -83,7 +83,7 @@ export default async function AboutPage() {
         <ArtImage name="about-desk" sizes="(min-width: 1280px) 1200px, 100vw" className="rounded-none border-x-0 sm:rounded-lg sm:border-x" />
       </div>
       <div className="mx-auto flex max-w-page justify-center px-[var(--page-gutter)] py-16 sm:py-20">
-        <CtaLink href={viewer ? viewer.home : nav.join.href}>{viewer ? nav.open : nav.join.label}</CtaLink>
+        <CtaLink href={viewer ? viewer.home : nav.join.href} track={viewer ? "open_app" : "join"}>{viewer ? nav.open : nav.join.label}</CtaLink>
       </div>
     </article>
   );

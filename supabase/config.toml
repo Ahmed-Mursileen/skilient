@@ -432,6 +432,10 @@ verify_jwt = false
 [functions.billing-worker]
 verify_jwt = false
 
+# Woken by pg_cron with a Vault bearer secret (analytics_worker_secret); sends the outbox to PostHog EU.
+[functions.analytics-worker]
+verify_jwt = false
+
 [analytics]
 enabled = true
 port = 54327

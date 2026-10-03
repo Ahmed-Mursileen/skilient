@@ -6,6 +6,8 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   reactStrictMode: true,
   typedRoutes: true,
+  // PostHog's API paths end in "/"; proxy.ts strips trailing slashes from every other path itself.
+  skipTrailingSlashRedirect: true,
   // CV PDFs (PRD 5.18): Chromium ships as compressed files the package unpacks at run time.
   serverExternalPackages: ["@sparticuz/chromium", "puppeteer-core"],
   outputFileTracingIncludes: {
@@ -20,6 +22,19 @@ const nextConfig: NextConfig = {
   },
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
+  },
+  // PostHog EU behind our own origin (PRD 10; phase 13 question 3): the CSP stays 'self' and ad
+  // blockers don't drop page views. proxy.ts skips /ingest, so no session work runs for these.
+  async rewrites() {
+    return {
+      beforeFiles: [
+        { source: "/ingest/static/:path*", destination: "https://eu-assets.i.posthog.com/static/:path*" },
+        { source: "/ingest/array/:path*", destination: "https://eu-assets.i.posthog.com/array/:path*" },
+        { source: "/ingest/:path*", destination: "https://eu.i.posthog.com/:path*" },
+      ],
+      afterFiles: [],
+      fallback: [],
+    };
   },
   async redirects() {
     // Screen spec route note: old routes keep working. `edit` is a reserved username.

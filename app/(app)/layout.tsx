@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { after } from "next/server";
+import { AnalyticsIdentity } from "@/components/analytics/analytics-identity";
 import { CurrentUserProvider } from "@/components/providers/current-user-provider";
 import { UpgradeSheetHost } from "@/components/billing/upgrade-sheet";
 import { AppShell } from "@/components/shell/app-shell";
@@ -40,6 +41,7 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
         {children}
       </AppShell>
       <UpgradeSheetHost />
+      <AnalyticsIdentity />
     </CurrentUserProvider>
   );
 }

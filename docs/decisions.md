@@ -1836,3 +1836,31 @@ Append-only. One dated entry per product decision, with the reason. Carried over
 - **Where the label shows:** skill chips on profiles, `/me/skills`, the skill drawer (the share of AI lines, the agent pull requests, a badge per commit), the venture Contributions tab ("AI-assisted (Claude)"), recruiter search and the candidate page, and the verified CV ("Level 2, AI-assisted"). `ai_assisted` is optional in `CvSnapshotV1`, so CVs signed before stay valid. CVs pick it up at their next refresh.
 - **Not labelled:** Explore people cards list skill names only, without levels, so they stay as they are.
 - **Backfill:** `github_user_repos.agent_prs_checked_at` records how far a repository's merged pull requests were checked. The first sync after this change checks the newest 100 merged pull requests, and later syncs check only newer ones. Merged-pull-request webhooks are handled as they arrive.
+
+## Phase 13: hardening (decisions)
+
+- 2026-10-03 (phase 13, plan): Eight slices, one PR each: analytics, alerts, security verification, restore drill, load test,
+  then three design-gate slices by screen-spec area (`docs/hardening-plan.md`). One question list with defaults in
+  `docs/phase-13-questions.md`; slice 1 is built on its defaults (Q1–Q6) until Ahmed answers.
+- 2026-10-03 (phase 13, slice 1, Q1 default): Server-side analytics events come from database triggers through a pgmq outbox
+  and the `analytics-worker`, not `posthog-node` in server actions (PRD 10 build note). Same events, but jobs and webhooks
+  are covered (subscriptions, first L2, venture completion), nothing waits on PostHog in a request, and only ids and enums
+  leave the database. "First time" events fire once per user (`private.analytics_once`, backfilled for people who were
+  already past them).
+- 2026-10-03 (phase 13, slice 1, Q2 default): Replays mask **all** text, inputs and text-bearing attributes and block every
+  user-uploaded image, stricter than PRD 10's list, because names appear on nearly every screen and PRD 10 also says no
+  names leave our systems. Layout, clicks and navigation stay visible.
+- 2026-10-03 (phase 13, slice 1, Q3–Q5 defaults): PostHog is proxied through `/ingest` on our domain
+  (`skipTrailingSlashRedirect` for its API paths; `proxy.ts` now strips trailing slashes itself and skips `/ingest`);
+  `localStorage` persistence, no analytics cookie; the never-recorded list is the PRD's plus every page with a secret,
+  token or code. Only page views, identify, replays, heatmaps and the five landing events may leave the browser, whatever
+  PostHog project settings turn on.
+- 2026-10-03 (phase 13, slice 1): The PostHog key is read at run time on the server (not inlined at build), so CI runs a
+  second E2E server from the same build with a test key; `tests/e2e/analytics.spec.ts` fakes PostHog at `/ingest`, serves
+  the installed recorder, seeds a sampled session and decodes every payload. posthog-js ignores automated browsers
+  (`navigator.webdriver`), so that spec presents as a normal browser.
+- 2026-10-03 (phase 13, slice 1): `signup_start` fires on the landing email field only; a visit straight to `/signup`
+  counts through its page view in the funnel. Organisation-page CTAs carry `data-track` attributes, read by one click
+  listener, so they stay server components.
+- 2026-10-03 (phase 13, slice 1): posthog-js is a lazily loaded chunk of about 100 KB gzip (after the page is idle), never in
+  first-load JS. The size-limit total of all chunks was already over its report-only 450 KB line.
